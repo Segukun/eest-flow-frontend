@@ -109,7 +109,10 @@ La implementación debe respetar:
 
 ## Instalación
 
+Se necesita Node.js y npm. Después de clonar el repositorio:
+
 ```bash
+cd frontend
 npm install
 ```
 
@@ -123,6 +126,12 @@ npm run dev
 
 ```bash
 npm run build
+```
+
+## Verificación del código
+
+```bash
+npm run lint
 ```
 
 ## Backend

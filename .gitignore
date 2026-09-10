@@ -1,0 +1,21 @@
+# Dependencias
+node_modules/
+
+# Archivos generados
+dist/
+
+# Variables locales
+.env
+.env.*
+!.env.example
+
+# Caché local de herramientas
+.npm-cache/
+
+# Editores y sistema operativo
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+
