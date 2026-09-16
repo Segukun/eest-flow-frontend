@@ -1,0 +1,226 @@
+.app-shell {
+  min-height: 100vh;
+}
+
+.app-main {
+  margin-left: var(--sidebar-w);
+  min-height: 100vh;
+  background: var(--color-bone);
+}
+
+.avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  border: 2px solid var(--color-bone);
+}
+.avatar--sm {
+  width: 28px;
+  height: 28px;
+  font-size: 10px;
+}
+.avatar--more {
+  background: var(--color-muted);
+}
+.avatars {
+  display: flex;
+}
+.avatars .avatar + .avatar {
+  margin-left: -10px;
+}
+
+.brand-name {
+  font-weight: 800;
+  font-size: 20px;
+  letter-spacing: -0.02em;
+}
+.brand-name--accent {
+  color: var(--color-green);
+}
+.brand-sub {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-terracotta);
+  font-weight: 600;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-graphite);
+  transition: background 0.15s ease;
+}
+.nav-item:hover {
+  background: rgba(31, 21, 28, 0.05);
+}
+.nav-item--active {
+  background: var(--color-green);
+  color: #fff;
+}
+.nav-item--active .icon {
+  filter: brightness(0) invert(1);
+}
+.nav-item__badge {
+  margin-left: auto;
+  background: var(--color-orange);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+.nav-item__chevron {
+  margin-left: auto;
+}
+
+.cat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.cat-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 14px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  color: #5b5257;
+  text-align: left;
+}
+.cat-item:hover {
+  background: rgba(31, 21, 28, 0.04);
+}
+.cat-item--active {
+  background: rgba(31, 21, 28, 0.06);
+  color: var(--color-graphite);
+  font-weight: 600;
+}
+.cat-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex: none;
+}
+.cat-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-menu {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  padding: 6px;
+  z-index: 30;
+}
+.user-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  text-align: left;
+}
+.user-menu__item:hover {
+  background: rgba(31, 21, 28, 0.05);
+}
+.user-menu__item--danger {
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+.sync-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-green);
+  display: inline-block;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 14px;
+  transition: opacity 0.15s ease;
+}
+.btn:hover {
+  opacity: 0.9;
+}
+.btn--sm {
+  padding: 8px 12px;
+}
+.btn--primary {
+  background: var(--color-green);
+  color: #fff;
+}
+.btn--ghost {
+  background: rgba(31, 21, 28, 0.06);
+}
+.btn--danger {
+  background: rgba(224, 52, 43, 0.1);
+  color: var(--color-danger);
+}
+
+.icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(31, 21, 28, 0.06);
+}
+.link-btn {
+  color: var(--color-orange);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.input,
+.select {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: #fff;
+  font-size: 14px;
+  color: var(--color-graphite);
+}
+.input:focus,
+.select:focus {
+  outline: 2px solid rgba(5, 144, 62, 0.25);
+  border-color: var(--color-green);
+}
+
+@media (max-width: 900px) {
+  .app-main {
+    margin-left: 0;
+    padding-top: var(--topbar-h);
+  }
+}

@@ -1,0 +1,8 @@
+.home {
+  padding: 24px 28px 40px;
+}
+@media (max-width: 900px) {
+  .home {
+    padding: 16px;
+  }
+}
