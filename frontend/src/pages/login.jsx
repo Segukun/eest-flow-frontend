@@ -6,7 +6,11 @@ import "../styles/pages/login.css";
 const AdminLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [serverError, setServerError] = useState("");
+
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
@@ -14,26 +18,37 @@ const AdminLogin = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    setError("");
+    // Limpiar errores anteriores
+    setEmailError("");
+    setPasswordError("");
+    setServerError("");
 
-    // limpiar espacios email
+    // Limpiar espacios innecesarios del email
     const emailLimpio = email.trim();
 
-    // validaciones de campos
-    if (!emailLimpio || !password) {
-      setError("Por favor, completá todos los campos.");
-      return;
+    let hayErrores = false;
+
+    if (!emailLimpio) {
+      setEmailError("Por favor, ingresá tu email.");
+      hayErrores = true;
+    } else {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+      if (!emailRegex.test(emailLimpio)) {
+        setEmailError("Ingresá un email válido. Ejemplo: admin@empresa.com");
+        hayErrores = true;
+      }
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (!emailRegex.test(emailLimpio)) {
-      setError("Ingresá un email válido. Ejemplo: admin@empresa.com");
-      return;
+    if (!password) {
+      setPasswordError("Por favor, ingresá tu contraseña.");
+      hayErrores = true;
+    } else if (password.length < 6) {
+      setPasswordError("La contraseña debe tener al menos 6 caracteres.");
+      hayErrores = true;
     }
 
-    if (password.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres.");
+    if (hayErrores) {
       return;
     }
 
@@ -68,26 +83,26 @@ const AdminLogin = () => {
       console.error("Error al iniciar sesión:", error);
 
       if (error.response) {
-        // login incorrecto
         if (error.response.status === 401) {
-          setError("email o password incorrectos");
+          setServerError("email o password incorrectos");
         } else {
-          // Otro error enviado por el backend
-          setError(
-            error.response.data?.mensaje ||
-              error.response.data?.message ||
+          setServerError(
+            error.response.data?.message ||
+              error.response.data?.mensaje ||
               "Ocurrió un error al iniciar sesión.",
           );
         }
 
       } else if (error.request) {
-        setError(
+        setServerError(
           "No se pudo conectar con el servidor. Verificá que el backend esté funcionando.",
         );
+
       } else {
-        setError("Ocurrió un error al iniciar sesión.");
+        setServerError("Ocurrió un error al intentar iniciar sesión.");
       }
     } 
+
     finally {
       setLoading(false);
     }
@@ -109,6 +124,7 @@ const AdminLogin = () => {
           </div>
 
           <form className="admin-form" onSubmit={handleSubmit}>
+
             <div className="admin-field">
               <label htmlFor="email">Email</label>
 
@@ -117,10 +133,17 @@ const AdminLogin = () => {
                 type="email"
                 placeholder="admin@empresa.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setEmailError("");
+                  setServerError("");
+                }}
                 required
                 disabled={loading}
+                className={emailError ? "input-error" : ""}
               />
+
+              {emailError && <p className="field-error">{emailError}</p>}
             </div>
 
             <div className="admin-field">
@@ -131,23 +154,19 @@ const AdminLogin = () => {
                 type="password"
                 placeholder="••••••••"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setPasswordError("");
+                  setServerError("");
+                }}
                 required
                 disabled={loading}
+                className={passwordError ? "input-error" : ""}
               />
-            </div>
 
-            {error && (
-              <p
-                style={{
-                  color: "#8d1717",
-                  fontSize: "13px",
-                  margin: 0,
-                }}
-              >
-                {error}
-              </p>
-            )}
+              {passwordError && <p className="field-error">{passwordError}</p>}
+            </div>
+            {serverError && <p className="server-error">{serverError}</p>}
 
             <button
               type="submit"
@@ -162,7 +181,7 @@ const AdminLogin = () => {
             type="button"
             className="admin-link-button"
             onClick={() => {
-              setError(
+              setServerError(
                 "La recuperación de contraseña todavía no está disponible.",
               );
             }}
