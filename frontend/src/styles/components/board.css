@@ -7,7 +7,7 @@
 }
 
 .column {
-  flex: 0 0 320px;
+  flex: 0 0 310px;
   background: #fff;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
@@ -57,25 +57,38 @@
   gap: 12px;
 }
 
-.column__empty {
+.add-task__empty {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
+  width: 100%;
   padding: 32px 16px;
   border: 1.5px dashed var(--color-border);
   border-radius: var(--radius-md);
   color: var(--color-muted);
   text-align: center;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease;
 }
-.column__empty strong {
+.add-task__empty:hover {
+  border-color: var(--color-green);
+  background: rgba(5, 144, 62, 0.04);
+  color: var(--color-green);
+}
+.add-task__empty strong {
   color: var(--color-graphite);
   font-size: 14px;
 }
-.column__empty small {
+.add-task__empty:hover strong {
+  color: var(--color-green);
+}
+.add-task__empty small {
   font-size: 12px;
 }
-.column__empty-icon {
+.add-task__empty-icon {
   width: 34px;
   height: 34px;
   border-radius: 10px;
@@ -83,6 +96,8 @@
   display: grid;
   place-items: center;
   margin-bottom: 6px;
+  font-size: 16px;
+  color: inherit;
 }
 
 /* ---- tarjeta ---- */
@@ -199,7 +214,7 @@
   gap: 8px;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 700px) {
   .board {
     flex-direction: column;
     overflow-x: visible;

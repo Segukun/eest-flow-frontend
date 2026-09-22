@@ -6,16 +6,16 @@ import {
 const AppContext = createContext(null);
 
 export function AppProvider({ children }) {
-  const [categories] = useState(CATEGORIES);
+  const [categories, setCategories] = useState(CATEGORIES);
   const [tasks, setTasks] = useState(TASKS);
   const [activeCategory, setActiveCategory] = useState(CATEGORIES[0].id);
-  const [view, setView] = useState("tablero"); // tablero | lista
+  const [view, setView] = useState("tablero");
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState({
     onlyMine: false,
     priorities: [],
     sector: "",
-    due: "", // hoy | 48 | 7
+    due: "",
   });
 
   const currentUser = USERS.find((u) => u.id === CURRENT_USER_ID);
@@ -49,7 +49,7 @@ export function AppProvider({ children }) {
     });
   }, [tasks, activeCategory, search, filters]);
 
-  /* ---------- acciones ---------- */
+  /* ---------- tareas ---------- */
 
   const addTask = (columnId, title) => {
     const id = "t" + Math.random().toString(36).slice(2, 8);
@@ -60,6 +60,7 @@ export function AppProvider({ children }) {
         categoryId: activeCategory,
         column: columnId,
         title,
+        description: "",
         priority: "media",
         labels: [],
         members: [],
@@ -74,7 +75,6 @@ export function AppProvider({ children }) {
 
   const deleteTask = (id) => setTasks((prev) => prev.filter((t) => t.id !== id));
 
-  /** Mueve la tarea a otra columna y la reordena antes de `beforeId` (null = al final) */
   const moveTask = (id, columnId, beforeId = null) => {
     setTasks((prev) => {
       const moving = prev.find((t) => t.id === id);
@@ -88,8 +88,30 @@ export function AppProvider({ children }) {
     });
   };
 
+  /* ---------- categorías ---------- */
+
+  const addCategory = ({ name, color, sectors: authorizedSectors }) => {
+    const id = "cat_" + Math.random().toString(36).slice(2, 8);
+    const newCategory = { id, name, color, sectors: authorizedSectors ?? "all" };
+    setCategories((prev) => [...prev, newCategory]);
+    setActiveCategory(id);
+    return id;
+  };
+
+  const deleteCategory = (id) => {
+    if (categories.length <= 1) return; // nunca te quedás sin categorías
+
+    setCategories((prev) => prev.filter((c) => c.id !== id));
+    setTasks((prev) => prev.filter((t) => t.categoryId !== id)); // limpia sus tareas
+
+    if (activeCategory === id) {
+      const fallback = categories.find((c) => c.id !== id);
+      if (fallback) setActiveCategory(fallback.id);
+    }
+  };
+
   const value = {
-    categories, activeCategory, setActiveCategory,
+    categories, activeCategory, setActiveCategory, addCategory, deleteCategory,
     columns: COLUMNS, sectors: SECTORS, users: USERS, currentUser,
     tasks, visibleTasks, addTask, updateTask, deleteTask, moveTask,
     view, setView, search, setSearch,

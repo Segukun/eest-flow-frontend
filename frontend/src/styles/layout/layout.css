@@ -218,9 +218,22 @@
   border-color: var(--color-green);
 }
 
-@media (max-width: 900px) {
+@media (max-width: 700px) {
   .app-main {
     margin-left: 0;
     padding-top: var(--topbar-h);
+  }
+}
+
+@media (min-width: 701px) {
+  .app-main {
+    margin-left: var(--sidebar-w);
+    min-height: 100vh;
+    background: var(--color-bone);
+    transition: margin-left .2s ease;
+  }
+
+  .app-shell:has(.sidebar--collapsed) .app-main {
+    margin-left: 84px;
   }
 }

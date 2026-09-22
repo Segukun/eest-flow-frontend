@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
+import AddCategoryModal from "../AddCategoryModal";
+import DeleteCategoryModal from "../DeleteCategoryModal";
 import "../../styles/layout/sidebar.css";
 
 const NAV = [
@@ -13,6 +15,9 @@ const NAV = [
 export default function Sidebar() {
   const { categories, activeCategory, setActiveCategory, currentUser } = useApp();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null); // categoría a borrar
   const ref = useRef(null);
 
   useEffect(() => {
@@ -22,13 +27,23 @@ export default function Sidebar() {
   }, []);
 
   return (
-    <aside className="sidebar">
+    <aside className={"sidebar" + (collapsed ? " sidebar--collapsed" : "")}>
+      <button
+        className="sidebar__collapse-btn"
+        onClick={() => setCollapsed((v) => !v)}
+        title={collapsed ? "Expandir" : "Colapsar"}
+      >
+        {collapsed ? "»" : "«"}
+      </button>
+
       <div className="sidebar__brand">
         <img src="/eestn1logo.png" alt="EEST N°1" className="sidebar__logo" />
-        <div className="sidebar__brand-text">
-          <span className="brand-name">EEST<span className="brand-name--accent">Flow</span></span>
-          <span className="brand-sub">Técnica Digital</span>
-        </div>
+        {!collapsed && (
+          <div className="sidebar__brand-text">
+            <span className="brand-name">EEST<span className="brand-name--accent">Flow</span></span>
+            <span className="brand-sub">Técnica Digital</span>
+          </div>
+        )}
       </div>
 
       <nav className="sidebar__nav">
@@ -38,56 +53,79 @@ export default function Sidebar() {
             to={item.to}
             end={item.end}
             className={({ isActive }) => "nav-item" + (isActive ? " nav-item--active" : "")}
+            title={collapsed ? item.label : undefined}
           >
             <img src={item.icon} alt="" className="icon" />
-            <span>{item.label}</span>
-            {item.badge && <span className="nav-item__badge">{item.badge}</span>}
+            {!collapsed && <span>{item.label}</span>}
+            {!collapsed && item.badge && <span className="nav-item__badge">{item.badge}</span>}
           </NavLink>
         ))}
       </nav>
 
-      <div className="sidebar__section">
-        <div className="sidebar__section-head">
-          <span>Categorías</span>
-          <button className="sidebar__add" title="Agregar categoría">+</button>
+      {!collapsed && (
+        <div className="sidebar__section">
+          <div className="sidebar__section-head">
+            <span>Categorías</span>
+            <button
+              className="sidebar__add"
+              title="Agregar categoría"
+              onClick={() => setAddOpen(true)}
+            >
+              +
+            </button>
+          </div>
+          <ul className="cat-list">
+            {categories.map((c) => (
+              <li key={c.id} className="cat-item-row">
+                <button
+                  className={"cat-item" + (activeCategory === c.id ? " cat-item--active" : "")}
+                  onClick={() => setActiveCategory(c.id)}
+                >
+                  <span className="cat-dot" style={{ background: c.color }} />
+                  <span className="cat-name">{c.name}</span>
+                </button>
+                {categories.length > 1 && (
+                  <button
+                    className="cat-item__delete"
+                    title="Eliminar categoría"
+                    onClick={(e) => { e.stopPropagation(); setDeleteTarget(c); }}
+                  >
+                    🗑
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
         </div>
-        <ul className="cat-list">
-          {categories.map((c) => (
-            <li key={c.id}>
-              <button
-                className={"cat-item" + (activeCategory === c.id ? " cat-item--active" : "")}
-                onClick={() => setActiveCategory(c.id)}
-              >
-                <span className="cat-dot" style={{ background: c.color }} />
-                <span className="cat-name">{c.name}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
+      )}
 
       <div className="sidebar__section">
         <NavLink
           to="/equipo"
           className={({ isActive }) => "nav-item" + (isActive ? " nav-item--active" : "")}
+          title={collapsed ? "Mi Equipo" : undefined}
         >
           <img src="/icons/team.svg" alt="" className="icon" />
-          <span>Mi Equipo</span>
+          {!collapsed && <span>Mi Equipo</span>}
         </NavLink>
       </div>
 
       <div className="sidebar__user" ref={ref}>
         <button className="user-card" onClick={() => setMenuOpen((v) => !v)}>
           <span className="avatar" style={{ background: currentUser.color }}>{currentUser.initials}</span>
-          <span className="user-card__info">
-            <strong>{currentUser.name}</strong>
-            <small>{currentUser.sector}</small>
-          </span>
-          <span className="user-card__chevron">⌄</span>
+          {!collapsed && (
+            <>
+              <span className="user-card__info">
+                <strong>{currentUser.name}</strong>
+                <small>{currentUser.sector}</small>
+              </span>
+              <span className="user-card__chevron">⌄</span>
+            </>
+          )}
         </button>
 
         {menuOpen && (
-          <div className="user-menu">
+          <div className="user-menu user-menu--flyout">
             <button className="user-menu__item">
               <img src="/icons/user.svg" alt="" className="icon-sm" /> Editar perfil
             </button>
@@ -98,6 +136,11 @@ export default function Sidebar() {
           </div>
         )}
       </div>
+
+      {addOpen && <AddCategoryModal onClose={() => setAddOpen(false)} />}
+      {deleteTarget && (
+        <DeleteCategoryModal category={deleteTarget} onClose={() => setDeleteTarget(null)} />
+      )}
     </aside>
   );
 }

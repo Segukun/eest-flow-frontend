@@ -2,6 +2,7 @@ import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
 import "../../styles/layout/topbar.css";
+import { FiPlus } from "react-icons/fi";
 
 const NAV = [
   { to: "/", label: "Inicio", icon: "/icons/home.svg", end: true },
@@ -76,6 +77,13 @@ export default function Topbar() {
                   </button>
                 </li>
               ))}
+
+              <li>
+                <button className="cat-item cat-item--add">
+                  <FiPlus className="cat-dot cat-dot--add"/>
+                  <span className="cat-name">Agregar categoría</span>
+                </button>
+              </li>
             </ul>
           )}
         </nav>

@@ -1,7 +1,7 @@
 import { useApp } from "../context/AppContext";
 import { PRIORITIES, LABEL_COLORS } from "../mock/db";
 
-export default function TaskCard({ task, isDragging, onDragStart, onDragEnd, onDropBefore, onEdit }) {
+export default function TaskCard({ task, isDragging, onDragStart, onDragEnd, onDropBefore, onView, onEdit }) {
   const { users } = useApp();
   const priority = PRIORITIES[task.priority];
   const members = task.members.map((id) => users.find((u) => u.id === id)).filter(Boolean);
@@ -14,7 +14,7 @@ export default function TaskCard({ task, isDragging, onDragStart, onDragEnd, onD
       onDragEnd={onDragEnd}
       onDragOver={(e) => e.preventDefault()}
       onDrop={(e) => { e.preventDefault(); e.stopPropagation(); onDropBefore(task.id); }}
-      onClick={() => onEdit(task.id)}
+      onClick={() => onView(task.id)}
     >
       <span className="task-card__priority" style={{ background: priority.color }} />
 
