@@ -1,0 +1,461 @@
+/* =========================================
+   CONTENEDOR GENERAL
+========================================= */
+
+#contenedorNotificaciones {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  background: var(--color-bone);
+  color: var(--color-graphite);
+  font-family: var(--font-family-base);
+}
+
+/* =========================================
+   CONTENIDO PRINCIPAL
+========================================= */
+
+#paginaNotificaciones {
+  flex: 1;
+  min-width: 0;
+  padding: 19px 28px 30px;
+}
+
+/* =========================================
+   ENCABEZADO
+========================================= */
+
+.encabezadoNotificaciones {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+}
+
+.marcaNotificaciones {
+  margin: 0 0 5px;
+  color: var(--color-green);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.7px;
+}
+
+.encabezadoNotificaciones h1 {
+  margin: 0;
+  color: var(--color-graphite);
+  font-size: 32px;
+  font-weight: 750;
+}
+
+/* =========================================
+   FILTROS
+========================================= */
+
+#filtrosNotificaciones {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+}
+
+.filtroNotificacion {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  padding: 11px 23px;
+
+  border: 1px solid var(--color-border);
+  border-radius: 25px;
+
+  background: var(--color-white);
+  color: var(--color-muted);
+
+  font-size: 13px;
+  font-weight: 500;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filtroNotificacion:hover {
+  border-color: var(--color-green);
+  color: var(--color-green);
+}
+
+.filtroNotificacion.activo {
+  background: var(--color-green);
+  border-color: var(--color-green);
+  color: var(--color-white);
+  font-weight: 650;
+}
+
+.contadorNoLeidas {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 19px;
+  height: 19px;
+
+  border-radius: 50%;
+  background: var(--color-orange);
+  color: var(--color-white);
+
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.filtroNotificacion.activo .contadorNoLeidas {
+  background: var(--color-white);
+  color: var(--color-green);
+}
+
+/* =========================================
+   LISTA DE NOTIFICACIONES
+========================================= */
+
+.listaNotificaciones {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+
+  width: 100%;
+  max-width: 1400px;
+}
+
+/* =========================================
+   TARJETAS
+========================================= */
+
+.notificacion {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 30px;
+
+  min-height: 145px;
+  padding: 27px 30px 27px 35px;
+
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+
+  box-shadow: var(--shadow-sm);
+
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.notificacion:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Línea lateral de cada tarjeta */
+
+.notificacion::before {
+  content: "";
+
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+
+  width: 4px;
+  background: var(--color-terracotta);
+}
+
+.notificacion:nth-child(4n + 1)::before {
+  background: var(--color-orange);
+}
+
+.notificacion:nth-child(4n + 2)::before {
+  background: var(--color-terracotta);
+}
+
+.notificacion:nth-child(4n + 3)::before {
+  background: var(--color-green);
+}
+
+.notificacion:nth-child(4n + 4)::before {
+  background: var(--color-muted);
+}
+
+/* Notificaciones no leídas */
+
+.notificacion.noLeida {
+  background: var(--color-white);
+}
+
+/* =========================================
+   CONTENIDO
+========================================= */
+
+.contenidoNotificacion {
+  flex: 1;
+  min-width: 0;
+}
+
+.cabeceraNotificacion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 7px;
+}
+
+.tipoNotificacion {
+  color: var(--color-terracotta);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.35px;
+  text-transform: uppercase;
+}
+
+.notificacion:nth-child(4n + 3) .tipoNotificacion {
+  color: var(--color-green);
+}
+
+.notificacion:nth-child(4n + 4) .tipoNotificacion {
+  color: var(--color-muted);
+}
+
+.tiempoNotificacion {
+  flex-shrink: 0;
+
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.notificacion h2 {
+  margin: 0 0 9px;
+
+  color: var(--color-graphite);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.descripcionNotificacion {
+  margin: 0;
+
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+/* =========================================
+   BOTÓN VER
+========================================= */
+
+.botonVerNotificacion {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+
+  flex-shrink: 0;
+
+  min-width: 95px;
+  padding: 12px 18px;
+
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+
+  background: var(--color-bone);
+  color: var(--color-terracotta);
+
+  font-size: 13px;
+  font-weight: 650;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.botonVerNotificacion span {
+  font-size: 21px;
+  line-height: 12px;
+}
+
+.botonVerNotificacion:hover {
+  background: var(--color-orange);
+  border-color: var(--color-orange);
+  color: var(--color-white);
+}
+
+.notificacion:nth-child(4n + 3) .botonVerNotificacion {
+  background: var(--color-white);
+  border-color: var(--color-green);
+  color: var(--color-green);
+}
+
+.notificacion:nth-child(4n + 3) .botonVerNotificacion:hover {
+  background: var(--color-green);
+  color: var(--color-white);
+}
+
+.notificacion:nth-child(4n + 4) .botonVerNotificacion {
+  background: var(--color-white);
+  border-color: var(--color-border);
+  color: var(--color-graphite);
+}
+
+/* =========================================
+   SIN NOTIFICACIONES
+========================================= */
+
+.sinNotificaciones {
+  padding: 70px 20px;
+  text-align: center;
+
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.sinNotificaciones h2 {
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+
+.sinNotificaciones p {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 14px;
+}
+
+/* =========================================
+   TABLET - 700px
+========================================= */
+
+@media (max-width: 700px) {
+  #paginaNotificaciones {
+    margin-left: 0;
+    padding: 25px 20px 40px;
+  }
+
+  .encabezadoNotificaciones h1 {
+    font-size: 27px;
+  }
+
+  .notificacion {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .botonVerNotificacion {
+    align-self: flex-end;
+  }
+}
+
+/* =========================================
+   CELULAR - 480px
+========================================= */
+
+@media (max-width: 480px) {
+  #paginaNotificaciones {
+    padding: 22px 15px 35px;
+  }
+
+  .marcaNotificaciones {
+    font-size: 11px;
+  }
+
+  .encabezadoNotificaciones h1 {
+    font-size: 25px;
+  }
+
+  #filtrosNotificaciones {
+    gap: 8px;
+  }
+
+  .filtroNotificacion {
+    padding: 9px 15px;
+    font-size: 12px;
+  }
+
+  .notificacion {
+    min-height: auto;
+    padding: 23px 20px 23px 25px;
+    gap: 18px;
+  }
+
+  .cabeceraNotificacion {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .notificacion h2 {
+    font-size: 15px;
+  }
+
+  .descripcionNotificacion {
+    font-size: 12px;
+  }
+
+  .botonVerNotificacion {
+    width: 100%;
+  }
+}
+
+/* =========================================
+   CELULAR PEQUEÑO - 360px
+========================================= */
+
+@media (max-width: 360px) {
+  #paginaNotificaciones {
+    padding: 18px 10px 30px;
+  }
+
+  .encabezadoNotificaciones h1 {
+    font-size: 22px;
+  }
+
+  .marcaNotificaciones {
+    font-size: 10px;
+  }
+
+  #filtrosNotificaciones {
+    gap: 6px;
+  }
+
+  .filtroNotificacion {
+    padding: 8px 11px;
+    font-size: 11px;
+  }
+
+  .notificacion {
+    padding: 20px 16px 20px 21px;
+    border-radius: var(--radius-md);
+  }
+
+  .tipoNotificacion {
+    font-size: 10px;
+  }
+
+  .tiempoNotificacion {
+    font-size: 11px;
+  }
+
+  .notificacion h2 {
+    font-size: 14px;
+  }
+
+  .descripcionNotificacion {
+    font-size: 11px;
+  }
+
+  .botonVerNotificacion {
+    padding: 10px 14px;
+    font-size: 12px;
+  }
+}

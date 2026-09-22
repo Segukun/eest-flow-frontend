@@ -108,7 +108,7 @@
 }
 
 .admin-field input {
-  width: 400px;
+  width: 350px;
   height: 45px;
   padding: 0px 2px;
   padding-left: 2px;
@@ -200,9 +200,34 @@
   line-height: 1;
 }
 
-/* =========================================================
-   TABLET
-========================================================= */
+.field-error {
+margin: -2px 0 0;
+font-size: 13px;
+line-height: 1.3;
+color: #8d1717;
+font-family: var(--font-family-base);
+}
+
+.input-error {
+border-color: #8d1717 !important;
+}
+
+.input-error:focus {
+border-color: #8d1717 !important;
+box-shadow: 0 0 0 3px rgba(141, 23, 23, 0.09) !important;
+}
+
+.server-error {
+margin: -2px 0 0;
+font-size: 13px;
+line-height: 1.4;
+text-align: center;
+color: #8d1717;
+font-family: var(--font-family-base);
+}
+
+/*tablet*/
+
 @media (max-width: 700px) {
   .admin-login-page {
     padding: 20px;
@@ -213,13 +238,11 @@
   }
 
   .admin-field input{
-    width: 380px;
+    width: 340px;
   }
 }
 
-/* =========================================================
-   MOBILE
-========================================================= */
+/*movil*/
 @media (max-width: 480px) {
   .admin-login-page {
     padding: 16px;
@@ -265,9 +288,7 @@
   }
 }
 
-/* =========================================================
-   MOBILE PEQUEÑO
-========================================================= */
+/* movil pequenio*/
 
 @media (max-width: 360px) {
   .admin-login-page {
@@ -280,6 +301,6 @@
   }
 
   .admin-field input{
-    width: 270px;
+    width: 250px;
   }
 }
