@@ -12,7 +12,6 @@ import {
 } from "react-icons/fi";
 
 import { miembros, vistasRapidas, totalMiembros } from "./equipodata";
-import Footer from "../components/footer";
 import "../styles/pages/equipo.css";
 
 const MIEMBROS_POR_PAGINA = 3;
@@ -385,9 +384,6 @@ const Equipo = () => {
           </nav>
         </footer>
       </main>
-
-      {/* Footer general de EEST Flow */}
-      <Footer />
     </>
   );
 };

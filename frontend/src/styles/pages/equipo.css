@@ -469,6 +469,10 @@
 /* =========================================================
    MOBILE
 ========================================================= */
+/* =========================================
+   MOBILE
+========================================= */
+
 @media (max-width: 480px) {
   .team-header {
     flex-direction: column;
@@ -492,23 +496,42 @@
     align-items: stretch;
   }
 
-  .team-select-wrapper,
+  /* Barra buscadora más fina y alargada */
   .team-search {
     width: 100%;
+    min-height: 38px;
+    height: 38px;
+    flex: none;
+    padding: 6px 12px;
+    border-radius: 10px;
   }
 
-  .team-select {
-    width: 100%;
+  .team-search input {
+    min-width: 0;
+    font-size: 12px;
   }
 
   .team-search kbd {
     display: none;
   }
 
-  .team-quick-views {
-    overflow-x: auto;
-    flex-wrap: nowrap;
+  .team-select-wrapper,
+  .team-select {
+    width: 100%;
   }
+
+.team-quick-views {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  overflow-x: visible;
+}
+
+.team-quick-views-label {
+  width: 100%;
+  margin-bottom: 2px;
+}
 
   .team-pagination {
     flex-direction: column;
