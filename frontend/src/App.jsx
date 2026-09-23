@@ -8,6 +8,7 @@ import Equipo from "./pages/equipo";
 import Layout from "./components/layout/Layout";
 import { AppProvider } from "./context/AppContext";
 
+
 function App() {
   return (
     <BrowserRouter>
