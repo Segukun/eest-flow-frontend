@@ -111,7 +111,7 @@ export default function Sidebar() {
       </div>
 
       <div className="sidebar__user" ref={ref}>
-        <button className="user-card" onClick={() => setMenuOpen((v) => !v)}>
+        <button className="user-card" onClick={() => setMenuOpen((v) => !v)} disabled={collapsed}>
           <span className="avatar" style={{ background: currentUser.color }}>{currentUser.initials}</span>
           {!collapsed && (
             <>

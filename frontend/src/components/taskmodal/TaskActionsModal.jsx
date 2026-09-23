@@ -3,14 +3,17 @@ import { useApp } from "../../context/AppContext";
 import { PRIORITIES, ALL_LABELS, LABEL_COLORS } from "../../mock/db";
 import "../../styles/components/task-actions-modal.css";
 
+import { IoEnterOutline, IoList, IoPricetagOutline, IoCalendarClear, IoTrashBinOutline } from "react-icons/io5";
+import { HiMiniArrowsRightLeft } from "react-icons/hi2";
+
 const OPTIONS = [
-  { id: "open", label: "Abrir tarjeta", icon: "↗", tone: "neutral" },
-  { id: "priority", label: "Asignar prioridad", icon: "☰", tone: "green" },
-  { id: "labels", label: "Agregar etiqueta", icon: "🏷", tone: "neutral" },
+  { id: "open", label: "Abrir tarjeta", icon: <IoEnterOutline/>, tone: "neutral" },
+  { id: "priority", label: "Asignar prioridad", icon: <IoList/>, tone: "green" },
+  { id: "labels", label: "Agregar etiqueta", icon: <IoPricetagOutline/>, tone: "neutral" },
   { id: "members", label: "Asignar personal", icon: "＋", tone: "neutral" },
-  { id: "due", label: "Asignar fecha límite", icon: "📅", tone: "neutral" },
-  { id: "move", label: "Mover", icon: "⇄", tone: "orange" },
-  { id: "delete", label: "Borrar", icon: "🗑", tone: "danger" },
+  { id: "due", label: "Asignar fecha límite", icon: <IoCalendarClear/>, tone: "neutral" },
+  { id: "move", label: "Mover", icon: <HiMiniArrowsRightLeft/>, tone: "orange" },
+  { id: "delete", label: "Borrar", icon: <IoTrashBinOutline/>, tone: "danger" },
 ];
 
 export default function TaskActionsModal({ taskId, onClose, onView }) {
