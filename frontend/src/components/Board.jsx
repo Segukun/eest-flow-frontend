@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { useApp } from "../context/AppContext";
 import Column from "./Column";
-import TaskModal from "./TaskModal";
+import TaskDetailModal from "./TaskDetailModal";
+import TaskActionsModal from "../components/taskmodal/TaskActionsModal.jsx";
 import "../styles/components/board.css";
 
 export default function Board() {
   const { columns, visibleTasks, moveTask } = useApp();
   const [dragging, setDragging] = useState(null);
-  const [editingId, setEditingId] = useState(null);
+  const [viewingId, setViewingId] = useState(null); // click en la tarjeta
+  const [editingId, setEditingId] = useState(null); // click en el lápiz
 
   const handleDrop = (columnId, beforeId) => {
     if (!dragging) return;
@@ -16,7 +18,7 @@ export default function Board() {
   };
 
   return (
-    <>
+    <div className="board-scroll">
       <div className="board">
         {columns.map((col) => (
           <Column
@@ -27,12 +29,27 @@ export default function Board() {
             onDragStart={setDragging}
             onDragEnd={() => setDragging(null)}
             onDrop={handleDrop}
+            onView={setViewingId}
             onEdit={setEditingId}
           />
         ))}
       </div>
 
-      {editingId && <TaskModal taskId={editingId} onClose={() => setEditingId(null)} />}
-    </>
+      {viewingId && (
+        <TaskDetailModal
+          taskId={viewingId}
+          onClose={() => setViewingId(null)}
+          onEdit={(id) => { setViewingId(null); setEditingId(id); }}
+        />
+      )}
+
+      {editingId && (
+        <TaskActionsModal
+          taskId={editingId}
+          onClose={() => setEditingId(null)}
+          onView={(id) => { setEditingId(null); setViewingId(id); }}
+        />
+      )}
+    </div>
   );
 }

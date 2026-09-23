@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useApp } from "../context/AppContext";
 
-export default function AddTask({ columnId }) {
+export default function AddTask({ columnId, variant = "default" }) {
   const { addTask } = useApp();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
@@ -18,6 +18,16 @@ export default function AddTask({ columnId }) {
   };
 
   if (!open) {
+    if (variant === "empty") {
+      return (
+        <button className="add-task__empty" onClick={() => setOpen(true)}>
+          <span className="add-task__empty-icon">+</span>
+          <strong>Aún no hay tareas</strong>
+          <small>Tocá para crear la primera, o arrastrá una tarea acá</small>
+        </button>
+      );
+    }
+
     return (
       <button className="add-task__trigger" onClick={() => setOpen(true)}>
         <span className="add-task__plus">+</span> Agregar tarea

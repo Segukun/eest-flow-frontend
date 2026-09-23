@@ -1,7 +1,7 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Login from "./pages/login";
 import Home from "./pages/home";
-import Sectores from "./pages/sectores";
+import Sectores from "./pages/GestionSectores";
 import Foro from "./pages/foro";
 import Notificaciones from "./pages/notificaciones";
 import Equipo from "./pages/equipo";

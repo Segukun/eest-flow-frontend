@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
+import AddCategoryModal from "../AddCategoryModal";
+import DeleteCategoryModal from "../DeleteCategoryModal";
 import "../../styles/layout/topbar.css";
 
 const NAV = [
@@ -15,6 +17,8 @@ export default function Topbar() {
   const { categories, activeCategory, setActiveCategory, currentUser } = useApp();
   const [open, setOpen] = useState(false);
   const [catsOpen, setCatsOpen] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   return (
     <>
@@ -66,7 +70,7 @@ export default function Topbar() {
           {catsOpen && (
             <ul className="cat-list cat-list--drawer">
               {categories.map((c) => (
-                <li key={c.id}>
+                <li key={c.id} className="cat-item-row">
                   <button
                     className={"cat-item" + (activeCategory === c.id ? " cat-item--active" : "")}
                     onClick={() => { setActiveCategory(c.id); setOpen(false); }}
@@ -74,8 +78,26 @@ export default function Topbar() {
                     <span className="cat-dot" style={{ background: c.color }} />
                     <span className="cat-name">{c.name}</span>
                   </button>
+                  {categories.length > 1 && (
+                    <button
+                      className="cat-item__delete"
+                      title="Eliminar categoría"
+                      onClick={(e) => { e.stopPropagation(); setDeleteTarget(c); }}
+                    >
+                      🗑
+                    </button>
+                  )}
                 </li>
               ))}
+              <li>
+                <button
+                  className="cat-item cat-item--add"
+                  onClick={() => setAddOpen(true)}
+                >
+                  <span className="cat-dot cat-dot--add">+</span>
+                  <span className="cat-name">Agregar categoría</span>
+                </button>
+              </li>
             </ul>
           )}
         </nav>
@@ -95,6 +117,18 @@ export default function Topbar() {
           <button className="user-menu__item user-menu__item--danger">Cerrar sesión</button>
         </div>
       </aside>
+
+      {addOpen && (
+        <AddCategoryModal
+          onClose={() => { setAddOpen(false); setOpen(false); }}
+        />
+      )}
+      {deleteTarget && (
+        <DeleteCategoryModal
+          category={deleteTarget}
+          onClose={() => setDeleteTarget(null)}
+        />
+      )}
     </>
   );
 }

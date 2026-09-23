@@ -1,5 +1,4 @@
 import { useState } from "react";
-import Sidebar from "../components/layout/Sidebar";
 import "../styles/pages/notificaciones.css"
 
 const Notificaciones = () => {
@@ -71,7 +70,6 @@ const Notificaciones = () => {
 
   return (
     <div id="contenedorNotificaciones">
-      <Sidebar />
 
       <main id="paginaNotificaciones">
         <div className="encabezadoNotificaciones">

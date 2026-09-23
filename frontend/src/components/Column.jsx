@@ -2,8 +2,9 @@ import { useState } from "react";
 import TaskCard from "./TaskCard";
 import AddTask from "./AddTask";
 
-export default function Column({ column, tasks, dragging, onDragStart, onDragEnd, onDrop, onEdit }) {
+export default function Column({ column, tasks, dragging, onDragStart, onDragEnd, onDrop, onView, onEdit }) {
   const [over, setOver] = useState(false);
+  const isEmpty = tasks.length === 0;
 
   return (
     <section
@@ -30,19 +31,16 @@ export default function Column({ column, tasks, dragging, onDragStart, onDragEnd
             onDragStart={onDragStart}
             onDragEnd={onDragEnd}
             onDropBefore={(beforeId) => onDrop(column.id, beforeId)}
+            onView={onView}
             onEdit={onEdit}
           />
         ))}
 
-        {tasks.length === 0 && (
-          <div className="column__empty">
-            <span className="column__empty-icon">+</span>
-            <strong>Aún no hay tareas</strong>
-            <small>Arrastrá una tarea o creá una nueva</small>
-          </div>
+        {isEmpty ? (
+          <AddTask columnId={column.id} variant="empty" />
+        ) : (
+          <AddTask columnId={column.id} />
         )}
-
-        <AddTask columnId={column.id} />
       </div>
     </section>
   );

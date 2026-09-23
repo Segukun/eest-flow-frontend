@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useApp } from "../context/AppContext";
 import FiltersPanel from "./FiltersPanel";
+import FiltersDropdown from "./FiltersDropdown";
 import "../styles/components/board-header.css";
+import { FiChevronDown } from "react-icons/fi";
 
 export default function BoardHeader() {
   const {
@@ -10,15 +12,29 @@ export default function BoardHeader() {
   } = useApp();
 
   const [catOpen, setCatOpen] = useState(false);
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);       // dropdown desktop
+  const [filtersSheetOpen, setFiltersSheetOpen] = useState(false); // sheet mobile
   const ref = useRef(null);
+  const filtersRef = useRef(null);
   const current = categories.find((c) => c.id === activeCategory);
 
   useEffect(() => {
-    const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setCatOpen(false); };
+    const h = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setCatOpen(false);
+      if (filtersRef.current && !filtersRef.current.contains(e.target)) setFiltersOpen(false);
+    };
     document.addEventListener("mousedown", h);
     return () => document.removeEventListener("mousedown", h);
   }, []);
+
+  const handleFiltersClick = () => {
+    const isMobile = window.matchMedia("(max-width: 700px)").matches;
+    if (isMobile) {
+      setFiltersSheetOpen(true);
+    } else {
+      setFiltersOpen((v) => !v);
+    }
+  };
 
   return (
     <header className="board-header">
@@ -27,7 +43,7 @@ export default function BoardHeader() {
           <button className="cat-select__trigger" onClick={() => setCatOpen((v) => !v)}>
             <h1 className="board-title">{current?.name}</h1>
             <span className="cat-dot" style={{ background: current?.color }} />
-            <span className="cat-select__chevron">⌄</span>
+            <FiChevronDown className="cat-select__chevron" />
           </button>
 
           {catOpen && (
@@ -79,11 +95,16 @@ export default function BoardHeader() {
             />
           </label>
 
-          <button className="filters-btn" onClick={() => setFiltersOpen(true)}>
-            <img src="/icons/funnel.svg" alt="" className="icon-sm" />
-            Filtros
-            {activeFiltersCount > 0 && <span className="filters-btn__count">{activeFiltersCount}</span>}
-          </button>
+          <div className="filters-anchor" ref={filtersRef}>
+            <button className="filters-btn" onClick={handleFiltersClick}>
+              <img src="/icons/funnel.svg" alt="" className="icon-sm" />
+              Filtros
+              {activeFiltersCount > 0 && <span className="filters-btn__count">{activeFiltersCount}</span>}
+            </button>
+
+            {/* solo se monta en desktop */}
+            {filtersOpen && <FiltersDropdown />}
+          </div>
         </div>
       </div>
 
@@ -91,7 +112,8 @@ export default function BoardHeader() {
         <span className="sync-dot" /> Tablero sincronizado · {visibleTasks.length} tareas
       </div>
 
-      {filtersOpen && <FiltersPanel onClose={() => setFiltersOpen(false)} />}
+      {/* solo mobile */}
+      {filtersSheetOpen && <FiltersPanel onClose={() => setFiltersSheetOpen(false)} />}
     </header>
   );
 }
