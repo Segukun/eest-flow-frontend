@@ -1,5 +1,5 @@
 import { useState } from "react";
-import "../styles/components/Miperfil.css";
+import "../styles/components/MiPerfil.css";
 
 // Simulación de base de datos
 const usuariosDB = [

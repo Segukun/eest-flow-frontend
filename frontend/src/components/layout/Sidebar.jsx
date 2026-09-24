@@ -12,7 +12,7 @@ const NAV = [
   { to: "/notificaciones", label: "Notificaciones", icon: "/icons/bell.svg", badge: 3 },
 ];
 
-export default function Sidebar({ onOpenPerfil }) {
+export default function Sidebar({ onOpenPerfil, onOpenConfiguracion }) {
   const { categories, activeCategory, setActiveCategory, currentUser } = useApp();
   const [menuOpen, setMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
@@ -141,7 +141,10 @@ export default function Sidebar({ onOpenPerfil }) {
 
   Editar perfil
 </button>
-            <button className="user-menu__item">
+            <button className="user-menu__item" onClick={() => {
+              onOpenConfiguracion();
+              setMenuOpen(false);
+            }}>
               <img src="/icons/settingsgear.svg" alt="" className="icon-sm" /> Configuración
             </button>
             <button className="user-menu__item user-menu__item--danger">Cerrar sesión</button>
