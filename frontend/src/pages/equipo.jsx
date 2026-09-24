@@ -13,6 +13,8 @@ import {
 
 import { miembros, vistasRapidas, totalMiembros } from "./equipodata";
 import "../styles/pages/equipo.css";
+import AgregarMiembro from "../components/AgregarMiembro.jsx";
+
 
 const MIEMBROS_POR_PAGINA = 3;
 
@@ -137,6 +139,8 @@ const Equipo = () => {
   const [sectorSeleccionado, setSectorSeleccionado] = useState("");
   const [paginaActual, setPaginaActual] = useState(1);
 
+  const [modalAgregarOpen, setModalAgregarOpen] = useState(false);
+
   // Las opciones de los selects salen de los datos reales, no de una
   // lista aparte: si mañana se agrega un rol o un sector nuevo desde el
   // backend, el select lo va a mostrar solo.
@@ -214,10 +218,14 @@ const Equipo = () => {
             </p>
           </div>
 
-          <Link to="/registrodemiembros" className="team-add-button">
-            <FiPlus />
-            Agregar miembro
-          </Link>
+<button
+  type="button"
+  className="team-add-button"
+  onClick={() => setModalAgregarOpen(true)}
+>
+  <FiPlus />
+  Agregar miembro
+</button>
         </header>
 
         <section className="team-filters-panel">
@@ -384,6 +392,11 @@ const Equipo = () => {
           </nav>
         </footer>
       </main>
+      {modalAgregarOpen && (
+  <AgregarMiembro
+    onClose={() => setModalAgregarOpen(false)}
+  />
+)}
     </>
   );
 };

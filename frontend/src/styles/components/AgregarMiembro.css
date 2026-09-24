@@ -1,0 +1,275 @@
+/* Fondo del modal */
+
+.agregar-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  background: rgba(31, 21, 28, 0.6);
+  backdrop-filter: blur(3px);
+}
+
+/* Contenedor principal */
+
+.agregar-modal {
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+
+  overflow-y: auto;
+
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+
+  box-shadow: var(--shadow-md);
+
+  animation: agregarModalEntrada 0.2s ease-out;
+}
+
+@keyframes agregarModalEntrada {
+  from {
+    opacity: 0;
+    transform: translateY(-15px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Encabezado */
+
+.agregar-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  padding: 24px;
+
+  border-bottom: 1px solid var(--color-border);
+}
+
+.agregar-modal-header h2 {
+  margin: 0;
+
+  color: var(--color-graphite);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+/* Botón cerrar */
+
+.agregar-modal-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 32px;
+  height: 32px;
+
+  border-radius: var(--radius-sm);
+
+  color: var(--color-muted);
+  font-size: 26px;
+  line-height: 1;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.agregar-modal-close:hover {
+  background: var(--color-bone);
+  color: var(--color-graphite);
+}
+
+/* Formulario */
+
+.agregar-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+
+  padding: 24px;
+}
+
+/* Campos */
+
+.agregar-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.agregar-campo label {
+  color: var(--color-graphite);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.agregar-campo input,
+.agregar-campo select {
+  width: 100%;
+
+  padding: 12px 14px;
+
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+
+  background: var(--color-white);
+  color: var(--color-graphite);
+
+  font-size: 14px;
+
+  outline: none;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.agregar-campo input::placeholder {
+  color: var(--color-muted);
+}
+
+.agregar-campo input:focus,
+.agregar-campo select:focus {
+  border-color: var(--color-orange);
+
+  box-shadow: 0 0 0 3px rgba(255, 136, 15, 0.12);
+}
+
+/* Roles */
+
+.agregar-roles {
+  display: flex;
+  gap: 12px;
+}
+
+.agregar-rol-btn {
+  flex: 1;
+
+  padding: 12px;
+
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+
+  background: var(--color-white);
+  color: var(--color-graphite);
+
+  font-size: 14px;
+  font-weight: 600;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.agregar-rol-btn:hover {
+  border-color: var(--color-orange);
+}
+
+.agregar-rol-btn.rol-seleccionado {
+  background: var(--color-orange);
+  border-color: var(--color-orange);
+  color: var(--color-white);
+}
+
+/* Mensajes de error */
+
+.agregar-error {
+  margin: 0;
+
+  color: var(--color-danger);
+
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+/* Mensaje de éxito */
+
+.agregar-exito {
+  margin: 0;
+  padding: 10px 12px;
+
+  border: 1px solid rgba(5, 144, 62, 0.2);
+  border-radius: var(--radius-sm);
+
+  background: rgba(5, 144, 62, 0.1);
+  color: var(--color-green);
+
+  font-size: 13px;
+}
+
+/* Botones inferiores */
+
+.agregar-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+
+  padding-top: 6px;
+}
+
+.agregar-btn {
+  padding: 11px 20px;
+
+  border-radius: var(--radius-sm);
+
+  font-size: 14px;
+  font-weight: 600;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.agregar-btn:hover {
+  transform: translateY(-1px);
+}
+
+.agregar-btn.cancelar {
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+  color: var(--color-graphite);
+}
+
+.agregar-btn.cancelar:hover {
+  background: var(--color-bone);
+}
+
+.agregar-btn.agregar {
+  background: var(--color-orange);
+  color: var(--color-white);
+}
+
+.agregar-btn.agregar:hover {
+  background: var(--color-terracotta);
+}
+
+/* Responsive */
+
+@media (max-width: 480px) {
+  .agregar-modal-header,
+  .agregar-modal-form {
+    padding: 20px;
+  }
+
+  .agregar-modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .agregar-btn {
+    width: 100%;
+  }
+}
