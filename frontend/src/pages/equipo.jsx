@@ -14,6 +14,7 @@ import {
 import { miembros, vistasRapidas, totalMiembros } from "./equipodata";
 import "../styles/pages/equipo.css";
 import AgregarMiembro from "../components/AgregarMiembro.jsx";
+import ModificarMiembro from "../components/ModificarMiembro.jsx";
 
 
 const MIEMBROS_POR_PAGINA = 3;
@@ -55,7 +56,7 @@ const obtenerNumerosDePagina = (paginaActual, totalPaginas) => {
   return paginas;
 };
 
-const MemberCard = ({ miembro }) => {
+const MemberCard = ({ miembro, onModificar }) => {
   return (
     <article
       className={
@@ -63,6 +64,14 @@ const MemberCard = ({ miembro }) => {
           ? "team-card team-card-highlight"
           : "team-card"
       }
+      onClick={() => onModificar(miembro)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          onModificar(miembro);
+        }
+      }}
     >
       <div className="team-card-top">
         <div className={`team-avatar team-avatar-${miembro.tipoRol}`}>
@@ -90,7 +99,11 @@ const MemberCard = ({ miembro }) => {
           </p>
         </div>
 
-        <button type="button" className="team-card-menu">
+        <button
+  type="button"
+  className="team-card-menu"
+  onClick={(e) => e.stopPropagation()}
+>
           <FiMoreVertical />
         </button>
       </div>
@@ -103,7 +116,10 @@ const MemberCard = ({ miembro }) => {
 
         <li>
           <FiMail />
-          <a href={`mailto:${miembro.correo}`}>
+          <a
+  href={`mailto:${miembro.correo}`}
+  onClick={(e) => e.stopPropagation()}
+>
             {miembro.correo}
           </a>
         </li>
@@ -138,8 +154,9 @@ const Equipo = () => {
   const [rolSeleccionado, setRolSeleccionado] = useState("");
   const [sectorSeleccionado, setSectorSeleccionado] = useState("");
   const [paginaActual, setPaginaActual] = useState(1);
-
   const [modalAgregarOpen, setModalAgregarOpen] = useState(false);
+  const [modalModificarOpen, setModalModificarOpen] = useState(false);
+  const [miembroSeleccionado, setMiembroSeleccionado] = useState(null);
 
   // Las opciones de los selects salen de los datos reales, no de una
   // lista aparte: si mañana se agrega un rol o un sector nuevo desde el
@@ -204,6 +221,11 @@ const Equipo = () => {
     setSectorSeleccionado("");
     setPaginaActual(1);
   };
+
+  const abrirModalModificar = (miembro) => {
+  setMiembroSeleccionado(miembro);
+  setModalModificarOpen(true);
+};
 
   return (
     <>
@@ -320,9 +342,13 @@ const Equipo = () => {
 
         <section className="team-grid">
           {miembrosDeLaPagina.length > 0 ? (
-            miembrosDeLaPagina.map((miembro) => (
-              <MemberCard key={miembro.id} miembro={miembro} />
-            ))
+miembrosDeLaPagina.map((miembro) => (
+  <MemberCard
+    key={miembro.id}
+    miembro={miembro}
+    onModificar={abrirModalModificar}
+  />
+))
           ) : (
             <p className="team-empty-state">
               No se encontraron integrantes con esos filtros.
@@ -395,6 +421,15 @@ const Equipo = () => {
       {modalAgregarOpen && (
   <AgregarMiembro
     onClose={() => setModalAgregarOpen(false)}
+  />
+)}
+{modalModificarOpen && miembroSeleccionado && (
+  <ModificarMiembro
+    miembro={miembroSeleccionado}
+    onClose={() => {
+      setModalModificarOpen(false);
+      setMiembroSeleccionado(null);
+    }}
   />
 )}
     </>

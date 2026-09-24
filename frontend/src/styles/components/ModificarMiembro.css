@@ -1,0 +1,242 @@
+.modificar-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 24px;
+
+  background: rgba(31, 21, 28, 0.55);
+  backdrop-filter: blur(4px);
+}
+
+.modificar-modal {
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+
+  overflow-y: auto;
+
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+
+  animation: modificarModalEntrada 0.2s ease-out;
+}
+
+@keyframes modificarModalEntrada {
+  from {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modificar-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 24px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.modificar-modal-header h2 {
+  margin: 0;
+
+  color: var(--color-graphite);
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.modificar-modal-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 32px;
+  height: 32px;
+
+  color: var(--color-muted);
+  font-size: 28px;
+  line-height: 1;
+
+  border-radius: var(--radius-sm);
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.modificar-modal-close:hover {
+  color: var(--color-graphite);
+  background: var(--color-bone);
+}
+
+.modificar-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+
+  padding: 24px;
+}
+
+.modificar-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modificar-campo label {
+  color: var(--color-graphite);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.modificar-campo input,
+.modificar-campo select {
+  width: 100%;
+
+  padding: 12px 14px;
+
+  color: var(--color-graphite);
+  background: var(--color-white);
+
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+
+  outline: none;
+  font-size: 14px;
+
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.modificar-campo input:focus,
+.modificar-campo select:focus {
+  border-color: var(--color-orange);
+  box-shadow: 0 0 0 3px rgba(255, 136, 15, 0.15);
+}
+
+.modificar-roles {
+  display: flex;
+  gap: 12px;
+}
+
+.modificar-rol-btn {
+  flex: 1;
+
+  padding: 12px;
+
+  color: var(--color-graphite);
+  background: var(--color-white);
+
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+
+  font-size: 14px;
+  font-weight: 600;
+
+  transition: background 0.2s ease, color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.modificar-rol-btn:hover {
+  border-color: var(--color-orange);
+}
+
+.modificar-rol-btn.rol-seleccionado {
+  color: var(--color-white);
+  background: var(--color-orange);
+  border-color: var(--color-orange);
+}
+
+.modificar-error {
+  margin: 0;
+
+  color: var(--color-danger);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.modificar-ayuda {
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.modificar-exito {
+  margin: 0;
+  padding: 10px 12px;
+
+  color: var(--color-green);
+  background: rgba(5, 144, 62, 0.08);
+
+  border: 1px solid rgba(5, 144, 62, 0.2);
+  border-radius: var(--radius-sm);
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.modificar-modal-actions {
+  display: flex;
+  gap: 12px;
+
+  margin-top: 4px;
+}
+
+.modificar-btn {
+  flex: 1;
+
+  padding: 12px 16px;
+
+  border-radius: var(--radius-sm);
+
+  font-size: 14px;
+  font-weight: 700;
+
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.modificar-btn:hover {
+  opacity: 0.9;
+}
+
+.modificar-btn:active {
+  transform: scale(0.98);
+}
+
+.modificar-btn.cancelar {
+  color: var(--color-graphite);
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+}
+
+.modificar-btn.guardar {
+  color: var(--color-white);
+  background: var(--color-orange);
+}
+
+@media (max-width: 480px) {
+  .modificar-modal-overlay {
+    padding: 14px;
+  }
+
+  .modificar-modal-header,
+  .modificar-modal-form {
+    padding: 20px;
+  }
+
+  .modificar-modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .modificar-btn {
+    width: 100%;
+  }
+}
