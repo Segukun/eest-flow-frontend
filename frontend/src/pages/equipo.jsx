@@ -1,5 +1,4 @@
-import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   FiSearch,
   FiChevronDown,
@@ -11,13 +10,13 @@ import {
   FiPlus,
 } from "react-icons/fi";
 
-import { miembros, vistasRapidas, totalMiembros } from "./equipodata";
+import { miembros, vistasRapidas } from "./equipodata";
 import "../styles/pages/equipo.css";
 import AgregarMiembro from "../components/AgregarMiembro.jsx";
 import ModificarMiembro from "../components/ModificarMiembro.jsx";
 
 
-const MIEMBROS_POR_PAGINA = 3;
+const MIEMBROS_POR_PAGINA = 6;
 
 // Qué campo de cada miembro decide si entra en cada vista rápida.
 // "administradores" se arma con el tipo de cuenta porque en los datos
@@ -57,6 +56,23 @@ const obtenerNumerosDePagina = (paginaActual, totalPaginas) => {
 };
 
 const MemberCard = ({ miembro, onModificar }) => {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+  const menuButtonRef = useRef(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const cerrarAlClickAfuera = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", cerrarAlClickAfuera);
+    return () => document.removeEventListener("mousedown", cerrarAlClickAfuera);
+  }, [menuOpen]);
+
   return (
     <article
       className={
@@ -64,14 +80,6 @@ const MemberCard = ({ miembro, onModificar }) => {
           ? "team-card team-card-highlight"
           : "team-card"
       }
-      onClick={() => onModificar(miembro)}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          onModificar(miembro);
-        }
-      }}
     >
       <div className="team-card-top">
         <div className={`team-avatar team-avatar-${miembro.tipoRol}`}>
@@ -99,13 +107,48 @@ const MemberCard = ({ miembro, onModificar }) => {
           </p>
         </div>
 
-        <button
-  type="button"
-  className="team-card-menu"
-  onClick={(e) => e.stopPropagation()}
->
-          <FiMoreVertical />
-        </button>
+        <div
+          className="team-card-menu-wrapper"
+          ref={menuRef}
+          onBlur={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget)) setMenuOpen(false);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              setMenuOpen(false);
+              menuButtonRef.current?.focus();
+            }
+          }}
+        >
+          <button
+            type="button"
+            className="team-card-menu"
+            ref={menuButtonRef}
+            aria-label={`Opciones de ${miembro.nombre}`}
+            aria-expanded={menuOpen}
+            aria-controls={`miembro-opciones-${miembro.id}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              setMenuOpen((open) => !open);
+            }}
+          >
+            <FiMoreVertical aria-hidden="true" />
+          </button>
+          {menuOpen && (
+            <div className="user-menu team-card-dropdown" id={`miembro-opciones-${miembro.id}`}>
+              <button
+                type="button"
+                className="user-menu__item"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onModificar(miembro);
+                }}
+              >
+                Editar miembro
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       <ul className="team-card-details">
@@ -136,13 +179,6 @@ const MemberCard = ({ miembro, onModificar }) => {
           {miembro.estado}
         </span>
 
-        <button
-          type="button"
-          className="team-file-link"
-          disabled
-        >
-          Ver expediente
-        </button>
       </div>
     </article>
   );
@@ -265,7 +301,6 @@ const Equipo = () => {
                 }
               />
 
-              <kbd>⌘K</kbd>
             </div>
 
             <div className="team-select-wrapper">
@@ -365,7 +400,7 @@ miembrosDeLaPagina.map((miembro) => (
               </>
             ) : (
               <>
-                Mostrando {miembrosDeLaPagina.length} de {totalMiembros}{" "}
+                Mostrando {miembrosDeLaPagina.length} de {miembros.length}{" "}
                 miembros registrados
                 <span className="team-pagination-dot"></span>
                 <span className="team-pagination-link">

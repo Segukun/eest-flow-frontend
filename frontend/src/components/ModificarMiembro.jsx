@@ -186,6 +186,10 @@ const ModificarMiembro = ({ miembro, onClose }) => {
                 Seleccioná un sector
               </option>
 
+              {miembro.area && !["taller electromecanica", "preceptoria"].includes(miembro.area) && (
+                <option value={miembro.area}>{miembro.area}</option>
+              )}
+
               <option value="taller electromecanica">
                 Taller Electromecánica
               </option>

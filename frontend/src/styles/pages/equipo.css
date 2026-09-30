@@ -8,6 +8,10 @@
   --color-primary: #1f9d55; /* falta sumar este verde institucional a tokens.css */
 
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
   background: #fbf8f0;
   color: var(--color-graphite);
   font-family: var(--font-family-base);
@@ -84,6 +88,7 @@
 
 .team-search input {
   flex: 1;
+  min-width: 0;
   border: none;
   outline: none;
   background: transparent;
@@ -92,21 +97,17 @@
   color: var(--color-graphite);
 }
 
-.team-search kbd {
-  background: #f1efe8;
-  border-radius: 6px;
-  padding: 2px 7px;
-  font-size: 11px;
-  color: #6b7a72;
-}
-
 .team-select-wrapper {
   position: relative;
   display: inline-flex;
   align-items: center;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .team-select {
+  min-width: 0;
+  max-width: 100%;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -190,7 +191,7 @@
 
 .team-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
   gap: 18px;
   margin-bottom: 26px;
 }
@@ -214,13 +215,6 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.team-card:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-md);
 }
 
 
@@ -236,6 +230,7 @@
 }
 
 .team-avatar {
+  flex-shrink: 0;
   position: relative;
   width: 42px;
   height: 42px;
@@ -274,6 +269,8 @@
 
 .team-card-identity {
   flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .team-card-name {
@@ -323,6 +320,20 @@
   cursor: pointer;
 }
 
+.team-card-menu-wrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.team-card-menu-wrapper > .team-card-dropdown {
+  top: calc(100% + 8px);
+  right: 0;
+  bottom: auto;
+  left: auto;
+  width: max-content;
+  min-width: 170px;
+}
+
 .team-card-details {
   list-style: none;
   margin: 0;
@@ -356,7 +367,7 @@
 .team-card-footer {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 10px;
   border-top: 1px solid #e6e1d6;
   padding-top: 12px;
@@ -378,16 +389,8 @@
   background: var(--color-primary);
 }
 
-.team-file-link {
-  border: none;
-  background: none;
-  color: #157a41;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
 .team-pagination {
+  margin-top: auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -400,15 +403,15 @@
 }
 
 .team-pagination-count {
-  display: flex;
-  align-items: center;
-  gap: 9px;
   margin: 0;
   font-size: 13px;
   color: #6b7a72;
 }
 
 .team-pagination-dot {
+  display: inline-block;
+  margin: 0 9px;
+  vertical-align: middle;
   width: 4px;
   height: 4px;
   border-radius: 50%;
@@ -421,6 +424,7 @@
 
 .team-pages {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 6px;
 }
@@ -467,10 +471,12 @@
 @media (max-width: 700px) {
   .team-page {
     padding: 16px 18px 32px;
+    min-height: calc(100vh - var(--topbar-h));
+    min-height: calc(100dvh - var(--topbar-h));
   }
 
   .team-grid {
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr));
   }
 }
 
@@ -517,10 +523,6 @@
   .team-search input {
     min-width: 0;
     font-size: 12px;
-  }
-
-  .team-search kbd {
-    display: none;
   }
 
   .team-select-wrapper,
