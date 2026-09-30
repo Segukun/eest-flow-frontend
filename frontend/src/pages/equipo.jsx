@@ -5,7 +5,6 @@ import {
   FiRefreshCw,
   FiMoreVertical,
   FiMail,
-  FiClock,
   FiBookmark,
   FiPlus,
 } from "react-icons/fi";
@@ -74,19 +73,10 @@ const MemberCard = ({ miembro, onModificar }) => {
   }, [menuOpen]);
 
   return (
-    <article
-      className={
-        miembro.destacado
-          ? "team-card team-card-highlight"
-          : "team-card"
-      }
-    >
+    <article className="team-card">
       <div className="team-card-top">
         <div className={`team-avatar team-avatar-${miembro.tipoRol}`}>
           {miembro.iniciales}
-          {miembro.disponible && (
-            <span className="team-avatar-dot"></span>
-          )}
         </div>
 
         <div className="team-card-identity">
@@ -167,19 +157,7 @@ const MemberCard = ({ miembro, onModificar }) => {
           </a>
         </li>
 
-        <li>
-          <FiClock />
-          <span>{miembro.turno}</span>
-        </li>
       </ul>
-
-      <div className="team-card-footer">
-        <span className="team-status">
-          <span className="team-status-dot"></span>
-          {miembro.estado}
-        </span>
-
-      </div>
     </article>
   );
 };
