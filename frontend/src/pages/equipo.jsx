@@ -1,5 +1,4 @@
-import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   FiSearch,
   FiChevronDown,
@@ -11,10 +10,13 @@ import {
   FiPlus,
 } from "react-icons/fi";
 
-import { miembros, vistasRapidas, totalMiembros } from "./equipodata";
+import { miembros, vistasRapidas } from "./equipodata";
 import "../styles/pages/equipo.css";
+import AgregarMiembro from "../components/AgregarMiembro.jsx";
+import ModificarMiembro from "../components/ModificarMiembro.jsx";
 
-const MIEMBROS_POR_PAGINA = 3;
+
+const MIEMBROS_POR_PAGINA = 6;
 
 // Qué campo de cada miembro decide si entra en cada vista rápida.
 // "administradores" se arma con el tipo de cuenta porque en los datos
@@ -53,7 +55,24 @@ const obtenerNumerosDePagina = (paginaActual, totalPaginas) => {
   return paginas;
 };
 
-const MemberCard = ({ miembro }) => {
+const MemberCard = ({ miembro, onModificar }) => {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+  const menuButtonRef = useRef(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const cerrarAlClickAfuera = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", cerrarAlClickAfuera);
+    return () => document.removeEventListener("mousedown", cerrarAlClickAfuera);
+  }, [menuOpen]);
+
   return (
     <article
       className={
@@ -88,9 +107,48 @@ const MemberCard = ({ miembro }) => {
           </p>
         </div>
 
-        <button type="button" className="team-card-menu">
-          <FiMoreVertical />
-        </button>
+        <div
+          className="team-card-menu-wrapper"
+          ref={menuRef}
+          onBlur={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget)) setMenuOpen(false);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              setMenuOpen(false);
+              menuButtonRef.current?.focus();
+            }
+          }}
+        >
+          <button
+            type="button"
+            className="team-card-menu"
+            ref={menuButtonRef}
+            aria-label={`Opciones de ${miembro.nombre}`}
+            aria-expanded={menuOpen}
+            aria-controls={`miembro-opciones-${miembro.id}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              setMenuOpen((open) => !open);
+            }}
+          >
+            <FiMoreVertical aria-hidden="true" />
+          </button>
+          {menuOpen && (
+            <div className="user-menu team-card-dropdown" id={`miembro-opciones-${miembro.id}`}>
+              <button
+                type="button"
+                className="user-menu__item"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onModificar(miembro);
+                }}
+              >
+                Editar miembro
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       <ul className="team-card-details">
@@ -101,7 +159,10 @@ const MemberCard = ({ miembro }) => {
 
         <li>
           <FiMail />
-          <a href={`mailto:${miembro.correo}`}>
+          <a
+  href={`mailto:${miembro.correo}`}
+  onClick={(e) => e.stopPropagation()}
+>
             {miembro.correo}
           </a>
         </li>
@@ -118,13 +179,6 @@ const MemberCard = ({ miembro }) => {
           {miembro.estado}
         </span>
 
-        <button
-          type="button"
-          className="team-file-link"
-          disabled
-        >
-          Ver expediente
-        </button>
       </div>
     </article>
   );
@@ -136,6 +190,9 @@ const Equipo = () => {
   const [rolSeleccionado, setRolSeleccionado] = useState("");
   const [sectorSeleccionado, setSectorSeleccionado] = useState("");
   const [paginaActual, setPaginaActual] = useState(1);
+  const [modalAgregarOpen, setModalAgregarOpen] = useState(false);
+  const [modalModificarOpen, setModalModificarOpen] = useState(false);
+  const [miembroSeleccionado, setMiembroSeleccionado] = useState(null);
 
   // Las opciones de los selects salen de los datos reales, no de una
   // lista aparte: si mañana se agrega un rol o un sector nuevo desde el
@@ -201,6 +258,11 @@ const Equipo = () => {
     setPaginaActual(1);
   };
 
+  const abrirModalModificar = (miembro) => {
+  setMiembroSeleccionado(miembro);
+  setModalModificarOpen(true);
+};
+
   return (
     <>
       <main className="team-page">
@@ -214,10 +276,14 @@ const Equipo = () => {
             </p>
           </div>
 
-          <Link to="/registrodemiembros" className="team-add-button">
-            <FiPlus />
-            Agregar miembro
-          </Link>
+<button
+  type="button"
+  className="team-add-button"
+  onClick={() => setModalAgregarOpen(true)}
+>
+  <FiPlus />
+  Agregar miembro
+</button>
         </header>
 
         <section className="team-filters-panel">
@@ -235,7 +301,6 @@ const Equipo = () => {
                 }
               />
 
-              <kbd>⌘K</kbd>
             </div>
 
             <div className="team-select-wrapper">
@@ -312,9 +377,13 @@ const Equipo = () => {
 
         <section className="team-grid">
           {miembrosDeLaPagina.length > 0 ? (
-            miembrosDeLaPagina.map((miembro) => (
-              <MemberCard key={miembro.id} miembro={miembro} />
-            ))
+miembrosDeLaPagina.map((miembro) => (
+  <MemberCard
+    key={miembro.id}
+    miembro={miembro}
+    onModificar={abrirModalModificar}
+  />
+))
           ) : (
             <p className="team-empty-state">
               No se encontraron integrantes con esos filtros.
@@ -331,7 +400,7 @@ const Equipo = () => {
               </>
             ) : (
               <>
-                Mostrando {miembrosDeLaPagina.length} de {totalMiembros}{" "}
+                Mostrando {miembrosDeLaPagina.length} de {miembros.length}{" "}
                 miembros registrados
                 <span className="team-pagination-dot"></span>
                 <span className="team-pagination-link">
@@ -384,6 +453,20 @@ const Equipo = () => {
           </nav>
         </footer>
       </main>
+      {modalAgregarOpen && (
+  <AgregarMiembro
+    onClose={() => setModalAgregarOpen(false)}
+  />
+)}
+{modalModificarOpen && miembroSeleccionado && (
+  <ModificarMiembro
+    miembro={miembroSeleccionado}
+    onClose={() => {
+      setModalModificarOpen(false);
+      setMiembroSeleccionado(null);
+    }}
+  />
+)}
     </>
   );
 };

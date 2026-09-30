@@ -1,0 +1,256 @@
+/* Fondo del modal */
+
+.perfil-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  background: rgba(31, 21, 28, 0.6);
+  backdrop-filter: blur(3px);
+}
+
+/* Contenedor principal */
+
+.perfil-modal {
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+
+  overflow-y: auto;
+
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+
+  box-shadow: var(--shadow-md);
+
+  animation: perfilModalEntrada 0.2s ease-out;
+}
+
+/* Animación */
+
+@keyframes perfilModalEntrada {
+  from {
+    opacity: 0;
+    transform: translateY(-15px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Encabezado */
+
+.perfil-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+
+  padding: 24px;
+
+  border-bottom: 1px solid var(--color-border);
+}
+
+.perfil-modal-header h2 {
+  margin: 0 0 6px;
+
+  color: var(--color-graphite);
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.perfil-modal-header p {
+  margin: 0;
+
+  color: var(--color-muted);
+  font-size: 14px;
+}
+
+/* Botón cerrar */
+
+.perfil-modal-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 32px;
+  height: 32px;
+
+  border-radius: var(--radius-sm);
+
+  color: var(--color-muted);
+  font-size: 26px;
+  line-height: 1;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.perfil-modal-close:hover {
+  background: var(--color-bone);
+  color: var(--color-graphite);
+}
+
+/* Formulario */
+
+.perfil-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+
+  padding: 24px;
+}
+
+/* Campos */
+
+.perfil-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.perfil-campo label {
+  color: var(--color-graphite);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.perfil-campo input {
+  width: 100%;
+
+  padding: 12px 14px;
+
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+
+  background: var(--color-white);
+  color: var(--color-graphite);
+
+  font-size: 14px;
+
+  outline: none;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.perfil-campo input:focus {
+  border-color: var(--color-orange);
+
+  box-shadow: 0 0 0 3px rgba(255, 136, 15, 0.12);
+}
+
+/* Campos deshabilitados */
+
+.perfil-campo input:disabled {
+  background: var(--color-bone);
+  color: var(--color-muted);
+
+  cursor: not-allowed;
+}
+
+/* Texto de ayuda */
+
+.perfil-campo small {
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+/* Mensajes */
+
+.perfil-mensaje {
+  margin: 0;
+  padding: 10px 12px;
+
+  border-radius: var(--radius-sm);
+
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.perfil-mensaje.error {
+  background: rgba(224, 52, 43, 0.1);
+  color: var(--color-danger);
+  border: 1px solid rgba(224, 52, 43, 0.2);
+}
+
+.perfil-mensaje.success {
+  background: rgba(5, 144, 62, 0.1);
+  color: var(--color-green);
+  border: 1px solid rgba(5, 144, 62, 0.2);
+}
+
+/* Botones */
+
+.perfil-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+
+  padding-top: 6px;
+}
+
+.perfil-btn {
+  padding: 11px 18px;
+
+  border-radius: var(--radius-sm);
+
+  font-size: 14px;
+  font-weight: 600;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.perfil-btn:hover {
+  transform: translateY(-1px);
+}
+
+.perfil-btn.cancelar {
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+  color: var(--color-graphite);
+}
+
+.perfil-btn.cancelar:hover {
+  background: var(--color-bone);
+}
+
+.perfil-btn.guardar {
+  background: var(--color-orange);
+  color: var(--color-white);
+}
+
+.perfil-btn.guardar:hover {
+  background: var(--color-terracotta);
+}
+
+/* Responsive */
+
+@media (max-width: 480px) {
+  .perfil-modal-header,
+  .perfil-modal-form {
+    padding: 20px;
+  }
+
+  .perfil-modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .perfil-btn {
+    width: 100%;
+  }
+}

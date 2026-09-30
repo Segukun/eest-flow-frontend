@@ -12,7 +12,7 @@ const NAV = [
   { to: "/notificaciones", label: "Notificaciones", icon: "/icons/bell.svg", badge: 3 },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ onOpenPerfil, onOpenConfiguracion }) {
   const { categories, activeCategory, setActiveCategory, currentUser } = useApp();
   const [menuOpen, setMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
@@ -125,11 +125,26 @@ export default function Sidebar() {
         </button>
 
         {menuOpen && (
-          <div className="user-menu user-menu--flyout">
-            <button className="user-menu__item">
-              <img src="/icons/user.svg" alt="" className="icon-sm" /> Editar perfil
-            </button>
-            <button className="user-menu__item">
+          <div className="user-menu">
+<button
+  className="user-menu__item"
+  onClick={() => {
+    onOpenPerfil();
+    setMenuOpen(false);
+  }}
+>
+  <img
+    src="/icons/user.svg"
+    alt=""
+    className="icon-sm"
+  />
+
+  Editar perfil
+</button>
+            <button className="user-menu__item" onClick={() => {
+              onOpenConfiguracion();
+              setMenuOpen(false);
+            }}>
               <img src="/icons/settingsgear.svg" alt="" className="icon-sm" /> Configuración
             </button>
             <button className="user-menu__item user-menu__item--danger">Cerrar sesión</button>

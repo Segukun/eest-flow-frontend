@@ -13,7 +13,7 @@ const NAV = [
   { to: "/equipo", label: "Mi Equipo", icon: "/icons/team.svg" },
 ];
 
-export default function Topbar() {
+export default function Topbar({ onOpenConfiguracion }) {
   const { categories, activeCategory, setActiveCategory, currentUser } = useApp();
   const [open, setOpen] = useState(false);
   const [catsOpen, setCatsOpen] = useState(false);
@@ -111,7 +111,10 @@ export default function Topbar() {
           </div>
         </div>
         <div className="drawer__actions">
-          <button className="user-menu__item">
+          <button className="user-menu__item" onClick={() => {
+            onOpenConfiguracion();
+            setOpen(false);
+          }}>
             <img src="/icons/settingsgear.svg" alt="" className="icon-sm" /> Configuración
           </button>
           <button className="user-menu__item user-menu__item--danger">Cerrar sesión</button>

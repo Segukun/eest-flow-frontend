@@ -1,0 +1,77 @@
+.configuracion-modal__seccion h3 {
+  margin: 0 0 8px;
+  color: var(--color-graphite);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.configuracion-modal__seccion p {
+  margin: 0 0 16px;
+  color: var(--color-muted);
+  font-size: 14px;
+}
+
+.configuracion-modal__seccion + .configuracion-modal__seccion {
+  padding-top: 18px;
+  border-top: 1px solid var(--color-border);
+}
+
+.configuracion-modal__temas {
+  display: flex;
+  gap: 6px;
+  padding: 4px;
+  background: var(--color-bone);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.configuracion-modal__opcion {
+  position: relative;
+  flex: 1;
+  cursor: pointer;
+}
+
+.configuracion-modal__opcion input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.configuracion-modal__opcion span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 14px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--color-muted);
+  font-size: 14px;
+  font-weight: 600;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.configuracion-modal__opcion input:checked + span {
+  background: var(--color-white);
+  border-color: var(--color-border);
+  color: var(--color-graphite);
+}
+
+.configuracion-modal__opcion input:checked + span svg {
+  color: var(--color-orange);
+}
+
+.configuracion-modal__opcion input:focus-visible + span,
+.configuracion-modal button:focus-visible {
+  outline: 2px solid var(--color-orange);
+  outline-offset: 2px;
+}
+
+.configuracion-modal__password {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+}
