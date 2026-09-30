@@ -62,9 +62,15 @@
   color: var(--color-graphite);
   transition: background 0.15s ease;
 }
+
 .nav-item:hover {
   background: rgba(31, 21, 28, 0.05);
 }
+
+.nav-item:not(.nav-item--active):hover .icon {
+  filter: none;
+}
+
 .nav-item--active {
   background: var(--color-green);
   color: #fff;
@@ -72,6 +78,14 @@
 .nav-item--active .icon {
   filter: brightness(0) invert(1);
 }
+
+.nav-item--active:hover {
+  background: var(--color-green);
+}
+.nav-item--active:hover .icon {
+  filter: brightness(0) invert(1);
+}
+
 .nav-item__badge {
   margin-left: auto;
   background: var(--color-orange);
