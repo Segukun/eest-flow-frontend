@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
 import AddCategoryModal from "../AddCategoryModal";
 import DeleteCategoryModal from "../DeleteCategoryModal";
@@ -13,18 +13,33 @@ const NAV = [
 ];
 
 export default function Sidebar({ onOpenPerfil, onOpenConfiguracion }) {
-  const { categories, activeCategory, setActiveCategory, currentUser } = useApp();
+  const { categories, activeCategory, setActiveCategory, currentUser, logout: contextLogout } = useApp();
   const [menuOpen, setMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState(null); // categoría a borrar
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const ref = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const onClick = (e) => { if (ref.current && !ref.current.contains(e.target)) setMenuOpen(false); };
     document.addEventListener("mousedown", onClick);
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
+
+  const handleLogout = () => {
+    const confirmar = window.confirm("¿Seguro que querés cerrar sesión?");
+    if (!confirmar) return;
+
+    // Si tenés logout en el context, usalo, si no, fallback local
+    if (contextLogout) {
+      contextLogout();
+    } else {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      navigate("/login", { replace: true });
+    }
+  };
 
   return (
     <aside className={"sidebar" + (collapsed ? " sidebar--collapsed" : "")}>
@@ -126,28 +141,32 @@ export default function Sidebar({ onOpenPerfil, onOpenConfiguracion }) {
 
         {menuOpen && (
           <div className="user-menu">
-<button
-  className="user-menu__item"
-  onClick={() => {
-    onOpenPerfil();
-    setMenuOpen(false);
-  }}
->
-  <img
-    src="/icons/user.svg"
-    alt=""
-    className="icon-sm"
-  />
-
-  Editar perfil
-</button>
+            <button
+              className="user-menu__item"
+              onClick={() => {
+                onOpenPerfil();
+                setMenuOpen(false);
+              }}
+            >
+              <img
+                src="/icons/user.svg"
+                alt=""
+                className="icon-sm"
+              />
+              Editar perfil
+            </button>
             <button className="user-menu__item" onClick={() => {
               onOpenConfiguracion();
               setMenuOpen(false);
             }}>
               <img src="/icons/settingsgear.svg" alt="" className="icon-sm" /> Configuración
             </button>
-            <button className="user-menu__item user-menu__item--danger">Cerrar sesión</button>
+            <button 
+              className="user-menu__item user-menu__item--danger" 
+              onClick={handleLogout}
+            >
+              Cerrar sesión
+            </button>
           </div>
         )}
       </div>

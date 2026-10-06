@@ -1,4 +1,5 @@
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useMemo, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   CATEGORIES, TASKS, USERS, CURRENT_USER_ID, COLUMNS, SECTORS,
 } from "../mock/db";
@@ -18,7 +19,52 @@ export function AppProvider({ children }) {
     due: "",
   });
 
-  const currentUser = USERS.find((u) => u.id === CURRENT_USER_ID);
+  // Auth state - lee del localStorage lo que guardaste en login.jsx
+  const [realUser, setRealUser] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const stored = localStorage.getItem("user");
+    if (stored) {
+      try {
+        setRealUser(JSON.parse(stored));
+      } catch {}
+    }
+  }, []);
+
+  // currentUser: si hay usuario real logueado, usa ese, si no usa el mock
+  const mockUser = USERS.find((u) => u.id === CURRENT_USER_ID);
+  const currentUser = useMemo(() => {
+    if (realUser) {
+      // Adaptar el usuario real al formato que espera el sidebar
+      return {
+        id: realUser._id || "real",
+        name: realUser.name || realUser.email,
+        email: realUser.email,
+        sector: realUser.sector || mockUser?.sector || "General",
+        color: mockUser?.color || "#05903E",
+        initials: (realUser.name?.[0] || realUser.email?.[0] || "U").toUpperCase() + (realUser.name?.split(" ")[1]?.[0] || "").toUpperCase(),
+        accountType: realUser.accountType,
+        ...mockUser, // fallback de campos mock
+        name: realUser.name || mockUser?.name,
+        sector: realUser.sector || mockUser?.sector,
+      };
+    }
+    return mockUser;
+  }, [realUser]);
+
+  const logout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setRealUser(null);
+    navigate("/login", { replace: true });
+  };
+
+  const login = (userData, token) => {
+    localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(userData));
+    setRealUser(userData);
+  };
 
   const activeFiltersCount = useMemo(() => {
     let n = 0;
@@ -99,10 +145,10 @@ export function AppProvider({ children }) {
   };
 
   const deleteCategory = (id) => {
-    if (categories.length <= 1) return; // nunca te quedás sin categorías
+    if (categories.length <= 1) return;
 
     setCategories((prev) => prev.filter((c) => c.id !== id));
-    setTasks((prev) => prev.filter((t) => t.categoryId !== id)); // limpia sus tareas
+    setTasks((prev) => prev.filter((t) => t.categoryId !== id));
 
     if (activeCategory === id) {
       const fallback = categories.find((c) => c.id !== id);
@@ -116,6 +162,11 @@ export function AppProvider({ children }) {
     tasks, visibleTasks, addTask, updateTask, deleteTask, moveTask,
     view, setView, search, setSearch,
     filters, setFilters, activeFiltersCount,
+    // Auth
+    realUser,
+    logout,
+    login,
+    isAuth: !!localStorage.getItem("token"),
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

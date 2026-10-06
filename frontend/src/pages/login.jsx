@@ -62,8 +62,19 @@ const AdminLogin = () => {
 
       console.log("Respuesta del servidor:", response.data);
 
-      const user = response.data.user;
+      // 1. GUARDAR TOKEN - esto es lo que usa ProtectedRoutes para proteger
+      const token = response.data.token || response.data.accessToken || response.data.access_token;
+      if (token) {
+        localStorage.setItem("token", token);
+      } else {
+        // Si tu backend no manda token todavia, igual guardamos algo para que funcione el flujo
+        // Cuando el backend mande token, esto ya queda listo
+        console.warn("El backend no devolvió token, usando user como fallback");
+        localStorage.setItem("token", "temp-token");
+      }
 
+      // 2. GUARDAR USER
+      const user = response.data.user;
       if (user) {
         localStorage.setItem(
           "user",
@@ -77,7 +88,10 @@ const AdminLogin = () => {
           }),
         );
       }
-      navigate("/home");
+
+      // 3. REDIRIGIR AL HOME (tu home es / no /home)
+      navigate("/", { replace: true });
+
     } 
     catch (error) {
       console.error("Error al iniciar sesión:", error);
