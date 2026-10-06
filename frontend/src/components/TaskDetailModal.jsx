@@ -1,15 +1,15 @@
-import { useApp } from "../context/AppContext";
-import { PRIORITIES, LABEL_COLORS } from "../mock/db";
+import { useApp, PRIORITIES } from "../context/AppContext";
 import "../styles/components/task-detail-modal.css";
 
 export default function TaskDetailModal({ taskId, onClose, onEdit }) {
-  const { tasks, users, columns } = useApp();
+  const { tasks, users, labels, columns } = useApp();
   const task = tasks.find((t) => t.id === taskId);
   if (!task) return null;
 
   const priority = PRIORITIES[task.priority];
   const column = columns.find((c) => c.id === task.column);
   const members = task.members.map((id) => users.find((u) => u.id === id)).filter(Boolean);
+  const taskLabels = task.labelIds.map((id) => labels.find((l) => l.id === id)).filter(Boolean);
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -26,18 +26,11 @@ export default function TaskDetailModal({ taskId, onClose, onEdit }) {
         </header>
 
         <div className="modal__body task-detail__body">
-          {task.labels.length > 0 && (
+          {taskLabels.length > 0 && (
             <div className="task-card__labels">
-              {task.labels.map((l) => (
-                <span
-                  key={l}
-                  className="label"
-                  style={{
-                    color: LABEL_COLORS[l] || "var(--color-graphite)",
-                    background: `color-mix(in srgb, ${LABEL_COLORS[l] || "#888"} 14%, transparent)`,
-                  }}
-                >
-                  {l}
+              {taskLabels.map((l) => (
+                <span key={l.id} className="label" style={{ color: l.color, background: `color-mix(in srgb, ${l.color} 14%, transparent)` }}>
+                  {l.title || "·"}
                 </span>
               ))}
             </div>
@@ -47,9 +40,7 @@ export default function TaskDetailModal({ taskId, onClose, onEdit }) {
 
           <div className="task-detail__section">
             <span className="field__label">Descripción</span>
-            <p className="task-detail__description">
-              {task.description || "Sin descripción todavía."}
-            </p>
+            <p className="task-detail__description">{task.description || "Sin descripción todavía."}</p>
           </div>
 
           <div className="task-detail__grid">
@@ -59,11 +50,6 @@ export default function TaskDetailModal({ taskId, onClose, onEdit }) {
                 <span className="pill__dot" style={{ background: "#fff" }} />
                 {priority.label}
               </span>
-            </div>
-
-            <div className="task-detail__section">
-              <span className="field__label">Sector</span>
-              <span className="task-detail__value">{task.sector}</span>
             </div>
 
             <div className="task-detail__section">
@@ -82,7 +68,7 @@ export default function TaskDetailModal({ taskId, onClose, onEdit }) {
               <div className="member-grid member-grid--static">
                 {members.map((m) => (
                   <div key={m.id} className="member member--static">
-                    <span className="avatar avatar--sm" style={{ background: m.color }}>{m.initials}</span>
+                    <span className="avatar avatar--sm" style={{ background: "var(--color-green)" }}>{m.initials}</span>
                     <span className="member__name">{m.name}</span>
                   </div>
                 ))}

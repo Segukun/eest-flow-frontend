@@ -112,12 +112,12 @@ export default function Sidebar({ onOpenPerfil, onOpenConfiguracion }) {
 
       <div className="sidebar__user" ref={ref}>
         <button className="user-card" onClick={() => setMenuOpen((v) => !v)} disabled={collapsed}>
-          <span className="avatar" style={{ background: currentUser.color }}>{currentUser.initials}</span>
+          <span className="avatar" style={{ background: currentUser?.color }}>{currentUser?.initials}</span>
           {!collapsed && (
             <>
               <span className="user-card__info">
-                <strong>{currentUser.name}</strong>
-                <small>{currentUser.sector}</small>
+                <strong>{currentUser?.name}</strong>
+                <small>{currentUser?.sector}</small>
               </span>
               <span className="user-card__chevron">⌄</span>
             </>

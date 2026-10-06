@@ -16,24 +16,41 @@ export default function AddCategoryModal({ onClose }) {
   const [color, setColor] = useState(PRESET_COLORS[0]);
   const [customColor, setCustomColor] = useState(null);
   const [sectorMode, setSectorMode] = useState("all"); // "all" | "custom"
-  const [selectedSectors, setSelectedSectors] = useState([]);
+  const [selectedSectorIds, setSelectedSectorIds] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(null);
 
   const finalColor = customColor || color;
 
-  const toggleSector = (s) =>
-    setSelectedSectors((prev) =>
-      prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]
+  const toggleSector = (sectorId) =>
+    setSelectedSectorIds((prev) =>
+      prev.includes(sectorId) ? prev.filter((x) => x !== sectorId) : [...prev, sectorId]
     );
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const trimmed = name.trim();
     if (!trimmed) return;
-    addCategory({
-      name: trimmed,
-      color: finalColor,
-      sectors: sectorMode === "all" ? "all" : selectedSectors,
-    });
-    onClose();
+
+    // el modelo Category exige sectors con al menos 1 elemento (ver
+    // schema: validate arr.length > 0), así que "Todos" se traduce a
+    // mandar TODOS los sectores existentes, no un string "all"
+    const sectorIds = sectorMode === "all" ? sectors.map((s) => s.id) : selectedSectorIds;
+
+    if (sectorIds.length === 0) {
+      setError("Elegí al menos un sector, o seleccioná \"Todos\".");
+      return;
+    }
+
+    setSubmitting(true);
+    setError(null);
+    try {
+      await addCategory({ name: trimmed, color: finalColor, sectors: sectorIds });
+      onClose();
+    } catch (err) {
+      setError(err?.response?.data?.message || "No se pudo crear la categoría.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -111,25 +128,32 @@ export default function AddCategoryModal({ onClose }) {
 
             {sectorMode === "custom" && (
               <div className="category-modal__sector-list">
-                {sectors.map((s) => (
-                  <button
-                    type="button"
-                    key={s}
-                    className={"pill pill--outline" + (selectedSectors.includes(s) ? " pill--outline-on" : "")}
-                    onClick={() => toggleSector(s)}
-                  >
-                    {s}
-                  </button>
-                ))}
+                {sectors.length === 0 ? (
+                  <p className="actions-modal__empty-hint">No hay sectores creados todavía.</p>
+                ) : (
+                  sectors.map((s) => (
+                    <button
+                      type="button"
+                      key={s.id}
+                      className={"pill pill--outline" + (selectedSectorIds.includes(s.id) ? " pill--outline-on" : "")}
+                      onClick={() => toggleSector(s.id)}
+                    >
+                      <span className="pill__dot" style={{ background: s.color }} />
+                      {s.name}
+                    </button>
+                  ))
+                )}
               </div>
             )}
           </div>
+
+          {error && <p className="label-creator__error">{error}</p>}
         </div>
 
         <footer className="category-modal__foot">
           <button className="link-btn" onClick={onClose}>Cancelar</button>
-          <button className="btn btn--primary" onClick={handleSubmit} disabled={!name.trim()}>
-            Agregar
+          <button className="btn btn--primary" onClick={handleSubmit} disabled={!name.trim() || submitting}>
+            {submitting ? "Agregando…" : "Agregar"}
           </button>
         </footer>
       </div>
