@@ -8,8 +8,8 @@
 
 .column {
   flex: 0 0 310px;
-  background: #fff;
-  border: 1px solid var(--color-border);
+  background: var(--theme-surface, #fff);
+  border: 1px solid var(--theme-border, var(--color-border));
   border-radius: var(--radius-lg);
   padding: 14px;
   box-shadow: var(--shadow-sm);
@@ -18,7 +18,7 @@
     background 0.15s ease;
 }
 .column--over {
-  border-color: var(--color-green);
+  border-color: var(--theme-green-text, var(--color-green));
   background: rgba(5, 144, 62, 0.04);
 }
 .column__head {
@@ -42,7 +42,7 @@
   border-radius: 50%;
 }
 .column__count {
-  background: rgba(31, 21, 28, 0.07);
+  background: var(--theme-hover, rgba(31, 21, 28, 0.07));
   border-radius: 999px;
   padding: 2px 8px;
   font-size: 11px;
@@ -64,7 +64,7 @@
   gap: 4px;
   width: 100%;
   padding: 32px 16px;
-  border: 1.5px dashed var(--color-border);
+  border: 1.5px dashed var(--theme-border, var(--color-border));
   border-radius: var(--radius-md);
   color: var(--color-muted);
   text-align: center;
@@ -74,16 +74,16 @@
     color 0.15s ease;
 }
 .add-task__empty:hover {
-  border-color: var(--color-green);
+  border-color: var(--theme-green-text, var(--color-green));
   background: rgba(5, 144, 62, 0.04);
-  color: var(--color-green);
+  color: var(--theme-green-text, var(--color-green));
 }
 .add-task__empty strong {
-  color: var(--color-graphite);
+  color: var(--theme-text, var(--color-graphite));
   font-size: 14px;
 }
 .add-task__empty:hover strong {
-  color: var(--color-green);
+  color: var(--theme-green-text, var(--color-green));
 }
 .add-task__empty small {
   font-size: 12px;
@@ -92,7 +92,7 @@
   width: 34px;
   height: 34px;
   border-radius: 10px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--theme-border, var(--color-border));
   display: grid;
   place-items: center;
   margin-bottom: 6px;
@@ -103,9 +103,9 @@
 /* ---- tarjeta ---- */
 .task-card {
   position: relative;
-  background: #fff;
+  background: var(--theme-surface, #fff);
   cursor: grab;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--theme-border, var(--color-border));
   border-radius: var(--radius-md);
   padding: 16px 14px 12px;
   overflow: hidden;
@@ -135,7 +135,7 @@
   width: 28px;
   height: 28px;
   border-radius: 8px;
-  background: rgba(31, 21, 28, 0.06);
+  background: var(--theme-hover, rgba(31, 21, 28, 0.06));
   display: grid;
   place-items: center;
   opacity: 0;
@@ -174,7 +174,7 @@
 .task-card__due {
   font-size: 12px;
   color: var(--color-muted);
-  background: rgba(31, 21, 28, 0.05);
+  background: var(--theme-hover, rgba(31, 21, 28, 0.05));
   border-radius: 999px;
   padding: 3px 10px;
 }
@@ -187,7 +187,7 @@
   width: 100%;
   padding: 12px;
   border-radius: var(--radius-md);
-  border: 1.5px dashed var(--color-border);
+  border: 1.5px dashed var(--theme-border, var(--color-border));
   color: var(--color-muted);
   font-size: 14px;
   font-weight: 600;
@@ -197,10 +197,10 @@
   color: var(--color-orange);
 }
 .add-task {
-  border: 1px solid var(--color-green);
+  border: 1px solid var(--theme-green-text, var(--color-green));
   border-radius: var(--radius-md);
   padding: 10px;
-  background: #fff;
+  background: var(--theme-surface, #fff);
 }
 .add-task__input {
   width: 100%;

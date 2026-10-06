@@ -8,7 +8,7 @@
   justify-content: center;
 }
 .filters-sheet {
-  background: #fff;
+  background: var(--theme-surface, #fff);
   width: min(520px, 100%);
   border-radius: 26px 26px 0 0;
   padding: 8px 20px 20px;
@@ -28,7 +28,7 @@
   justify-content: space-between;
   align-items: center;
   padding-bottom: 14px;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--theme-border, var(--color-border));
 }
 .filters-sheet__title {
   display: flex;
@@ -66,7 +66,7 @@
 }
 .filters-sheet__footer {
   padding-top: 14px;
-  border-top: 1px solid var(--color-border);
+  border-top: 1px solid var(--theme-border, var(--color-border));
 }
 .filters-sheet__footer .btn {
   width: 100%;
@@ -76,8 +76,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--color-bone);
-  border: 1px solid var(--color-border);
+  background: var(--theme-background, var(--color-bone));
+  border: 1px solid var(--theme-border, var(--color-border));
   border-radius: var(--radius-lg);
   padding: 14px;
 }
@@ -103,19 +103,19 @@
   width: 54px;
   height: 30px;
   border-radius: 999px;
-  background: rgba(31, 21, 28, 0.15);
+  background: var(--theme-hover, rgba(31, 21, 28, 0.15));
   padding: 3px;
   display: flex;
 }
 .switch--on {
-  background: var(--color-green);
+  background: var(--theme-green-fill, var(--color-green));
   justify-content: flex-end;
 }
 .switch__knob {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--theme-surface, #fff);
 }
 
 .filters-group__head {
@@ -153,8 +153,8 @@
   gap: 8px;
   padding: 12px 16px;
   border-radius: 999px;
-  border: 1px solid var(--color-border);
-  background: #fff;
+  border: 1px solid var(--theme-border, var(--color-border));
+  background: var(--theme-surface, #fff);
   font-size: 14px;
   font-weight: 600;
 }
@@ -167,17 +167,17 @@
   margin-left: auto;
 }
 .pill--on {
-  background: var(--color-green);
+  background: var(--theme-green-fill, var(--color-green));
   color: #fff;
-  border-color: var(--color-green);
+  border-color: var(--theme-green-text, var(--color-green));
 }
 .pill--on .pill__dot {
-  background: #fff !important;
+  background: var(--theme-surface, #fff) !important;
 }
 .pill--outline {
   justify-content: center;
 }
 .pill--outline-on {
-  border-color: var(--color-green);
-  color: var(--color-green);
+  border-color: var(--theme-green-text, var(--color-green));
+  color: var(--theme-green-text, var(--color-green));
 }

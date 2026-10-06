@@ -1,3 +1,4 @@
+import { readableAccent, avatarStyle } from "../../theme";
 import { useState } from "react";
 import { useApp } from "../../context/AppContext";
 import { PRIORITIES, ALL_LABELS, LABEL_COLORS } from "../../mock/db";
@@ -51,7 +52,7 @@ export default function TaskActionsModal({ taskId, onClose, onView }) {
                   key={l}
                   className="label"
                   style={{
-                    color: LABEL_COLORS[l] || "var(--color-graphite)",
+                    color: readableAccent(LABEL_COLORS[l] || "var(--color-graphite)"),
                     background: `color-mix(in srgb, ${LABEL_COLORS[l] || "#888"} 14%, transparent)`,
                   }}
                 >
@@ -64,7 +65,7 @@ export default function TaskActionsModal({ taskId, onClose, onView }) {
           <div className="task-card__foot">
             <div className="avatars">
               {members.slice(0, 4).map((m) => (
-                <span key={m.id} className="avatar avatar--sm" style={{ background: m.color }}>{m.initials}</span>
+                <span key={m.id} className="avatar avatar--sm" style={avatarStyle(m.color)}>{m.initials}</span>
               ))}
             </div>
             {task.dueDate && (
@@ -126,7 +127,7 @@ export default function TaskActionsModal({ taskId, onClose, onView }) {
                     key={l}
                     className={"label label--btn" + (task.labels.includes(l) ? " label--on" : "")}
                     style={{
-                      color: LABEL_COLORS[l],
+                      color: readableAccent(LABEL_COLORS[l]),
                       background: task.labels.includes(l)
                         ? `color-mix(in srgb, ${LABEL_COLORS[l]} 18%, transparent)`
                         : "transparent",
@@ -151,7 +152,7 @@ export default function TaskActionsModal({ taskId, onClose, onView }) {
                     className={"member" + (task.members.includes(u.id) ? " member--on" : "")}
                     onClick={() => toggleArrayField("members", u.id)}
                   >
-                    <span className="avatar avatar--sm" style={{ background: u.color }}>{u.initials}</span>
+                    <span className="avatar avatar--sm" style={avatarStyle(u.color)}>{u.initials}</span>
                     <span className="member__name">{u.name}</span>
                   </button>
                 ))}

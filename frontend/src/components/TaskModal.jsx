@@ -1,3 +1,4 @@
+import { readableAccent, avatarStyle } from "../theme";
 import { useApp } from "../context/AppContext";
 import { PRIORITIES, ALL_LABELS, LABEL_COLORS } from "../mock/db";
 import "../styles/components/task-modal.css";
@@ -56,7 +57,7 @@ export default function TaskModal({ taskId, onClose }) {
                   key={l}
                   className={"label label--btn" + (task.labels.includes(l) ? " label--on" : "")}
                   style={{
-                    color: LABEL_COLORS[l],
+                    color: readableAccent(LABEL_COLORS[l]),
                     background: task.labels.includes(l)
                       ? `color-mix(in srgb, ${LABEL_COLORS[l]} 18%, transparent)`
                       : "transparent",
@@ -79,7 +80,7 @@ export default function TaskModal({ taskId, onClose }) {
                   className={"member" + (task.members.includes(u.id) ? " member--on" : "")}
                   onClick={() => toggle("members", u.id)}
                 >
-                  <span className="avatar avatar--sm" style={{ background: u.color }}>{u.initials}</span>
+                  <span className="avatar avatar--sm" style={avatarStyle(u.color)}>{u.initials}</span>
                   <span className="member__name">{u.name}</span>
                 </button>
               ))}

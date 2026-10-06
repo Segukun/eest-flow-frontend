@@ -5,7 +5,7 @@
 .app-main {
   margin-left: var(--sidebar-w);
   min-height: 100vh;
-  background: var(--color-bone);
+  background: var(--theme-background, var(--color-bone));
 }
 
 .avatar {
@@ -17,7 +17,7 @@
   color: #fff;
   font-size: 12px;
   font-weight: 700;
-  border: 2px solid var(--color-bone);
+  border: 2px solid var(--theme-background, var(--color-bone));
 }
 .avatar--sm {
   width: 28px;
@@ -40,7 +40,7 @@
   letter-spacing: -0.02em;
 }
 .brand-name--accent {
-  color: var(--color-green);
+  color: var(--theme-green-text, var(--color-green));
 }
 .brand-sub {
   font-size: 11px;
@@ -59,12 +59,12 @@
   border-radius: var(--radius-md);
   font-size: 15px;
   font-weight: 500;
-  color: var(--color-graphite);
+  color: var(--theme-text, var(--color-graphite));
   transition: background 0.15s ease;
 }
 
 .nav-item:hover {
-  background: rgba(31, 21, 28, 0.05);
+  background: var(--theme-hover, rgba(31, 21, 28, 0.05));
 }
 
 .nav-item:not(.nav-item--active):hover .icon {
@@ -72,7 +72,7 @@
 }
 
 .nav-item--active {
-  background: var(--color-green);
+  background: var(--theme-green-fill, var(--color-green));
   color: #fff;
 }
 .nav-item--active .icon {
@@ -80,7 +80,7 @@
 }
 
 .nav-item--active:hover {
-  background: var(--color-green);
+  background: var(--theme-green-fill, var(--color-green));
 }
 .nav-item--active:hover .icon {
   filter: brightness(0) invert(1);
@@ -112,15 +112,15 @@
   padding: 9px 14px;
   border-radius: var(--radius-md);
   font-size: 14px;
-  color: #5b5257;
+  color: var(--theme-secondary, #5b5257);
   text-align: left;
 }
 .cat-item:hover {
-  background: rgba(31, 21, 28, 0.04);
+  background: var(--theme-hover, rgba(31, 21, 28, 0.04));
 }
 .cat-item--active {
-  background: rgba(31, 21, 28, 0.06);
-  color: var(--color-graphite);
+  background: var(--theme-hover, rgba(31, 21, 28, 0.06));
+  color: var(--theme-text, var(--color-graphite));
   font-weight: 600;
 }
 .cat-dot {
@@ -140,8 +140,8 @@
   bottom: calc(100% + 8px);
   left: 0;
   right: 0;
-  background: #fff;
-  border: 1px solid var(--color-border);
+  background: var(--theme-surface, #fff);
+  border: 1px solid var(--theme-border, var(--color-border));
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
   padding: 6px;
@@ -158,10 +158,10 @@
   text-align: left;
 }
 .user-menu__item:hover {
-  background: rgba(31, 21, 28, 0.05);
+  background: var(--theme-hover, rgba(31, 21, 28, 0.05));
 }
 .user-menu__item--danger {
-  color: var(--color-danger);
+  color: var(--theme-danger-text, var(--color-danger));
   font-weight: 600;
 }
 
@@ -169,7 +169,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--color-green);
+  background: var(--theme-green-fill, var(--color-green));
   display: inline-block;
 }
 
@@ -191,15 +191,15 @@
   padding: 8px 12px;
 }
 .btn--primary {
-  background: var(--color-green);
+  background: var(--theme-green-fill, var(--color-green));
   color: #fff;
 }
 .btn--ghost {
-  background: rgba(31, 21, 28, 0.06);
+  background: var(--theme-hover, rgba(31, 21, 28, 0.06));
 }
 .btn--danger {
   background: rgba(224, 52, 43, 0.1);
-  color: var(--color-danger);
+  color: var(--theme-danger-text, var(--color-danger));
 }
 
 .icon-btn {
@@ -208,7 +208,7 @@
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: rgba(31, 21, 28, 0.06);
+  background: var(--theme-hover, rgba(31, 21, 28, 0.06));
 }
 .link-btn {
   color: var(--color-orange);
@@ -220,16 +220,16 @@
 .select {
   width: 100%;
   padding: 11px 14px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--theme-border, var(--color-border));
   border-radius: var(--radius-md);
-  background: #fff;
+  background: var(--theme-surface, #fff);
   font-size: 14px;
-  color: var(--color-graphite);
+  color: var(--theme-text, var(--color-graphite));
 }
 .input:focus,
 .select:focus {
   outline: 2px solid rgba(5, 144, 62, 0.25);
-  border-color: var(--color-green);
+  border-color: var(--theme-green-text, var(--color-green));
 }
 
 @media (max-width: 700px) {
@@ -243,7 +243,7 @@
   .app-main {
     margin-left: var(--sidebar-w);
     min-height: 100vh;
-    background: var(--color-bone);
+    background: var(--theme-background, var(--color-bone));
     transition: margin-left .2s ease;
   }
 

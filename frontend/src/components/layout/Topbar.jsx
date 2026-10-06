@@ -1,3 +1,4 @@
+import { avatarStyle } from "../../theme";
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
@@ -103,7 +104,7 @@ export default function Topbar({ onOpenConfiguracion }) {
         </nav>
 
         <div className="drawer__user">
-          <span className="avatar" style={{ background: currentUser.color }}>{currentUser.initials}</span>
+          <span className="avatar" style={avatarStyle(currentUser.color)}>{currentUser.initials}</span>
           <div className="user-card__info">
             <strong>{currentUser.name}</strong>
             <small>{currentUser.sector}</small>

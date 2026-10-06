@@ -1,3 +1,4 @@
+import { readableAccent } from "../theme";
 import { useState, useEffect } from "react";
 import { FiX, FiPlus, FiAlertCircle } from "react-icons/fi";
 import "../styles/components/AgregarSectorModal.css";
@@ -72,7 +73,7 @@ export default function AgregarSectorModal({ isOpen, onClose, onSave, initialDat
       <div className="asm-modal" role="dialog" aria-modal="true">
         <div className="asm-header">
           <div className="asm-header-left">
-            <div className="asm-icon" style={{ background: `${form.color}15`, color: form.color }}>
+            <div className="asm-icon" style={{ background: `${form.color}15`, color: readableAccent(form.color) }}>
               <FiPlus />
             </div>
             <div>
@@ -128,12 +129,12 @@ export default function AgregarSectorModal({ isOpen, onClose, onSave, initialDat
           <div className="asm-preview">
             <span className="asm-preview-label">Vista previa</span>
             <div className="asm-preview-card">
-              <div className="asm-preview-icon" style={{ borderColor: form.color, color: form.color }}><FiPlus /></div>
+              <div className="asm-preview-icon" style={{ borderColor: form.color, color: readableAccent(form.color) }}><FiPlus /></div>
               <div>
-                <span className="asm-preview-cat" style={{ color: form.color }}>{form.categoria}</span>
+                <span className="asm-preview-cat" style={{ color: readableAccent(form.color) }}>{form.categoria}</span>
                 <h4>{form.nombre || "NOMBRE DEL SECTOR"}</h4>
               </div>
-              <span className="asm-preview-badge" style={{ background: `${form.color}15`, color: form.color }}>0 Miembros</span>
+              <span className="asm-preview-badge" style={{ background: `${form.color}15`, color: readableAccent(form.color) }}>0 Miembros</span>
             </div>
           </div>
 

@@ -6,8 +6,8 @@
   display: flex;
   min-height: 100vh;
   width: 100%;
-  background: var(--color-bone);
-  color: var(--color-graphite);
+  background: var(--theme-background, var(--color-bone));
+  color: var(--theme-text, var(--color-graphite));
   font-family: var(--font-family-base);
 }
 
@@ -34,7 +34,7 @@
 
 .marcaNotificaciones {
   margin: 0 0 5px;
-  color: var(--color-green);
+  color: var(--theme-green-text, var(--color-green));
   font-size: 13px;
   font-weight: 800;
   letter-spacing: 0.7px;
@@ -42,7 +42,7 @@
 
 .encabezadoNotificaciones h1 {
   margin: 0;
-  color: var(--color-graphite);
+  color: var(--theme-text, var(--color-graphite));
   font-size: 32px;
   font-weight: 750;
 }
@@ -67,10 +67,10 @@
 
   padding: 11px 23px;
 
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--theme-border, var(--color-border));
   border-radius: 25px;
 
-  background: var(--color-white);
+  background: var(--theme-surface, var(--color-white));
   color: var(--color-muted);
 
   font-size: 13px;
@@ -81,13 +81,13 @@
 }
 
 .filtroNotificacion:hover {
-  border-color: var(--color-green);
-  color: var(--color-green);
+  border-color: var(--theme-green-text, var(--color-green));
+  color: var(--theme-green-text, var(--color-green));
 }
 
 .filtroNotificacion.activo {
-  background: var(--color-green);
-  border-color: var(--color-green);
+  background: var(--theme-green-fill, var(--color-green));
+  border-color: var(--theme-green-text, var(--color-green));
   color: var(--color-white);
   font-weight: 650;
 }
@@ -109,8 +109,8 @@
 }
 
 .filtroNotificacion.activo .contadorNoLeidas {
-  background: var(--color-white);
-  color: var(--color-green);
+  background: var(--theme-surface, var(--color-white));
+  color: var(--theme-green-text, var(--color-green));
 }
 
 /* =========================================
@@ -141,8 +141,8 @@
   min-height: 145px;
   padding: 27px 30px 27px 35px;
 
-  background: var(--color-white);
-  border: 1px solid var(--color-border);
+  background: var(--theme-surface, var(--color-white));
+  border: 1px solid var(--theme-border, var(--color-border));
   border-radius: var(--radius-lg);
 
   box-shadow: var(--shadow-sm);
@@ -179,7 +179,7 @@
 }
 
 .notificacion:nth-child(4n + 3)::before {
-  background: var(--color-green);
+  background: var(--theme-green-fill, var(--color-green));
 }
 
 .notificacion:nth-child(4n + 4)::before {
@@ -189,7 +189,7 @@
 /* Notificaciones no leídas */
 
 .notificacion.noLeida {
-  background: var(--color-white);
+  background: var(--theme-surface, var(--color-white));
 }
 
 /* =========================================
@@ -218,7 +218,7 @@
 }
 
 .notificacion:nth-child(4n + 3) .tipoNotificacion {
-  color: var(--color-green);
+  color: var(--theme-green-text, var(--color-green));
 }
 
 .notificacion:nth-child(4n + 4) .tipoNotificacion {
@@ -236,7 +236,7 @@
 .notificacion h2 {
   margin: 0 0 9px;
 
-  color: var(--color-graphite);
+  color: var(--theme-text, var(--color-graphite));
   font-size: 17px;
   font-weight: 700;
   line-height: 1.4;
@@ -266,10 +266,10 @@
   min-width: 95px;
   padding: 12px 18px;
 
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--theme-border, var(--color-border));
   border-radius: var(--radius-sm);
 
-  background: var(--color-bone);
+  background: var(--theme-background, var(--color-bone));
   color: var(--color-terracotta);
 
   font-size: 13px;
@@ -291,20 +291,20 @@
 }
 
 .notificacion:nth-child(4n + 3) .botonVerNotificacion {
-  background: var(--color-white);
-  border-color: var(--color-green);
-  color: var(--color-green);
+  background: var(--theme-surface, var(--color-white));
+  border-color: var(--theme-green-text, var(--color-green));
+  color: var(--theme-green-text, var(--color-green));
 }
 
 .notificacion:nth-child(4n + 3) .botonVerNotificacion:hover {
-  background: var(--color-green);
+  background: var(--theme-green-fill, var(--color-green));
   color: var(--color-white);
 }
 
 .notificacion:nth-child(4n + 4) .botonVerNotificacion {
-  background: var(--color-white);
-  border-color: var(--color-border);
-  color: var(--color-graphite);
+  background: var(--theme-surface, var(--color-white));
+  border-color: var(--theme-border, var(--color-border));
+  color: var(--theme-text, var(--color-graphite));
 }
 
 /* =========================================
@@ -315,8 +315,8 @@
   padding: 70px 20px;
   text-align: center;
 
-  background: var(--color-white);
-  border: 1px solid var(--color-border);
+  background: var(--theme-surface, var(--color-white));
+  border: 1px solid var(--theme-border, var(--color-border));
   border-radius: var(--radius-lg);
 }
 

@@ -8,8 +8,8 @@
   right: 0;
   z-index: 45;
   width: 280px;
-  background: #fff;
-  border: 1px solid var(--color-border);
+  background: var(--theme-surface, #fff);
+  border: 1px solid var(--theme-border, var(--color-border));
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
   padding: 10px;
@@ -55,16 +55,16 @@
   font-weight: 600;
   text-align: left;
   cursor: pointer;
-  color: var(--color-graphite);
+  color: var(--theme-text, var(--color-graphite));
 }
 .filters-dd__row:hover {
-  background: rgba(31, 21, 28, 0.04);
+  background: var(--theme-hover, rgba(31, 21, 28, 0.04));
 }
 .filters-dd__row.is-open {
   background: rgba(5, 144, 62, 0.07);
 }
 .filters-dd__row.is-active {
-  border-left: 3px solid var(--color-green);
+  border-left: 3px solid var(--theme-green-text, var(--color-green));
   padding-left: 7px;
 }
 
@@ -84,7 +84,7 @@
   font-size: 13px;
 }
 .filters-dd__check {
-  color: var(--color-green);
+  color: var(--theme-green-text, var(--color-green));
   font-weight: 800;
   font-size: 13px;
 }
@@ -96,8 +96,8 @@
   right: calc(100% + 10px);
   z-index: 46;
   width: 240px;
-  background: #fff;
-  border: 1px solid var(--color-border);
+  background: var(--theme-surface, #fff);
+  border: 1px solid var(--theme-border, var(--color-border));
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
   padding: 8px;
@@ -120,15 +120,15 @@
   border-radius: var(--radius-sm);
   font-size: 14px;
   text-align: left;
-  color: var(--color-graphite);
+  color: var(--theme-text, var(--color-graphite));
 }
 .filters-dd__opt:hover {
-  background: rgba(31, 21, 28, 0.05);
+  background: var(--theme-hover, rgba(31, 21, 28, 0.05));
 }
 .filters-dd__opt.is-on {
   background: rgba(5, 144, 62, 0.08);
   font-weight: 700;
-  color: var(--color-green);
+  color: var(--theme-green-text, var(--color-green));
 }
 .filters-dd__opt-dot {
   width: 8px;
@@ -141,20 +141,20 @@
   width: 42px;
   height: 24px;
   border-radius: 999px;
-  background: rgba(31, 21, 28, 0.15);
+  background: var(--theme-hover, rgba(31, 21, 28, 0.15));
   padding: 3px;
   display: inline-flex;
   flex: none;
 }
 .switch--sm.switch--on {
-  background: var(--color-green);
+  background: var(--theme-green-fill, var(--color-green));
   justify-content: flex-end;
 }
 .switch--sm .switch__knob {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--theme-surface, #fff);
 }
 
 @media (max-width: 700px) {

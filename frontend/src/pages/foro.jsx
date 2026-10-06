@@ -1,3 +1,4 @@
+import { avatarStyle } from "../theme";
 import { useState, useRef, useEffect } from "react";
 import { FiSearch, FiFileText, FiImage, FiHeart, FiMessageCircle, FiPlus, FiPaperclip, FiX, FiMoreHorizontal, FiEdit2, FiTrash2, FiSave, FiDownload } from "react-icons/fi";
 import ComentariosModal from "../components/ComentariosModal.jsx";
@@ -209,7 +210,7 @@ export default function Foro() {
               <div key={post.id} className={`foro-post ${post.pinned ? "foro-post--pinned" : ""}`}>
                 {post.pinned && (<div className="foro-pinned-bar"><span>📌 Anclado</span></div>)}
                 <div className="foro-post-head">
-                  <div className="foro-post-avatar" style={{ background: post.avatarColor }}>{post.avatar}</div>
+                  <div className="foro-post-avatar" style={avatarStyle(post.avatarColor)}>{post.avatar}</div>
                   <div><h3>{post.author}</h3><p>{post.role}</p></div>
                   {isOwnPost(post) && (
                     <div className="foro-post-menu-wrapper">
