@@ -1,3 +1,4 @@
+import { avatarStyle } from "../../theme";
 import { useState, useRef, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
@@ -112,7 +113,7 @@ export default function Sidebar({ onOpenPerfil, onOpenConfiguracion }) {
 
       <div className="sidebar__user" ref={ref}>
         <button className="user-card" onClick={() => setMenuOpen((v) => !v)} disabled={collapsed}>
-          <span className="avatar" style={{ background: currentUser.color }}>{currentUser.initials}</span>
+          <span className="avatar" style={avatarStyle(currentUser.color)}>{currentUser.initials}</span>
           {!collapsed && (
             <>
               <span className="user-card__info">

@@ -1,3 +1,4 @@
+import { readableAccent, avatarStyle } from "../theme";
 import { useState } from "react";
 import {
   FiPlus,
@@ -174,16 +175,16 @@ export default function GestionSectores() {
           {sectores.map((sec) => (
             <div key={sec.id} className="gs-sector-card">
               <div className="gs-sector-card-head">
-                <div className="gs-sector-icon" style={{ color: sec.color, borderColor: sec.color }}>
+                <div className="gs-sector-icon" style={{ color: readableAccent(sec.color), borderColor: sec.color }}>
                   <sec.icon />
                 </div>
                 <div>
-                  <span className="gs-sector-cat" style={{ color: sec.color === "#1F151C" ? "#DC9655" : sec.color }}>
+                  <span className="gs-sector-cat" style={{ color: readableAccent(sec.color === "#1F151C" ? "#DC9655" : sec.color) }}>
                     {sec.categoria}
                   </span>
                   <h3>{sec.nombre}</h3>
                 </div>
-                <span className="gs-sector-badge" style={{ background: `${sec.color}15`, color: sec.color }}>
+                <span className="gs-sector-badge" style={{ background: `${sec.color}15`, color: readableAccent(sec.color) }}>
                   {sec.miembros.length} {sec.miembros.length === 1 ? "Miembro" : "Miembros"}
                 </span>
               </div>
@@ -195,7 +196,7 @@ export default function GestionSectores() {
                   <>
                     {sec.miembros.slice(0, 3).map((m) => (
                       <div key={m.id} className="gs-member-preview">
-                        <span className="gs-member-avatar" style={{ background: m.color }}>
+                        <span className="gs-member-avatar" style={avatarStyle(m.color)}>
                           {m.ini}
                         </span>
                         <span>{m.nombre}</span>
@@ -207,7 +208,7 @@ export default function GestionSectores() {
               </div>
 
               <div className="gs-sector-card-foot">
-                <button className="gs-secondary" style={{ borderColor: sec.color, color: sec.color }} onClick={() => openAdminModal(sec.id)}>
+                <button className="gs-secondary" style={{ borderColor: sec.color, color: readableAccent(sec.color) }} onClick={() => openAdminModal(sec.id)}>
                   Administrar sector
                 </button>
               </div>
@@ -242,7 +243,7 @@ export default function GestionSectores() {
           <div className="gsd-modal">
             <div className="gsd-header">
               <div className="gsd-header-left">
-                <div className="gs-sector-icon gs-sector-icon--large" style={{ background: `${adminSector.color}15`, color: adminSector.color }}>
+                <div className="gs-sector-icon gs-sector-icon--large" style={{ background: `${adminSector.color}15`, color: readableAccent(adminSector.color) }}>
                   <adminSector.icon />
                 </div>
                 <div>
@@ -265,7 +266,7 @@ export default function GestionSectores() {
                 adminSector.miembros.map((m) => (
                   <div key={m.id} className="gs-detail-member">
                     <div className="gs-detail-member-left">
-                      <span className="gs-member-avatar gs-member-avatar--lg" style={{ background: `${m.color}33`, color: m.color }}>{m.ini}</span>
+                      <span className="gs-member-avatar gs-member-avatar--lg" style={{ background: `${m.color}33`, color: readableAccent(m.color) }}>{m.ini}</span>
                       <div>
                         <p className="gs-dm-name">{m.nombre}</p>
                         {m.materia && <p className="gs-dm-sub">{m.materia}</p>}

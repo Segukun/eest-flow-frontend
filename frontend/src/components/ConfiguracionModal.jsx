@@ -1,11 +1,10 @@
-import { useState } from "react";
+import { useTheme } from "../context/useTheme";
 import { FiLock, FiMoon, FiSun } from "react-icons/fi";
 import "../styles/components/MiPerfil.css";
 import "../styles/components/ConfiguracionModal.css";
 
 export default function ConfiguracionModal({ onClose, onOpenPerfil }) {
-  // Selección visual: se reinicia al cerrar y no modifica el tema de la app.
-  const [tema, setTema] = useState("claro");
+  const [tema, setTema] = useTheme();
 
   return (
     <div className="perfil-modal-overlay" onClick={onClose}>
@@ -40,7 +39,7 @@ export default function ConfiguracionModal({ onClose, onOpenPerfil }) {
               <label className="configuracion-modal__opcion">
                 <input
                   type="radio"
-                  name="tema-visual"
+                  name="tema"
                   value="claro"
                   checked={tema === "claro"}
                   onChange={() => setTema("claro")}
@@ -50,7 +49,7 @@ export default function ConfiguracionModal({ onClose, onOpenPerfil }) {
               <label className="configuracion-modal__opcion">
                 <input
                   type="radio"
-                  name="tema-visual"
+                  name="tema"
                   value="oscuro"
                   checked={tema === "oscuro"}
                   onChange={() => setTema("oscuro")}

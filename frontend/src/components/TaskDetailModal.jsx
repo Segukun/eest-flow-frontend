@@ -1,3 +1,4 @@
+import { readableAccent, avatarStyle } from "../theme";
 import { useApp } from "../context/AppContext";
 import { PRIORITIES, LABEL_COLORS } from "../mock/db";
 import "../styles/components/task-detail-modal.css";
@@ -33,7 +34,7 @@ export default function TaskDetailModal({ taskId, onClose, onEdit }) {
                   key={l}
                   className="label"
                   style={{
-                    color: LABEL_COLORS[l] || "var(--color-graphite)",
+                    color: readableAccent(LABEL_COLORS[l] || "var(--color-graphite)"),
                     background: `color-mix(in srgb, ${LABEL_COLORS[l] || "#888"} 14%, transparent)`,
                   }}
                 >
@@ -55,7 +56,7 @@ export default function TaskDetailModal({ taskId, onClose, onEdit }) {
           <div className="task-detail__grid">
             <div className="task-detail__section">
               <span className="field__label">Prioridad</span>
-              <span className="pill pill--on" style={{ background: priority.color, borderColor: priority.color }}>
+              <span className="pill pill--on" style={{ background: priority.color, borderColor: priority.color, color: "var(--theme-on-warm, #fff)" }}>
                 <span className="pill__dot" style={{ background: "#fff" }} />
                 {priority.label}
               </span>
@@ -82,7 +83,7 @@ export default function TaskDetailModal({ taskId, onClose, onEdit }) {
               <div className="member-grid member-grid--static">
                 {members.map((m) => (
                   <div key={m.id} className="member member--static">
-                    <span className="avatar avatar--sm" style={{ background: m.color }}>{m.initials}</span>
+                    <span className="avatar avatar--sm" style={avatarStyle(m.color)}>{m.initials}</span>
                     <span className="member__name">{m.name}</span>
                   </div>
                 ))}

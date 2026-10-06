@@ -6,8 +6,8 @@
 }
 
 .actions-modal__preview {
-  background: #fff;
-  border: 1px solid var(--color-border);
+  background: var(--theme-surface, #fff);
+  border: 1px solid var(--theme-border, var(--color-border));
   border-radius: var(--radius-lg);
   padding: 16px;
   box-shadow: var(--shadow-sm);
@@ -19,7 +19,7 @@
 }
 
 .actions-modal__bubble {
-  background: #fff;
+  background: var(--theme-surface, #fff);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
   padding: 6px;
@@ -58,10 +58,10 @@
   text-align: left;
 }
 .actions-modal__item:hover {
-  background: rgba(31, 21, 28, 0.04);
+  background: var(--theme-hover, rgba(31, 21, 28, 0.04));
 }
 .actions-modal__item.is-danger .actions-modal__label {
-  color: var(--color-danger);
+  color: var(--theme-danger-text, var(--color-danger));
   font-weight: 600;
 }
 
@@ -75,7 +75,7 @@
   flex: none;
 }
 .actions-modal__icon--neutral {
-  background: rgba(31, 21, 28, 0.06);
+  background: var(--theme-hover, rgba(31, 21, 28, 0.06));
 }
 .actions-modal__icon--green {
   background: rgba(5, 144, 62, 0.12);
@@ -86,7 +86,7 @@
 }
 .actions-modal__icon--danger {
   background: rgba(224, 52, 43, 0.1);
-  color: var(--color-danger);
+  color: var(--theme-danger-text, var(--color-danger));
 }
 
 .actions-modal__label {
@@ -114,7 +114,7 @@
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: rgba(31, 21, 28, 0.06);
+  background: var(--theme-hover, rgba(31, 21, 28, 0.06));
   font-size: 18px;
   display: grid;
   place-items: center;

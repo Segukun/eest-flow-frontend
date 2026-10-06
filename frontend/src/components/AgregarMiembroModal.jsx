@@ -1,3 +1,4 @@
+import { readableAccent } from "../theme";
 import { useState, useEffect } from "react";
 import { FiX, FiUserPlus, FiAlertCircle } from "react-icons/fi";
 import "../styles/components/AgregarSectorModal.css";
@@ -40,7 +41,7 @@ export default function AgregarMiembroModal({ isOpen, onClose, onSave, initialDa
       <div className="asm-modal" style={{ maxWidth: 440 }}>
         <div className="asm-header">
           <div className="asm-header-left">
-            <div className="asm-icon" style={{ background: `${form.color}15`, color: form.color }}><FiUserPlus /></div>
+            <div className="asm-icon" style={{ background: `${form.color}15`, color: readableAccent(form.color) }}><FiUserPlus /></div>
             <div>
               <h2>{isEditing ? "Editar miembro" : "Agregar miembro"}</h2>
               <p>Asigná una persona a este sector</p>

@@ -1,3 +1,4 @@
+import { avatarStyle } from "../theme";
 import { useState } from "react";
 import { FiX, FiSend } from "react-icons/fi";
 import "../styles/pages/Foro.css";
@@ -14,7 +15,7 @@ function CommentItem({ comment }) {
 
   return (
     <div className="foro-comment">
-      <div className="foro-comment-avatar" style={{ background: comment.color }}>{comment.avatar}</div>
+      <div className="foro-comment-avatar" style={avatarStyle(comment.color)}>{comment.avatar}</div>
       <div className="foro-comment-body">
         <div className="foro-comment-head">
           <strong>{comment.author}</strong> <span>{comment.time}</span>

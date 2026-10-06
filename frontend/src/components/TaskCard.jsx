@@ -1,3 +1,4 @@
+import { readableAccent, avatarStyle } from "../theme";
 import { useApp } from "../context/AppContext";
 import { PRIORITIES, LABEL_COLORS } from "../mock/db";
 
@@ -32,7 +33,7 @@ export default function TaskCard({ task, isDragging, onDragStart, onDragEnd, onD
             <span
               key={l}
               className="label"
-              style={{ color: LABEL_COLORS[l] || "var(--color-graphite)",
+              style={{ color: readableAccent(LABEL_COLORS[l] || "var(--color-graphite)"),
                        background: `color-mix(in srgb, ${LABEL_COLORS[l] || "#888"} 14%, transparent)` }}
             >
               {l}
@@ -46,7 +47,7 @@ export default function TaskCard({ task, isDragging, onDragStart, onDragEnd, onD
       <div className="task-card__foot">
         <div className="avatars">
           {members.slice(0, 3).map((m) => (
-            <span key={m.id} className="avatar avatar--sm" style={{ background: m.color }} title={m.name}>
+            <span key={m.id} className="avatar avatar--sm" style={avatarStyle(m.color)} title={m.name}>
               {m.initials}
             </span>
           ))}

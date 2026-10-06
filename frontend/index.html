@@ -2,6 +2,14 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      // Restore appearance before the first paint, even before React loads.
+      try {
+        document.documentElement.dataset.theme = localStorage.getItem('eest-flow-theme') === 'oscuro' ? 'oscuro' : 'claro';
+      } catch {
+        document.documentElement.dataset.theme = 'claro';
+      }
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"

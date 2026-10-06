@@ -1,3 +1,4 @@
+import { readableAccent, avatarStyle } from "../theme";
 import { useState } from "react";
 import { useApp } from "../context/AppContext";
 import { PRIORITIES, LABEL_COLORS } from "../mock/db";
@@ -26,14 +27,14 @@ export default function ListView() {
                   <span className="list-row__title">{t.title}</span>
                   <span className="list-row__labels">
                     {t.labels.map((l) => (
-                      <span key={l} className="label" style={{ color: LABEL_COLORS[l] }}>{l}</span>
+                      <span key={l} className="label" style={{ color: readableAccent(LABEL_COLORS[l]) }}>{l}</span>
                     ))}
                   </span>
                   <span className="avatars">
                     {t.members.map((id) => {
                       const u = users.find((x) => x.id === id);
                       return u ? (
-                        <span key={id} className="avatar avatar--sm" style={{ background: u.color }}>{u.initials}</span>
+                        <span key={id} className="avatar avatar--sm" style={avatarStyle(u.color)}>{u.initials}</span>
                       ) : null;
                     })}
                   </span>
