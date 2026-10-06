@@ -1,73 +1,36 @@
 import { useState } from "react";
-import { useApp, PRIORITIES } from "../../context/AppContext";
+import { useApp } from "../../context/AppContext";
+import { PRIORITIES, ALL_LABELS, LABEL_COLORS } from "../../mock/db";
 import "../../styles/components/task-actions-modal.css";
 
 import { IoEnterOutline, IoList, IoPricetagOutline, IoCalendarClear, IoTrashBinOutline } from "react-icons/io5";
 import { HiMiniArrowsRightLeft } from "react-icons/hi2";
 
 const OPTIONS = [
-  { id: "open", label: "Abrir tarjeta", icon: <IoEnterOutline />, tone: "neutral" },
-  { id: "priority", label: "Asignar prioridad", icon: <IoList />, tone: "green" },
-  { id: "labels", label: "Etiquetas", icon: <IoPricetagOutline />, tone: "neutral" },
+  { id: "open", label: "Abrir tarjeta", icon: <IoEnterOutline/>, tone: "neutral" },
+  { id: "priority", label: "Asignar prioridad", icon: <IoList/>, tone: "green" },
+  { id: "labels", label: "Agregar etiqueta", icon: <IoPricetagOutline/>, tone: "neutral" },
   { id: "members", label: "Asignar personal", icon: "＋", tone: "neutral" },
-  { id: "due", label: "Asignar fecha límite", icon: <IoCalendarClear />, tone: "neutral" },
-  { id: "move", label: "Mover", icon: <HiMiniArrowsRightLeft />, tone: "orange" },
-  { id: "delete", label: "Borrar", icon: <IoTrashBinOutline />, tone: "danger" },
-];
-
-const LABEL_COLOR_PRESETS = [
-  "var(--color-green)", "var(--color-orange)", "var(--color-terracotta)",
-  "var(--color-graphite)", "#6c4ae0", "#1f9fb8",
+  { id: "due", label: "Asignar fecha límite", icon: <IoCalendarClear/>, tone: "neutral" },
+  { id: "move", label: "Mover", icon: <HiMiniArrowsRightLeft/>, tone: "orange" },
+  { id: "delete", label: "Borrar", icon: <IoTrashBinOutline/>, tone: "danger" },
 ];
 
 export default function TaskActionsModal({ taskId, onClose, onView }) {
-  const { tasks, users, labels, columns, currentUser, updateTask, deleteTask, addLabel } = useApp();
-  const [panel, setPanel] = useState(null);
-  const [newLabelTitle, setNewLabelTitle] = useState("");
-  const [newLabelColor, setNewLabelColor] = useState(LABEL_COLOR_PRESETS[0]);
-  const [creatingLabel, setCreatingLabel] = useState(false);
-  const [labelError, setLabelError] = useState(null);
-
+  const { tasks, users, columns, updateTask, deleteTask } = useApp();
+  const [panel, setPanel] = useState(null); // null = lista de opciones
   const task = tasks.find((t) => t.id === taskId);
   if (!task) return null;
 
   const priority = PRIORITIES[task.priority];
   const members = task.members.map((id) => users.find((u) => u.id === id)).filter(Boolean);
-  const taskLabels = task.labelIds.map((id) => labels.find((l) => l.id === id)).filter(Boolean);
 
-  const toggleMember = (userId) =>
+  const toggleArrayField = (key, value) =>
     updateTask(task.id, {
-      members: task.members.includes(userId)
-        ? task.members.filter((v) => v !== userId)
-        : [...task.members, userId],
+      [key]: task[key].includes(value)
+        ? task[key].filter((v) => v !== value)
+        : [...task[key], value],
     });
-
-  const toggleLabel = (labelId) =>
-    updateTask(task.id, {
-      labelIds: task.labelIds.includes(labelId)
-        ? task.labelIds.filter((v) => v !== labelId)
-        : [...task.labelIds, labelId],
-    });
-
-  const handleCreateLabel = async () => {
-    setLabelError(null);
-    setCreatingLabel(true);
-    try {
-      const created = await addLabel({ title: newLabelTitle.trim(), color: newLabelColor });
-      // la aplica directo a la tarea actual
-      await updateTask(task.id, { labelIds: [...task.labelIds, created.id] });
-      setNewLabelTitle("");
-    } catch (err) {
-      // el backend exige admin para crear etiquetas; si falla por permisos,
-      // avisamos explícitamente en vez de fallar en silencio
-      const message = err?.response?.status === 403
-        ? "Solo un administrador puede crear etiquetas nuevas."
-        : err?.response?.data?.message || "No se pudo crear la etiqueta.";
-      setLabelError(message);
-    } finally {
-      setCreatingLabel(false);
-    }
-  };
 
   const handleOptionClick = (id) => {
     if (id === "open") return onView(task.id);
@@ -78,16 +41,21 @@ export default function TaskActionsModal({ taskId, onClose, onView }) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="actions-modal" onClick={(e) => e.stopPropagation()}>
+        {/* preview de la tarjeta afectada */}
         <div className="actions-modal__preview">
-          <span
-            className="task-card__priority"
-            style={{ background: priority.color, position: "static", height: 4, borderRadius: 4, marginBottom: 10, display: "block" }}
-          />
-          {taskLabels.length > 0 && (
+          <span className="task-card__priority" style={{ background: priority.color, position: "static", height: 4, borderRadius: 4, marginBottom: 10, display: "block" }} />
+          {task.labels.length > 0 && (
             <div className="task-card__labels">
-              {taskLabels.map((l) => (
-                <span key={l.id} className="label" style={{ color: l.color, background: `color-mix(in srgb, ${l.color} 14%, transparent)` }}>
-                  {l.title || "·"}
+              {task.labels.map((l) => (
+                <span
+                  key={l}
+                  className="label"
+                  style={{
+                    color: LABEL_COLORS[l] || "var(--color-graphite)",
+                    background: `color-mix(in srgb, ${LABEL_COLORS[l] || "#888"} 14%, transparent)`,
+                  }}
+                >
+                  {l}
                 </span>
               ))}
             </div>
@@ -96,7 +64,7 @@ export default function TaskActionsModal({ taskId, onClose, onView }) {
           <div className="task-card__foot">
             <div className="avatars">
               {members.slice(0, 4).map((m) => (
-                <span key={m.id} className="avatar avatar--sm" style={{ background: "var(--color-green)" }}>{m.initials}</span>
+                <span key={m.id} className="avatar avatar--sm" style={{ background: m.color }}>{m.initials}</span>
               ))}
             </div>
             {task.dueDate && (
@@ -107,6 +75,7 @@ export default function TaskActionsModal({ taskId, onClose, onView }) {
           </div>
         </div>
 
+        {/* globo de opciones */}
         <div className="actions-modal__bubble">
           <div className="actions-modal__bubble-head">
             <span className="sync-dot" /> Acciones de tarjeta
@@ -150,61 +119,24 @@ export default function TaskActionsModal({ taskId, onClose, onView }) {
 
           {panel === "labels" && (
             <div className="actions-modal__panel">
-              <PanelHead title="Etiquetas" onBack={() => setPanel(null)} />
-
-              {labels.length > 0 ? (
-                <div className="chip-grid chip-grid--wrap">
-                  {labels.map((l) => (
-                    <button
-                      key={l.id}
-                      className={"label label--btn" + (task.labelIds.includes(l.id) ? " label--on" : "")}
-                      style={{
-                        color: l.color,
-                        background: task.labelIds.includes(l.id)
-                          ? `color-mix(in srgb, ${l.color} 18%, transparent)`
-                          : "transparent",
-                        borderColor: l.color,
-                      }}
-                      onClick={() => toggleLabel(l.id)}
-                    >
-                      {l.title || "·"}
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <p className="actions-modal__empty-hint">Esta categoría todavía no tiene etiquetas.</p>
-              )}
-
-              <div className="label-creator">
-                <span className="field__label">Crear nueva</span>
-                <div className="label-creator__row">
-                  <input
-                    className="input"
-                    placeholder="Nombre (opcional)"
-                    value={newLabelTitle}
-                    onChange={(e) => setNewLabelTitle(e.target.value)}
-                    maxLength={30}
-                  />
-                  <div className="label-creator__colors">
-                    {LABEL_COLOR_PRESETS.map((c) => (
-                      <button
-                        key={c}
-                        type="button"
-                        className={"label-creator__swatch" + (newLabelColor === c ? " is-selected" : "")}
-                        style={{ background: c }}
-                        onClick={() => setNewLabelColor(c)}
-                      />
-                    ))}
-                  </div>
-                </div>
-                <button
-                  className="btn btn--primary btn--sm"
-                  onClick={handleCreateLabel}
-                  disabled={creatingLabel}
-                >
-                  {creatingLabel ? "Creando…" : "+ Crear etiqueta"}
-                </button>
-                {labelError && <p className="label-creator__error">{labelError}</p>}
+              <PanelHead title="Agregar etiqueta" onBack={() => setPanel(null)} />
+              <div className="chip-grid chip-grid--wrap">
+                {ALL_LABELS.map((l) => (
+                  <button
+                    key={l}
+                    className={"label label--btn" + (task.labels.includes(l) ? " label--on" : "")}
+                    style={{
+                      color: LABEL_COLORS[l],
+                      background: task.labels.includes(l)
+                        ? `color-mix(in srgb, ${LABEL_COLORS[l]} 18%, transparent)`
+                        : "transparent",
+                      borderColor: LABEL_COLORS[l],
+                    }}
+                    onClick={() => toggleArrayField("labels", l)}
+                  >
+                    {l}
+                  </button>
+                ))}
               </div>
             </div>
           )}
@@ -217,9 +149,9 @@ export default function TaskActionsModal({ taskId, onClose, onView }) {
                   <button
                     key={u.id}
                     className={"member" + (task.members.includes(u.id) ? " member--on" : "")}
-                    onClick={() => toggleMember(u.id)}
+                    onClick={() => toggleArrayField("members", u.id)}
                   >
-                    <span className="avatar avatar--sm" style={{ background: "var(--color-green)" }}>{u.initials}</span>
+                    <span className="avatar avatar--sm" style={{ background: u.color }}>{u.initials}</span>
                     <span className="member__name">{u.name}</span>
                   </button>
                 ))}

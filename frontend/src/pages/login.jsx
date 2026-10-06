@@ -77,7 +77,7 @@ const AdminLogin = () => {
           }),
         );
       }
-      navigate("/");
+      navigate("/home");
     } 
     catch (error) {
       console.error("Error al iniciar sesión:", error);

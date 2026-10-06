@@ -103,11 +103,11 @@ export default function Topbar({ onOpenConfiguracion }) {
         </nav>
 
         <div className="drawer__user">
-          <span className="avatar" style={{ background: currentUser?.color }}>{currentUser?.initials}</span>
+          <span className="avatar" style={{ background: currentUser.color }}>{currentUser.initials}</span>
           <div className="user-card__info">
-            <strong>{currentUser?.name}</strong>
-            <small>{currentUser?.sector}</small>
-            <span className="role-chip">{currentUser?.role}</span>
+            <strong>{currentUser.name}</strong>
+            <small>{currentUser.sector}</small>
+            <span className="role-chip">{currentUser.role}</span>
           </div>
         </div>
         <div className="drawer__actions">

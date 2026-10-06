@@ -1,156 +1,24 @@
-import { createContext, useContext, useEffect, useMemo, useState, useCallback } from "react";
-import { fetchTasks, createTaskRequest, updateTaskRequest, deleteTaskRequest } from "../api/tasks";
+import { createContext, useContext, useMemo, useState } from "react";
 import {
-  fetchCategories,
-  createCategoryRequest,
-  deleteCategoryRequest,
-} from "../api/categories";
-import { fetchLabels, createLabelRequest } from "../api/labels";
-import { fetchSectors } from "../api/sectors";
-import { fetchUsers } from "../api/users";
+  CATEGORIES, TASKS, USERS, CURRENT_USER_ID, COLUMNS, SECTORS,
+} from "../mock/db";
 
 const AppContext = createContext(null);
 
-export const COLUMNS = [
-  { id: "pending", title: "Pendiente", dot: "var(--color-orange)" },
-  { id: "in_progress", title: "En curso", dot: "var(--color-green)" },
-  { id: "review", title: "En revisión", dot: "var(--color-terracotta)" },
-  { id: "completed", title: "Terminado", dot: "#9aa0a6" },
-];
-
-export const PRIORITIES = {
-  low: { id: "low", label: "Baja", color: "#9aa0a6" },
-  medium: { id: "medium", label: "Media", color: "var(--color-terracotta)" },
-  high: { id: "high", label: "Alta", color: "var(--color-orange)" },
-};
-
-function normalizeTask(raw) {
-  return {
-    id: raw._id,
-    title: raw.title,
-    description: raw.description,
-    priority: raw.priority,
-    column: raw.state,
-    categoryId: raw.category,
-    members: raw.assignedUser ?? [], // ver nota: el backend puede devolver null acá
-    labelIds: raw.labels ?? [],
-    dueDate: raw.dueDate ? raw.dueDate.slice(0, 10) : "",
-  };
-}
-
-function normalizeCategory(raw) {
-  return { id: raw._id, name: raw.name, color: raw.color, sectors: raw.sectors ?? [] };
-}
-
-function normalizeLabel(raw) {
-  return { id: raw._id, title: raw.title, color: raw.color, categoryId: raw.category };
-}
-
-function normalizeSector(raw) {
-  return { id: raw._id, name: raw.name, color: raw.color };
-}
-
-function normalizeUser(raw) {
-  const initials = raw.name
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-  return { id: raw._id, name: raw.name, initials, accountType: raw.accountType };
-}
-
 export function AppProvider({ children }) {
-  // ---- categorías ----
-  const [categories, setCategories] = useState([]);
-  const [categoriesLoading, setCategoriesLoading] = useState(true);
-  const [categoriesError, setCategoriesError] = useState(null);
-  const [activeCategory, setActiveCategory] = useState(null);
-
-  // ---- sectores / usuarios (listas de apoyo para selects) ----
-  const [sectors, setSectors] = useState([]);
-  const [users, setUsers] = useState([]);
-
-  // ---- etiquetas de la categoría activa ----
-  const [labels, setLabels] = useState([]);
-  const [labelsLoading, setLabelsLoading] = useState(false);
-
-  // ---- tareas ----
-  const [tasks, setTasks] = useState([]);
-  const [tasksLoading, setTasksLoading] = useState(true);
-  const [tasksError, setTasksError] = useState(null);
-
+  const [categories, setCategories] = useState(CATEGORIES);
+  const [tasks, setTasks] = useState(TASKS);
+  const [activeCategory, setActiveCategory] = useState(CATEGORIES[0].id);
   const [view, setView] = useState("tablero");
   const [search, setSearch] = useState("");
-  const [filters, setFilters] = useState({ onlyMine: false, priorities: [], sector: "", due: "" });
+  const [filters, setFilters] = useState({
+    onlyMine: false,
+    priorities: [],
+    sector: "",
+    due: "",
+  });
 
-  /* ---------- carga inicial ---------- */
-
-  const loadCategories = useCallback(async () => {
-    setCategoriesLoading(true);
-    setCategoriesError(null);
-    try {
-      const raw = await fetchCategories();
-      const normalized = raw.map(normalizeCategory);
-      setCategories(normalized);
-      setActiveCategory((prev) => prev ?? normalized[0]?.id ?? null);
-    } catch (err) {
-      setCategoriesError(err?.response?.data?.message || "No se pudieron cargar las categorías.");
-    } finally {
-      setCategoriesLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadCategories();
-    fetchSectors()
-      .then((raw) => setSectors(raw.map(normalizeSector)))
-      .catch(() => setSectors([]));
-    fetchUsers()
-      .then((raw) => setUsers(raw.map(normalizeUser)))
-      .catch(() => setUsers([]));
-  }, [loadCategories]);
-
-  /* ---------- etiquetas: dependen de la categoría activa ---------- */
-
-  const loadLabels = useCallback(async () => {
-    if (!activeCategory) {
-      setLabels([]);
-      return;
-    }
-    setLabelsLoading(true);
-    try {
-      const raw = await fetchLabels(activeCategory);
-      setLabels(raw.map(normalizeLabel));
-    } catch {
-      setLabels([]);
-    } finally {
-      setLabelsLoading(false);
-    }
-  }, [activeCategory]);
-
-  useEffect(() => {
-    loadLabels();
-  }, [loadLabels]);
-
-  /* ---------- tareas ---------- */
-
-  const loadTasks = useCallback(async () => {
-    setTasksLoading(true);
-    setTasksError(null);
-    try {
-      const raw = await fetchTasks();
-      setTasks(raw.map(normalizeTask));
-    } catch (err) {
-      setTasksError(err?.response?.data?.message || "No se pudieron cargar las tareas.");
-    } finally {
-      setTasksLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadTasks();
-  }, [loadTasks]);
+  const currentUser = USERS.find((u) => u.id === CURRENT_USER_ID);
 
   const activeFiltersCount = useMemo(() => {
     let n = 0;
@@ -168,100 +36,84 @@ export function AppProvider({ children }) {
     return tasks.filter((t) => {
       if (t.categoryId !== activeCategory) return false;
       if (search && !t.title.toLowerCase().includes(search.toLowerCase())) return false;
+      if (filters.onlyMine && !t.members.includes(CURRENT_USER_ID)) return false;
       if (filters.priorities.length && !filters.priorities.includes(t.priority)) return false;
-      if (filters.due && t.dueDate) {
+      if (filters.sector && t.sector !== filters.sector) return false;
+      if (filters.due) {
         const d = diffDays(t.dueDate);
         if (filters.due === "hoy" && !(d >= -1 && d < 1)) return false;
         if (filters.due === "48" && !(d < 2)) return false;
         if (filters.due === "7" && !(d < 7)) return false;
       }
-      // ⚠️ filters.onlyMine queda sin efecto hasta tener un endpoint /me
-      // que confirme el id del usuario logueado (ver nota general).
       return true;
     });
   }, [tasks, activeCategory, search, filters]);
 
-  /* ---------- acciones: tareas ---------- */
+  /* ---------- tareas ---------- */
 
-  const addTask = async (columnId, title) => {
-    if (!activeCategory) return;
-    const created = await createTaskRequest({
-      title,
-      description: "Sin descripción",
-      priority: "medium",
-      state: columnId,
-      category: activeCategory,
+  const addTask = (columnId, title) => {
+    const id = "t" + Math.random().toString(36).slice(2, 8);
+    setTasks((prev) => [
+      ...prev,
+      {
+        id,
+        categoryId: activeCategory,
+        column: columnId,
+        title,
+        description: "",
+        priority: "media",
+        labels: [],
+        members: [],
+        sector: currentUser.sector,
+        dueDate: "",
+      },
+    ]);
+  };
+
+  const updateTask = (id, patch) =>
+    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)));
+
+  const deleteTask = (id) => setTasks((prev) => prev.filter((t) => t.id !== id));
+
+  const moveTask = (id, columnId, beforeId = null) => {
+    setTasks((prev) => {
+      const moving = prev.find((t) => t.id === id);
+      if (!moving) return prev;
+      const rest = prev.filter((t) => t.id !== id);
+      const updated = { ...moving, column: columnId };
+      if (!beforeId) return [...rest, updated];
+      const idx = rest.findIndex((t) => t.id === beforeId);
+      if (idx === -1) return [...rest, updated];
+      return [...rest.slice(0, idx), updated, ...rest.slice(idx)];
     });
-    setTasks((prev) => [...prev, normalizeTask(created)]);
   };
 
-  const updateTask = async (id, patch) => {
-    const payload = {};
-    if (patch.title !== undefined) payload.title = patch.title;
-    if (patch.description !== undefined) payload.description = patch.description;
-    if (patch.priority !== undefined) payload.priority = patch.priority;
-    if (patch.column !== undefined) payload.state = patch.column;
-    if (patch.members !== undefined) payload.assignedUser = patch.members;
-    if (patch.labelIds !== undefined) payload.labels = patch.labelIds;
-    if (patch.dueDate !== undefined) payload.dueDate = patch.dueDate || null;
+  /* ---------- categorías ---------- */
 
-    const updated = await updateTaskRequest(id, payload);
-    setTasks((prev) => prev.map((t) => (t.id === id ? normalizeTask(updated) : t)));
+  const addCategory = ({ name, color, sectors: authorizedSectors }) => {
+    const id = "cat_" + Math.random().toString(36).slice(2, 8);
+    const newCategory = { id, name, color, sectors: authorizedSectors ?? "all" };
+    setCategories((prev) => [...prev, newCategory]);
+    setActiveCategory(id);
+    return id;
   };
 
-  const deleteTask = async (id) => {
-    await deleteTaskRequest(id);
-    setTasks((prev) => prev.filter((t) => t.id !== id));
-  };
+  const deleteCategory = (id) => {
+    if (categories.length <= 1) return; // nunca te quedás sin categorías
 
-  const moveTask = async (id, columnId) => {
-    const previous = tasks;
-    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, column: columnId } : t)));
-    try {
-      await updateTaskRequest(id, { state: columnId });
-    } catch (err) {
-      setTasks(previous); // revierte el optimistic update
-      throw err;
-    }
-  };
-
-  /* ---------- acciones: categorías ---------- */
-
-  const addCategory = async ({ name, color, sectors: sectorIds }) => {
-    const created = await createCategoryRequest({ name, color, sectors: sectorIds });
-    const normalized = normalizeCategory(created);
-    setCategories((prev) => [...prev, normalized]);
-    setActiveCategory(normalized.id);
-    return normalized.id;
-  };
-
-  const deleteCategory = async (id) => {
-    if (categories.length <= 1) return;
-    await deleteCategoryRequest(id);
     setCategories((prev) => prev.filter((c) => c.id !== id));
+    setTasks((prev) => prev.filter((t) => t.categoryId !== id)); // limpia sus tareas
+
     if (activeCategory === id) {
       const fallback = categories.find((c) => c.id !== id);
-      setActiveCategory(fallback?.id ?? null);
+      if (fallback) setActiveCategory(fallback.id);
     }
-  };
-
-  /* ---------- acciones: etiquetas ---------- */
-
-  const addLabel = async ({ title, color }) => {
-    if (!activeCategory) throw new Error("No hay categoría activa");
-    const created = await createLabelRequest({ title, color, category: activeCategory });
-    const normalized = normalizeLabel(created);
-    setLabels((prev) => [...prev, normalized]);
-    return normalized;
   };
 
   const value = {
-    categories, categoriesLoading, categoriesError,
-    activeCategory, setActiveCategory, addCategory, deleteCategory,
-    columns: COLUMNS, sectors, users,
-    labels, labelsLoading, addLabel,
-    tasks, visibleTasks, tasksLoading, tasksError, reloadTasks: loadTasks,
-    addTask, updateTask, deleteTask, moveTask,
+    categories, activeCategory, setActiveCategory, addCategory, deleteCategory,
+    columns: COLUMNS, sectors: SECTORS, users: USERS, currentUser,
+    tasks, visibleTasks, addTask, updateTask, deleteTask, moveTask,
     view, setView, search, setSearch,
     filters, setFilters, activeFiltersCount,
   };

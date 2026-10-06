@@ -1,10 +1,10 @@
-import { useApp, PRIORITIES } from "../context/AppContext";
+import { useApp } from "../context/AppContext";
+import { PRIORITIES, LABEL_COLORS } from "../mock/db";
 
 export default function TaskCard({ task, isDragging, onDragStart, onDragEnd, onDropBefore, onView, onEdit }) {
-  const { users, labels } = useApp();
+  const { users } = useApp();
   const priority = PRIORITIES[task.priority];
   const members = task.members.map((id) => users.find((u) => u.id === id)).filter(Boolean);
-  const taskLabels = task.labelIds.map((id) => labels.find((l) => l.id === id)).filter(Boolean);
 
   return (
     <article
@@ -26,15 +26,16 @@ export default function TaskCard({ task, isDragging, onDragStart, onDragEnd, onD
         ✎
       </button>
 
-      {taskLabels.length > 0 && (
+      {task.labels.length > 0 && (
         <div className="task-card__labels">
-          {taskLabels.map((l) => (
+          {task.labels.map((l) => (
             <span
-              key={l.id}
+              key={l}
               className="label"
-              style={{ color: l.color, background: `color-mix(in srgb, ${l.color} 14%, transparent)` }}
+              style={{ color: LABEL_COLORS[l] || "var(--color-graphite)",
+                       background: `color-mix(in srgb, ${LABEL_COLORS[l] || "#888"} 14%, transparent)` }}
             >
-              {l.title || "·"}
+              {l}
             </span>
           ))}
         </div>
@@ -45,7 +46,7 @@ export default function TaskCard({ task, isDragging, onDragStart, onDragEnd, onD
       <div className="task-card__foot">
         <div className="avatars">
           {members.slice(0, 3).map((m) => (
-            <span key={m.id} className="avatar avatar--sm" style={{ background: "var(--color-green)" }} title={m.name}>
+            <span key={m.id} className="avatar avatar--sm" style={{ background: m.color }} title={m.name}>
               {m.initials}
             </span>
           ))}
