@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../api.js";
 import "../styles/pages/login.css";
 
-const AdminLogin = () => {
+const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -208,4 +208,4 @@ const AdminLogin = () => {
   );
 };
 
-export default AdminLogin;
+export default Login;

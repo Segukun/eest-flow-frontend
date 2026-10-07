@@ -1,9 +1,6 @@
-import { avatarStyle } from "../../theme";
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
-import AddCategoryModal from "../AddCategoryModal";
-import DeleteCategoryModal from "../DeleteCategoryModal";
 import "../../styles/layout/topbar.css";
 
 const NAV = [
@@ -14,12 +11,10 @@ const NAV = [
   { to: "/equipo", label: "Mi Equipo", icon: "/icons/team.svg" },
 ];
 
-export default function Topbar({ onOpenConfiguracion }) {
-  const { categories, activeCategory, setActiveCategory, currentUser } = useApp();
+export default function Topbar({ onOpenConfiguracion, onOpenAddCategory, onRequestDeleteCategory }) {
+  const { categories, categoriesLoading, activeCategory, setActiveCategory, currentUser } = useApp();
   const [open, setOpen] = useState(false);
   const [catsOpen, setCatsOpen] = useState(false);
-  const [addOpen, setAddOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState(null);
 
   return (
     <>
@@ -69,70 +64,67 @@ export default function Topbar({ onOpenConfiguracion }) {
           </button>
 
           {catsOpen && (
-            <ul className="cat-list cat-list--drawer">
-              {categories.map((c) => (
-                <li key={c.id} className="cat-item-row">
-                  <button
-                    className={"cat-item" + (activeCategory === c.id ? " cat-item--active" : "")}
-                    onClick={() => { setActiveCategory(c.id); setOpen(false); }}
-                  >
-                    <span className="cat-dot" style={{ background: c.color }} />
-                    <span className="cat-name">{c.name}</span>
-                  </button>
-                  {categories.length > 1 && (
+            categoriesLoading ? (
+              <p className="actions-modal__empty-hint">Cargando…</p>
+            ) : (
+              <ul className="cat-list cat-list--drawer">
+                {categories.map((c) => (
+                  <li key={c.id} className="cat-item-row">
                     <button
-                      className="cat-item__delete"
-                      title="Eliminar categoría"
-                      onClick={(e) => { e.stopPropagation(); setDeleteTarget(c); }}
+                      className={"cat-item" + (activeCategory === c.id ? " cat-item--active" : "")}
+                      onClick={() => { setActiveCategory(c.id); setOpen(false); }}
                     >
-                      🗑
+                      <span className="cat-dot" style={{ background: c.color }} />
+                      <span className="cat-name">{c.name}</span>
                     </button>
-                  )}
+                    {categories.length > 1 && (
+                      <button
+                        className="cat-item__delete"
+                        title="Eliminar categoría"
+                        onClick={(e) => { e.stopPropagation(); onRequestDeleteCategory(c); setOpen(false); }}
+                      >
+                        🗑
+                      </button>
+                    )}
+                  </li>
+                ))}
+                <li>
+                  <button className="cat-item cat-item--add" onClick={() => { onOpenAddCategory(); setOpen(false); }}>
+                    <span className="cat-dot cat-dot--add">+</span>
+                    <span className="cat-name">Agregar categoría</span>
+                  </button>
                 </li>
-              ))}
-              <li>
-                <button
-                  className="cat-item cat-item--add"
-                  onClick={() => setAddOpen(true)}
-                >
-                  <span className="cat-dot cat-dot--add">+</span>
-                  <span className="cat-name">Agregar categoría</span>
-                </button>
-              </li>
-            </ul>
+              </ul>
+            )
           )}
         </nav>
 
         <div className="drawer__user">
-          <span className="avatar" style={avatarStyle(currentUser.color)}>{currentUser.initials}</span>
+          <span className="avatar" style={{ background: "var(--color-green)" }}>
+            {currentUser?.initials ?? "…"}
+          </span>
           <div className="user-card__info">
-            <strong>{currentUser.name}</strong>
-            <small>{currentUser.sector}</small>
-            <span className="role-chip">{currentUser.role}</span>
+            <strong>{currentUser?.name ?? "Cargando…"}</strong>
+            <span className="role-chip">
+              {currentUser?.accountType === "admin" ? "Administrador" : "Colaborador"}
+            </span>
           </div>
         </div>
         <div className="drawer__actions">
-          <button className="user-menu__item" onClick={() => {
-            onOpenConfiguracion();
-            setOpen(false);
-          }}>
+          <button className="user-menu__item" onClick={() => { onOpenConfiguracion(); setOpen(false); }}>
             <img src="/icons/settingsgear.svg" alt="" className="icon-sm" /> Configuración
           </button>
-          <button className="user-menu__item user-menu__item--danger">Cerrar sesión</button>
+          <button
+            className="user-menu__item user-menu__item--danger"
+            onClick={() => {
+              localStorage.removeItem("user");
+              window.location.href = "/login";
+            }}
+          >
+            Cerrar sesión
+          </button>
         </div>
       </aside>
-
-      {addOpen && (
-        <AddCategoryModal
-          onClose={() => { setAddOpen(false); setOpen(false); }}
-        />
-      )}
-      {deleteTarget && (
-        <DeleteCategoryModal
-          category={deleteTarget}
-          onClose={() => setDeleteTarget(null)}
-        />
-      )}
     </>
   );
 }

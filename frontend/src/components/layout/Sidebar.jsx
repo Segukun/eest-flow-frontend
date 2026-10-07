@@ -1,9 +1,6 @@
-import { avatarStyle } from "../../theme";
 import { useState, useRef, useEffect } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
-import AddCategoryModal from "../AddCategoryModal";
-import DeleteCategoryModal from "../DeleteCategoryModal";
 import "../../styles/layout/sidebar.css";
 
 const NAV = [
@@ -13,34 +10,17 @@ const NAV = [
   { to: "/notificaciones", label: "Notificaciones", icon: "/icons/bell.svg", badge: 3 },
 ];
 
-export default function Sidebar({ onOpenPerfil, onOpenConfiguracion }) {
-  const { categories, activeCategory, setActiveCategory, currentUser, logout: contextLogout } = useApp();
+export default function Sidebar({ onOpenPerfil, onOpenConfiguracion, onOpenAddCategory, onRequestDeleteCategory }) {
+  const { categories, categoriesLoading, activeCategory, setActiveCategory, currentUser } = useApp();
   const [menuOpen, setMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-  const [addOpen, setAddOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState(null);
   const ref = useRef(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const onClick = (e) => { if (ref.current && !ref.current.contains(e.target)) setMenuOpen(false); };
     document.addEventListener("mousedown", onClick);
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
-
-  const handleLogout = () => {
-    const confirmar = window.confirm("¿Seguro que querés cerrar sesión?");
-    if (!confirmar) return;
-
-    // Si tenés logout en el context, usalo, si no, fallback local
-    if (contextLogout) {
-      contextLogout();
-    } else {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      navigate("/login", { replace: true });
-    }
-  };
 
   return (
     <aside className={"sidebar" + (collapsed ? " sidebar--collapsed" : "")}>
@@ -82,36 +62,37 @@ export default function Sidebar({ onOpenPerfil, onOpenConfiguracion }) {
         <div className="sidebar__section">
           <div className="sidebar__section-head">
             <span>Categorías</span>
-            <button
-              className="sidebar__add"
-              title="Agregar categoría"
-              onClick={() => setAddOpen(true)}
-            >
+            <button className="sidebar__add" title="Agregar categoría" onClick={onOpenAddCategory}>
               +
             </button>
           </div>
-          <ul className="cat-list">
-            {categories.map((c) => (
-              <li key={c.id} className="cat-item-row">
-                <button
-                  className={"cat-item" + (activeCategory === c.id ? " cat-item--active" : "")}
-                  onClick={() => setActiveCategory(c.id)}
-                >
-                  <span className="cat-dot" style={{ background: c.color }} />
-                  <span className="cat-name">{c.name}</span>
-                </button>
-                {categories.length > 1 && (
+
+          {categoriesLoading ? (
+            <p className="actions-modal__empty-hint">Cargando…</p>
+          ) : (
+            <ul className="cat-list">
+              {categories.map((c) => (
+                <li key={c.id} className="cat-item-row">
                   <button
-                    className="cat-item__delete"
-                    title="Eliminar categoría"
-                    onClick={(e) => { e.stopPropagation(); setDeleteTarget(c); }}
+                    className={"cat-item" + (activeCategory === c.id ? " cat-item--active" : "")}
+                    onClick={() => setActiveCategory(c.id)}
                   >
-                    🗑
+                    <span className="cat-dot" style={{ background: c.color }} />
+                    <span className="cat-name">{c.name}</span>
                   </button>
-                )}
-              </li>
-            ))}
-          </ul>
+                  {categories.length > 1 && (
+                    <button
+                      className="cat-item__delete"
+                      title="Eliminar categoría"
+                      onClick={(e) => { e.stopPropagation(); onRequestDeleteCategory(c); }}
+                    >
+                      🗑
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
 
@@ -127,13 +108,15 @@ export default function Sidebar({ onOpenPerfil, onOpenConfiguracion }) {
       </div>
 
       <div className="sidebar__user" ref={ref}>
-        <button className="user-card" onClick={() => setMenuOpen((v) => !v)} disabled={collapsed}>
-          <span className="avatar" style={avatarStyle(currentUser.color)}>{currentUser.initials}</span>
+        <button className="user-card" onClick={() => setMenuOpen((v) => !v)} disabled={collapsed || !currentUser}>
+          <span className="avatar" style={{ background: "var(--color-green)" }}>
+            {currentUser?.initials ?? "…"}
+          </span>
           {!collapsed && (
             <>
               <span className="user-card__info">
-                <strong>{currentUser.name}</strong>
-                <small>{currentUser.sector}</small>
+                <strong>{currentUser?.name ?? "Cargando…"}</strong>
+                <small>{currentUser?.accountType === "admin" ? "Administrador" : "Colaborador"}</small>
               </span>
               <span className="user-card__chevron">⌄</span>
             </>
@@ -142,40 +125,25 @@ export default function Sidebar({ onOpenPerfil, onOpenConfiguracion }) {
 
         {menuOpen && (
           <div className="user-menu">
-            <button
-              className="user-menu__item"
-              onClick={() => {
-                onOpenPerfil();
-                setMenuOpen(false);
-              }}
-            >
-              <img
-                src="/icons/user.svg"
-                alt=""
-                className="icon-sm"
-              />
+            <button className="user-menu__item" onClick={() => { onOpenPerfil(); setMenuOpen(false); }}>
+              <img src="/icons/user.svg" alt="" className="icon-sm" />
               Editar perfil
             </button>
-            <button className="user-menu__item" onClick={() => {
-              onOpenConfiguracion();
-              setMenuOpen(false);
-            }}>
+            <button className="user-menu__item" onClick={() => { onOpenConfiguracion(); setMenuOpen(false); }}>
               <img src="/icons/settingsgear.svg" alt="" className="icon-sm" /> Configuración
             </button>
-            <button 
-              className="user-menu__item user-menu__item--danger" 
-              onClick={handleLogout}
+            <button
+              className="user-menu__item user-menu__item--danger"
+              onClick={() => {
+                localStorage.removeItem("user");
+                window.location.href = "/login";
+              }}
             >
               Cerrar sesión
             </button>
           </div>
         )}
       </div>
-
-      {addOpen && <AddCategoryModal onClose={() => setAddOpen(false)} />}
-      {deleteTarget && (
-        <DeleteCategoryModal category={deleteTarget} onClose={() => setDeleteTarget(null)} />
-      )}
     </aside>
   );
 }

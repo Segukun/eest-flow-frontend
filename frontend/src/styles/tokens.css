@@ -126,3 +126,74 @@ ul {
   width: 16px;
   height: 16px;
 }
+
+/* Overlay compartido por TODOS los modales de la app.
+   Único lugar donde se define — no duplicar en otros CSS. */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(31, 21, 28, 0.55);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1000; /* por encima de sidebar (20), topbar/drawer (25-31) y dropdowns */
+  animation: modal-fade 0.15s ease;
+}
+
+@keyframes modal-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Caja blanca base que usan los modales "de formulario largo"
+   (TaskDetailModal y cualquier otro que use className="modal ..."). 
+   Las clases con namespace propio (.category-modal, .actions-modal,
+   .delete-category-modal) ya traen su propio ancho/fondo y no la usan. */
+.modal {
+  width: min(560px, 100%);
+  max-height: 88vh;
+  background: var(--theme-surface, #fff);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--theme-border, var(--color-border));
+  flex: none;
+}
+
+.modal__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.modal__body {
+  padding: 20px 22px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.modal__foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 22px;
+  border-top: 1px solid var(--theme-border, var(--color-border));
+  flex: none;
+}

@@ -1,62 +1,147 @@
-import { readableAccent, avatarStyle } from "../../theme";
 import { useState } from "react";
-import { useApp } from "../../context/AppContext";
-import { PRIORITIES, ALL_LABELS, LABEL_COLORS } from "../../mock/db";
+import { useApp, PRIORITIES } from "../../context/AppContext";
 import "../../styles/components/task-actions-modal.css";
 
-import { IoEnterOutline, IoList, IoPricetagOutline, IoCalendarClear, IoTrashBinOutline } from "react-icons/io5";
+import { IoEnterOutline, IoList, IoPricetagOutline, IoCalendarClear, IoTrashBinOutline, IoPencil, IoClose, IoCheckmark } from "react-icons/io5";
 import { HiMiniArrowsRightLeft } from "react-icons/hi2";
 
 const OPTIONS = [
-  { id: "open", label: "Abrir tarjeta", icon: <IoEnterOutline/>, tone: "neutral" },
-  { id: "priority", label: "Asignar prioridad", icon: <IoList/>, tone: "green" },
-  { id: "labels", label: "Agregar etiqueta", icon: <IoPricetagOutline/>, tone: "neutral" },
+  { id: "open", label: "Abrir tarjeta", icon: <IoEnterOutline />, tone: "neutral" },
+  { id: "priority", label: "Asignar prioridad", icon: <IoList />, tone: "green" },
+  { id: "labels", label: "Etiquetas", icon: <IoPricetagOutline />, tone: "neutral" },
   { id: "members", label: "Asignar personal", icon: "＋", tone: "neutral" },
-  { id: "due", label: "Asignar fecha límite", icon: <IoCalendarClear/>, tone: "neutral" },
-  { id: "move", label: "Mover", icon: <HiMiniArrowsRightLeft/>, tone: "orange" },
-  { id: "delete", label: "Borrar", icon: <IoTrashBinOutline/>, tone: "danger" },
+  { id: "due", label: "Asignar fecha límite", icon: <IoCalendarClear />, tone: "neutral" },
+  { id: "move", label: "Mover", icon: <HiMiniArrowsRightLeft />, tone: "orange" },
+  { id: "delete", label: "Borrar", icon: <IoTrashBinOutline />, tone: "danger" },
+];
+
+const LABEL_COLOR_PRESETS = [
+  "var(--color-green)", "var(--color-orange)", "var(--color-terracotta)",
+  "var(--color-graphite)", "#6c4ae0", "#1f9fb8", "#e0342b", "#2563eb",
 ];
 
 export default function TaskActionsModal({ taskId, onClose, onView }) {
-  const { tasks, users, columns, updateTask, deleteTask } = useApp();
-  const [panel, setPanel] = useState(null); // null = lista de opciones
+  const { tasks, users, labels, columns, updateTask, deleteTask, addLabel, updateLabel, deleteLabel } = useApp();
+  const [panel, setPanel] = useState(null);
+
+  // ---- creación de etiqueta nueva ----
+  const [newLabelTitle, setNewLabelTitle] = useState("");
+  const [newLabelColor, setNewLabelColor] = useState(null); // sin default: el usuario debe elegir
+  const [creatingLabel, setCreatingLabel] = useState(false);
+  const [labelError, setLabelError] = useState(null);
+
+  // ---- edición de una etiqueta existente ----
+  const [editingLabelId, setEditingLabelId] = useState(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editColor, setEditColor] = useState(null);
+  const [savingEdit, setSavingEdit] = useState(false);
+
   const task = tasks.find((t) => t.id === taskId);
   if (!task) return null;
 
   const priority = PRIORITIES[task.priority];
   const members = task.members.map((id) => users.find((u) => u.id === id)).filter(Boolean);
+  const taskLabels = task.labelIds.map((id) => labels.find((l) => l.id === id)).filter(Boolean);
 
-  const toggleArrayField = (key, value) =>
+  const toggleMember = (userId) =>
     updateTask(task.id, {
-      [key]: task[key].includes(value)
-        ? task[key].filter((v) => v !== value)
-        : [...task[key], value],
+      members: task.members.includes(userId)
+        ? task.members.filter((v) => v !== userId)
+        : [...task.members, userId],
     });
+
+  const toggleLabel = (labelId) =>
+    updateTask(task.id, {
+      labelIds: task.labelIds.includes(labelId)
+        ? task.labelIds.filter((v) => v !== labelId)
+        : [...task.labelIds, labelId],
+    });
+
+  const canCreateLabel = newLabelTitle.trim().length > 0 && newLabelColor !== null;
+
+  const handleCreateLabel = async () => {
+    if (!canCreateLabel) return;
+    setLabelError(null);
+    setCreatingLabel(true);
+    try {
+      await addLabel({ title: newLabelTitle.trim(), color: newLabelColor });
+      setNewLabelTitle("");
+      setNewLabelColor(null);
+    } catch (err) {
+      const message = err?.response?.status === 403
+        ? "Solo un administrador puede crear etiquetas nuevas."
+        : err?.response?.data?.message || "No se pudo crear la etiqueta.";
+      setLabelError(message);
+    } finally {
+      setCreatingLabel(false);
+    }
+  };
+
+  const startEditLabel = (label) => {
+    setEditingLabelId(label.id);
+    setEditTitle(label.title || "");
+    setEditColor(label.color);
+    setLabelError(null);
+  };
+
+  const cancelEditLabel = () => {
+    setEditingLabelId(null);
+    setEditTitle("");
+    setEditColor(null);
+  };
+
+  const canSaveEdit = editTitle.trim().length > 0 && editColor !== null;
+
+  const saveEditLabel = async () => {
+    if (!canSaveEdit) return;
+    setSavingEdit(true);
+    setLabelError(null);
+    try {
+      await updateLabel(editingLabelId, { title: editTitle.trim(), color: editColor });
+      cancelEditLabel();
+    } catch (err) {
+      const message = err?.response?.status === 403
+        ? "Solo un administrador puede editar etiquetas."
+        : err?.response?.data?.message || "No se pudo guardar la etiqueta.";
+      setLabelError(message);
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const handleDeleteLabel = async (labelId) => {
+    setLabelError(null);
+    try {
+      await deleteLabel(labelId);
+      if (editingLabelId === labelId) cancelEditLabel();
+    } catch (err) {
+      const message = err?.response?.status === 403
+        ? "Solo un administrador puede borrar etiquetas."
+        : err?.response?.data?.message || "No se pudo borrar la etiqueta.";
+      setLabelError(message);
+    }
+  };
 
   const handleOptionClick = (id) => {
     if (id === "open") return onView(task.id);
     if (id === "delete") { deleteTask(task.id); onClose(); return; }
     setPanel(id);
+    if (id === "labels") { cancelEditLabel(); setLabelError(null); }
   };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="actions-modal" onClick={(e) => e.stopPropagation()}>
-        {/* preview de la tarjeta afectada */}
         <div className="actions-modal__preview">
-          <span className="task-card__priority" style={{ background: priority.color, position: "static", height: 4, borderRadius: 4, marginBottom: 10, display: "block" }} />
-          {task.labels.length > 0 && (
+          <span
+            className="task-card__priority"
+            style={{ background: priority.color, position: "static", height: 4, borderRadius: 4, marginBottom: 10, display: "block" }}
+          />
+          {taskLabels.length > 0 && (
             <div className="task-card__labels">
-              {task.labels.map((l) => (
-                <span
-                  key={l}
-                  className="label"
-                  style={{
-                    color: readableAccent(LABEL_COLORS[l] || "var(--color-graphite)"),
-                    background: `color-mix(in srgb, ${LABEL_COLORS[l] || "#888"} 14%, transparent)`,
-                  }}
-                >
-                  {l}
+              {taskLabels.map((l) => (
+                <span key={l.id} className="label" style={{ color: l.color, background: `color-mix(in srgb, ${l.color} 14%, transparent)` }}>
+                  {l.title}
                 </span>
               ))}
             </div>
@@ -65,7 +150,7 @@ export default function TaskActionsModal({ taskId, onClose, onView }) {
           <div className="task-card__foot">
             <div className="avatars">
               {members.slice(0, 4).map((m) => (
-                <span key={m.id} className="avatar avatar--sm" style={avatarStyle(m.color)}>{m.initials}</span>
+                <span key={m.id} className="avatar avatar--sm" style={{ background: "var(--color-green)" }}>{m.initials}</span>
               ))}
             </div>
             {task.dueDate && (
@@ -76,7 +161,6 @@ export default function TaskActionsModal({ taskId, onClose, onView }) {
           </div>
         </div>
 
-        {/* globo de opciones */}
         <div className="actions-modal__bubble">
           <div className="actions-modal__bubble-head">
             <span className="sync-dot" /> Acciones de tarjeta
@@ -120,25 +204,122 @@ export default function TaskActionsModal({ taskId, onClose, onView }) {
 
           {panel === "labels" && (
             <div className="actions-modal__panel">
-              <PanelHead title="Agregar etiqueta" onBack={() => setPanel(null)} />
-              <div className="chip-grid chip-grid--wrap">
-                {ALL_LABELS.map((l) => (
-                  <button
-                    key={l}
-                    className={"label label--btn" + (task.labels.includes(l) ? " label--on" : "")}
-                    style={{
-                      color: readableAccent(LABEL_COLORS[l]),
-                      background: task.labels.includes(l)
-                        ? `color-mix(in srgb, ${LABEL_COLORS[l]} 18%, transparent)`
-                        : "transparent",
-                      borderColor: LABEL_COLORS[l],
-                    }}
-                    onClick={() => toggleArrayField("labels", l)}
-                  >
-                    {l}
-                  </button>
-                ))}
+              <PanelHead title="Etiquetas" onBack={() => { setPanel(null); cancelEditLabel(); }} />
+
+              {/* columna de etiquetas existentes, una abajo de la otra, estilo Trello */}
+              <div className="label-manager__list">
+                {labels.length === 0 && (
+                  <p className="actions-modal__empty-hint">Esta categoría todavía no tiene etiquetas.</p>
+                )}
+
+                {labels.map((l) => {
+                  const isEditing = editingLabelId === l.id;
+                  const isOnTask = task.labelIds.includes(l.id);
+
+                  if (isEditing) {
+                    return (
+                      <div key={l.id} className="label-manager__row label-manager__row--editing">
+                        <input
+                          className="input label-manager__edit-input"
+                          value={editTitle}
+                          onChange={(e) => setEditTitle(e.target.value)}
+                          placeholder="Nombre de la etiqueta"
+                          maxLength={30}
+                          autoFocus
+                        />
+                        <div className="label-manager__colors">
+                          {LABEL_COLOR_PRESETS.map((c) => (
+                            <button
+                              key={c}
+                              type="button"
+                              className={"label-manager__swatch" + (editColor === c ? " is-selected" : "")}
+                              style={{ background: c }}
+                              onClick={() => setEditColor(c)}
+                            />
+                          ))}
+                        </div>
+                        <div className="label-manager__row-actions">
+                          <button
+                            className="icon-btn icon-btn--danger"
+                            title="Borrar etiqueta"
+                            onClick={() => handleDeleteLabel(l.id)}
+                          >
+                            <IoTrashBinOutline />
+                          </button>
+                          <button className="icon-btn" title="Cancelar" onClick={cancelEditLabel}>
+                            <IoClose />
+                          </button>
+                          <button
+                            className="icon-btn icon-btn--primary"
+                            title="Guardar"
+                            onClick={saveEditLabel}
+                            disabled={!canSaveEdit || savingEdit}
+                          >
+                            <IoCheckmark />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div key={l.id} className="label-manager__row">
+                      <button
+                        className={"label-manager__chip" + (isOnTask ? " is-on" : "")}
+                        style={{
+                          background: isOnTask ? l.color : `color-mix(in srgb, ${l.color} 16%, transparent)`,
+                          color: isOnTask ? "#fff" : l.color,
+                        }}
+                        onClick={() => toggleLabel(l.id)}
+                        title={isOnTask ? "Quitar de la tarea" : "Agregar a la tarea"}
+                      >
+                        {l.title}
+                      </button>
+                      <button
+                        className="label-manager__edit-btn"
+                        title="Editar etiqueta"
+                        onClick={() => startEditLabel(l)}
+                      >
+                        <IoPencil />
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
+
+              {/* crear nueva etiqueta, siempre al final de la columna */}
+              {editingLabelId === null && (
+                <div className="label-creator">
+                  <span className="field__label">Crear etiqueta</span>
+                  <input
+                    className="input"
+                    placeholder="Nombre de la etiqueta"
+                    value={newLabelTitle}
+                    onChange={(e) => setNewLabelTitle(e.target.value)}
+                    maxLength={30}
+                  />
+                  <div className="label-creator__colors">
+                    {LABEL_COLOR_PRESETS.map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        className={"label-creator__swatch" + (newLabelColor === c ? " is-selected" : "")}
+                        style={{ background: c }}
+                        onClick={() => setNewLabelColor(c)}
+                      />
+                    ))}
+                  </div>
+                  <button
+                    className="btn btn--primary btn--sm"
+                    onClick={handleCreateLabel}
+                    disabled={!canCreateLabel || creatingLabel}
+                  >
+                    {creatingLabel ? "Creando…" : "+ Agregar etiqueta"}
+                  </button>
+                </div>
+              )}
+
+              {labelError && <p className="label-creator__error">{labelError}</p>}
             </div>
           )}
 
@@ -150,9 +331,9 @@ export default function TaskActionsModal({ taskId, onClose, onView }) {
                   <button
                     key={u.id}
                     className={"member" + (task.members.includes(u.id) ? " member--on" : "")}
-                    onClick={() => toggleArrayField("members", u.id)}
+                    onClick={() => toggleMember(u.id)}
                   >
-                    <span className="avatar avatar--sm" style={avatarStyle(u.color)}>{u.initials}</span>
+                    <span className="avatar avatar--sm" style={{ background: "var(--color-green)" }}>{u.initials}</span>
                     <span className="member__name">{u.name}</span>
                   </button>
                 ))}
