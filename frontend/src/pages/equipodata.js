@@ -5,7 +5,7 @@
 export const miembros = [
   {
     id: 1,
-    nombre: "Juan Smoes",
+    nombre: "Juan Smooooooooooooooooosoes",
     iniciales: "JS",
     rol: "Profesor",
     tipoRol: "docente",

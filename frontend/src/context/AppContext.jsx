@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState, useCallback } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { fetchTasks, createTaskRequest, updateTaskRequest, deleteTaskRequest } from "../api/tasks";
 import { fetchCategories, createCategoryRequest, deleteCategoryRequest } from "../api/categories";
 import { fetchLabels, createLabelRequest, updateLabelRequest, deleteLabelRequest } from "../api/labels";
@@ -6,6 +6,8 @@ import { fetchSectors } from "../api/sectors";
 import { fetchUsers } from "../api/users";
 
 const AppContext = createContext(null);
+
+const POLL_INTERVAL_MS = 10000; // cada 10 segundos
 
 export const COLUMNS = [
   { id: "pending", title: "Pendiente", dot: "var(--color-orange)" },
@@ -121,16 +123,44 @@ export function AppProvider({ children }) {
     }
   }, []);
 
-  const loadTasks = useCallback(async () => {
-    setTasksLoading(true);
-    setTasksError(null);
+/* ---------- actualizacion en tiempo real ---------- */
+  const mutationsInFlight = useRef(0);
+  const tasksSignature = useRef("");
+
+  // envuelve cualquier escritura para que el polling no la pise
+  const track = async (fn) => {
+    mutationsInFlight.current += 1;
+    try {
+      return await fn();
+    } finally {
+      mutationsInFlight.current -= 1;
+    }
+  };
+
+  const loadTasks = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) {
+      setTasksLoading(true);
+      setTasksError(null);
+    }
     try {
       const raw = await fetchTasks();
+
+      // si hay una escritura en curso, descartamos esta respuesta (puede estar vieja)
+      if (silent && mutationsInFlight.current > 0) return;
+
+      // si no cambió nada, no re-renderizamos
+      const signature = JSON.stringify(raw);
+      if (silent && signature === tasksSignature.current) return;
+      tasksSignature.current = signature;
+
       setTasks(raw.map(normalizeTask));
     } catch (err) {
-      setTasksError(err?.response?.data?.message || "No se pudieron cargar las tareas.");
+      // en el polling los errores no tumban el tablero
+      if (!silent) {
+        setTasksError(err?.response?.data?.message || "No se pudieron cargar las tareas.");
+      }
     } finally {
-      setTasksLoading(false);
+      if (!silent) setTasksLoading(false);
     }
   }, []);
 
@@ -144,6 +174,23 @@ export function AppProvider({ children }) {
       .then((raw) => setUsers(raw.map(normalizeUser)))
       .catch(() => setUsers([]));
   }, [loadCategories, loadTasks]);
+
+  /* efecto de tiempo real */
+  useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState === "visible") {
+        loadTasks({ silent: true });
+      }
+    };
+
+    const id = setInterval(refresh, POLL_INTERVAL_MS);
+    document.addEventListener("visibilitychange", refresh); // refresca al volver a la pestaña
+
+    return () => {
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, [loadTasks]);
 
   /* ---------- etiquetas: dependen de la categoría activa ---------- */
 
@@ -197,7 +244,8 @@ export function AppProvider({ children }) {
 
   /* ---------- acciones: tareas ---------- */
 
-  const addTask = async (columnId, title) => {
+const addTask = (columnId, title) =>
+  track(async () => {
     if (!activeCategory) return;
     const created = await createTaskRequest({
       title,
@@ -207,9 +255,10 @@ export function AppProvider({ children }) {
       category: activeCategory,
     });
     setTasks((prev) => [...prev, normalizeTask(created)]);
-  };
+  });
 
-  const updateTask = async (id, patch) => {
+const updateTask = (id, patch) =>
+  track(async () => {
     const payload = {};
     if (patch.title !== undefined) payload.title = patch.title;
     if (patch.description !== undefined) payload.description = patch.description;
@@ -221,14 +270,16 @@ export function AppProvider({ children }) {
 
     const updated = await updateTaskRequest(id, payload);
     setTasks((prev) => prev.map((t) => (t.id === id ? normalizeTask(updated) : t)));
-  };
+  });
 
-  const deleteTask = async (id) => {
+const deleteTask = (id) =>
+  track(async () => {
     await deleteTaskRequest(id);
     setTasks((prev) => prev.filter((t) => t.id !== id));
-  };
+  });
 
-  const moveTask = async (id, columnId) => {
+const moveTask = (id, columnId) =>
+  track(async () => {
     const previous = tasks;
     setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, column: columnId } : t)));
     try {
@@ -237,7 +288,7 @@ export function AppProvider({ children }) {
       setTasks(previous);
       throw err;
     }
-  };
+  });
 
   /* ---------- acciones: categorías ---------- */
 
@@ -294,7 +345,7 @@ const deleteLabel = async (id) => {
     activeCategory, setActiveCategory, addCategory, deleteCategory,
     columns: COLUMNS, sectors, users,
     labels, labelsLoading, addLabel, updateLabel, deleteLabel,
-    tasks, visibleTasks, tasksLoading, tasksError, reloadTasks: loadTasks,
+    tasks, visibleTasks, tasksLoading, tasksError, reloadTasks: () => loadTasks(),
     addTask, updateTask, deleteTask, moveTask,
     view, setView, search, setSearch,
     filters, setFilters, activeFiltersCount,
