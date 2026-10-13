@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import Login from "./pages/login";
+import OlvidarContrasenia from "./pages/OlvidarContrasenia";
 import Home from "./pages/home";
 import Sectores from "./pages/GestionSectores";
 import Foro from "./pages/foro";
@@ -19,6 +20,7 @@ function App() {
       <Routes>
         {/* Ruta pública */}
         <Route path="/login" element={<Login />} />
+        <Route path="/olvidarContrasenia" element={<OlvidarContrasenia />} />
 
         {/* Rutas protegidas */}
         <Route
