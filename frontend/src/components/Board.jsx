@@ -22,7 +22,7 @@ export default function Board() {
     try {
       await moveTask(id, columnId);
     } catch {
-      // moveTask ya revierte el estado local
+      // moveTask ya revierte
     }
   };
 
@@ -63,7 +63,7 @@ export default function Board() {
             dragging={dragging}
             onDragStart={setDragging}
             onDragEnd={() => setDragging(null)}
-            onDrop={(columnId) => handleDrop(columnId)}
+            onDrop={handleDrop}
             onView={setViewingId}
             onEdit={setEditingId}
           />

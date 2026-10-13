@@ -40,9 +40,7 @@ export default function ListView() {
                       {t.members.map((id) => {
                         const u = users.find((x) => x.id === id);
                         return u ? (
-                          <span key={id} className="avatar avatar--sm" style={{ background: "var(--color-green)" }}>
-                            {u.initials}
-                          </span>
+                          <span key={id} className="avatar avatar--sm" style={{ background: "var(--color-green)" }}>{u.initials}</span>
                         ) : null;
                       })}
                     </span>

@@ -1,6 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
 
 :root {
+  color-scheme: light;
   --color-orange: #ff880f;
   --color-green: #05903e;
   --color-terracotta: #dc9655;
@@ -25,6 +26,58 @@
     "Segoe UI", sans-serif;
 }
 
+/* Semantic surfaces preserve the institutional palette without recoloring
+   logos, photographs, user swatches or the original light appearance. */
+:root[data-theme="oscuro"] {
+  color-scheme: dark;
+  --theme-background: #1f151c;
+  --theme-surface: #2b2229;
+  --theme-surface-soft: #342b32;
+  --theme-text: #fff9ed;
+  --theme-secondary: #c9bbc3;
+  --theme-border: #65545f;
+  --theme-hover: rgba(255, 249, 237, 0.08);
+  --theme-green-text: #75d399;
+  --theme-green-fill: #047a35;
+  --theme-green-hover: #03662c;
+  --theme-warm-text: #efb778;
+  --theme-danger-text: #ff9690;
+  --theme-danger-soft: #45292e;
+  --theme-on-warm: #1f151c;
+  --theme-accent-weight: 40%;
+  --color-muted: #c9bbc3;
+  --color-border: #65545f;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.3);
+}
+
+:root[data-theme="oscuro"] :is(input, textarea, select) {
+  color: var(--theme-text);
+}
+:root[data-theme="oscuro"] :is(input, textarea)::placeholder {
+  color: var(--theme-secondary);
+  opacity: 1;
+}
+:where(:root[data-theme="oscuro"]) :where(input, textarea, select):where(:not([type="radio"]):not([type="checkbox"]):not([type="color"])) {
+  background-color: var(--theme-surface-soft);
+}
+:root[data-theme="oscuro"] .nav-item:not(.nav-item--active) .icon,
+:root[data-theme="oscuro"] .view-toggle__btn:not(.is-active) .icon-sm {
+  filter: brightness(0) invert(1);
+}
+:root[data-theme="oscuro"] :focus-visible {
+  outline: 2px solid var(--theme-warm-text);
+  outline-offset: 3px;
+}
+
+:root[data-theme="oscuro"] :is(.nav-item__badge, .contadorNoLeidas,
+  .team-avatar-taller,
+  .team-avatar-preceptoria, .admin-primary-button, .modificar-rol-btn.rol-seleccionado,
+  .modificar-btn.guardar, .agregar-btn.agregar, .perfil-btn.guardar) {
+  color: var(--theme-on-warm);
+}
+:root[data-theme="oscuro"] .foro-file-download { color: #fff; }
+
 * {
   box-sizing: border-box;
 }
@@ -38,8 +91,8 @@ body,
 body {
   margin: 0;
   font-family: var(--font-family-base);
-  background: var(--color-bone);
-  color: var(--color-graphite);
+  background: var(--theme-background, var(--color-bone));
+  color: var(--theme-text, var(--color-graphite));
   -webkit-font-smoothing: antialiased;
 }
 
@@ -72,4 +125,75 @@ ul {
 .icon-sm {
   width: 16px;
   height: 16px;
+}
+
+/* Overlay compartido por TODOS los modales de la app.
+   Único lugar donde se define — no duplicar en otros CSS. */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(31, 21, 28, 0.55);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1000; /* por encima de sidebar (20), topbar/drawer (25-31) y dropdowns */
+  animation: modal-fade 0.15s ease;
+}
+
+@keyframes modal-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Caja blanca base que usan los modales "de formulario largo"
+   (TaskDetailModal y cualquier otro que use className="modal ..."). 
+   Las clases con namespace propio (.category-modal, .actions-modal,
+   .delete-category-modal) ya traen su propio ancho/fondo y no la usan. */
+.modal {
+  width: min(560px, 100%);
+  max-height: 88vh;
+  background: var(--theme-surface, #fff);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--theme-border, var(--color-border));
+  flex: none;
+}
+
+.modal__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.modal__body {
+  padding: 20px 22px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.modal__foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 22px;
+  border-top: 1px solid var(--theme-border, var(--color-border));
+  flex: none;
 }

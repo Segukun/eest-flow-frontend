@@ -16,12 +16,12 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #fff;
-  border: 1px solid var(--color-border);
+  background: var(--theme-surface, #fff);
+  border: 1px solid var(--theme-border, var(--color-border));
   font-size: 20px;
   display: grid;
   place-items: center;
-  color: var(--color-graphite);
+  color: var(--theme-text, var(--color-graphite));
 }
 .board-mobile__arrow:disabled {
   opacity: 0.3;
@@ -65,7 +65,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--color-border);
+  background: var(--theme-border, var(--color-border));
 }
 .board-mobile__dot.is-active {
   width: 22px;

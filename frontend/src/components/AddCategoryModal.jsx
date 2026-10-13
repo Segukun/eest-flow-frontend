@@ -15,7 +15,7 @@ export default function AddCategoryModal({ onClose }) {
   const [name, setName] = useState("");
   const [color, setColor] = useState(PRESET_COLORS[0]);
   const [customColor, setCustomColor] = useState(null);
-  const [sectorMode, setSectorMode] = useState("all"); // "all" | "custom"
+  const [sectorMode, setSectorMode] = useState("all");
   const [selectedSectorIds, setSelectedSectorIds] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
@@ -31,9 +31,9 @@ export default function AddCategoryModal({ onClose }) {
     const trimmed = name.trim();
     if (!trimmed) return;
 
-    // el modelo Category exige sectors con al menos 1 elemento (ver
-    // schema: validate arr.length > 0), así que "Todos" se traduce a
-    // mandar TODOS los sectores existentes, no un string "all"
+    // "Todos" se traduce a mandar TODOS los sectores que existen HOY,
+    // porque Category.sectors exige un array de ObjectIds reales,
+    // nunca un string "all"
     const sectorIds = sectorMode === "all" ? sectors.map((s) => s.id) : selectedSectorIds;
 
     if (sectorIds.length === 0) {
@@ -98,11 +98,7 @@ export default function AddCategoryModal({ onClose }) {
                 style={customColor ? { background: customColor } : undefined}
               >
                 {customColor ? <span className="category-modal__swatch-check">✓</span> : "+"}
-                <input
-                  type="color"
-                  className="category-modal__color-input"
-                  onChange={(e) => setCustomColor(e.target.value)}
-                />
+                <input type="color" className="category-modal__color-input" onChange={(e) => setCustomColor(e.target.value)} />
               </label>
             </div>
           </div>

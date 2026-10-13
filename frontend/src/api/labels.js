@@ -1,4 +1,4 @@
-import api from "../api.js";
+import api from "../api";
 
 export const fetchLabels = async (categoryId) => {
   const { data } = await api.get("/api/labels", { params: { category: categoryId } });
@@ -6,7 +6,6 @@ export const fetchLabels = async (categoryId) => {
 };
 
 export const createLabelRequest = async (payload) => {
-  // nota: el backend exige accountType "admin" para esta ruta
   const { data } = await api.post("/api/labels", payload);
   return data;
 };

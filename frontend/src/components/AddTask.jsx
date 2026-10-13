@@ -9,10 +9,10 @@ export default function AddTask({ columnId, variant = "default" }) {
 
   useEffect(() => { if (open) inputRef.current?.focus(); }, [open]);
 
-  const confirm = () => {
+  const confirm = async () => {
     const t = title.trim();
     if (!t) return;
-    addTask(columnId, t);
+    await addTask(columnId, t);
     setTitle("");
     inputRef.current?.focus();
   };
@@ -27,7 +27,6 @@ export default function AddTask({ columnId, variant = "default" }) {
         </button>
       );
     }
-
     return (
       <button className="add-task__trigger" onClick={() => setOpen(true)}>
         <span className="add-task__plus">+</span> Agregar tarea

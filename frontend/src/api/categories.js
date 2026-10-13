@@ -1,4 +1,4 @@
-import api from "../api.js";
+import api from "../api";
 
 export const fetchCategories = async () => {
   const { data } = await api.get("/api/categories");

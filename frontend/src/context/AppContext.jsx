@@ -1,11 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, useCallback } from "react";
 import { fetchTasks, createTaskRequest, updateTaskRequest, deleteTaskRequest } from "../api/tasks";
-import {
-  fetchCategories,
-  createCategoryRequest,
-  deleteCategoryRequest,
-} from "../api/categories";
-import { fetchLabels, createLabelRequest } from "../api/labels";
+import { fetchCategories, createCategoryRequest, deleteCategoryRequest } from "../api/categories";
+import { fetchLabels, createLabelRequest, updateLabelRequest, deleteLabelRequest } from "../api/labels";
 import { fetchSectors } from "../api/sectors";
 import { fetchUsers } from "../api/users";
 
@@ -32,7 +28,7 @@ function normalizeTask(raw) {
     priority: raw.priority,
     column: raw.state,
     categoryId: raw.category,
-    members: raw.assignedUser ?? [], // ver nota: el backend puede devolver null acá
+    members: raw.assignedUser ?? [],
     labelIds: raw.labels ?? [],
     dueDate: raw.dueDate ? raw.dueDate.slice(0, 10) : "",
   };
@@ -51,7 +47,7 @@ function normalizeSector(raw) {
 }
 
 function normalizeUser(raw) {
-  const initials = raw.name
+  const initials = (raw.name || "")
     .split(" ")
     .map((w) => w[0])
     .join("")
@@ -61,13 +57,23 @@ function normalizeUser(raw) {
 }
 
 export function AppProvider({ children }) {
+  // ---- sesión ----
+  const [sessionUser] = useState(() => {
+    try {
+      const raw = localStorage.getItem("user");
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  });
+
   // ---- categorías ----
   const [categories, setCategories] = useState([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [categoriesError, setCategoriesError] = useState(null);
   const [activeCategory, setActiveCategory] = useState(null);
 
-  // ---- sectores / usuarios (listas de apoyo para selects) ----
+  // ---- sectores / usuarios ----
   const [sectors, setSectors] = useState([]);
   const [users, setUsers] = useState([]);
 
@@ -83,6 +89,20 @@ export function AppProvider({ children }) {
   const [view, setView] = useState("tablero");
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState({ onlyMine: false, priorities: [], sector: "", due: "" });
+
+  const currentUser = sessionUser
+    ? users.find((u) => u.id === sessionUser._id) ?? {
+        id: sessionUser._id,
+        name: sessionUser.name,
+        initials: (sessionUser.name || "")
+          .split(" ")
+          .map((w) => w[0])
+          .join("")
+          .slice(0, 2)
+          .toUpperCase() || "?",
+        accountType: sessionUser.accountType,
+      }
+    : null;
 
   /* ---------- carga inicial ---------- */
 
@@ -101,15 +121,29 @@ export function AppProvider({ children }) {
     }
   }, []);
 
+  const loadTasks = useCallback(async () => {
+    setTasksLoading(true);
+    setTasksError(null);
+    try {
+      const raw = await fetchTasks();
+      setTasks(raw.map(normalizeTask));
+    } catch (err) {
+      setTasksError(err?.response?.data?.message || "No se pudieron cargar las tareas.");
+    } finally {
+      setTasksLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     loadCategories();
+    loadTasks();
     fetchSectors()
       .then((raw) => setSectors(raw.map(normalizeSector)))
       .catch(() => setSectors([]));
     fetchUsers()
       .then((raw) => setUsers(raw.map(normalizeUser)))
       .catch(() => setUsers([]));
-  }, [loadCategories]);
+  }, [loadCategories, loadTasks]);
 
   /* ---------- etiquetas: dependen de la categoría activa ---------- */
 
@@ -133,25 +167,6 @@ export function AppProvider({ children }) {
     loadLabels();
   }, [loadLabels]);
 
-  /* ---------- tareas ---------- */
-
-  const loadTasks = useCallback(async () => {
-    setTasksLoading(true);
-    setTasksError(null);
-    try {
-      const raw = await fetchTasks();
-      setTasks(raw.map(normalizeTask));
-    } catch (err) {
-      setTasksError(err?.response?.data?.message || "No se pudieron cargar las tareas.");
-    } finally {
-      setTasksLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadTasks();
-  }, [loadTasks]);
-
   const activeFiltersCount = useMemo(() => {
     let n = 0;
     if (filters.onlyMine) n++;
@@ -169,17 +184,16 @@ export function AppProvider({ children }) {
       if (t.categoryId !== activeCategory) return false;
       if (search && !t.title.toLowerCase().includes(search.toLowerCase())) return false;
       if (filters.priorities.length && !filters.priorities.includes(t.priority)) return false;
+      if (filters.onlyMine && currentUser && !t.members.includes(currentUser.id)) return false;
       if (filters.due && t.dueDate) {
         const d = diffDays(t.dueDate);
         if (filters.due === "hoy" && !(d >= -1 && d < 1)) return false;
         if (filters.due === "48" && !(d < 2)) return false;
         if (filters.due === "7" && !(d < 7)) return false;
       }
-      // ⚠️ filters.onlyMine queda sin efecto hasta tener un endpoint /me
-      // que confirme el id del usuario logueado (ver nota general).
       return true;
     });
-  }, [tasks, activeCategory, search, filters]);
+  }, [tasks, activeCategory, search, filters, currentUser]);
 
   /* ---------- acciones: tareas ---------- */
 
@@ -220,7 +234,7 @@ export function AppProvider({ children }) {
     try {
       await updateTaskRequest(id, { state: columnId });
     } catch (err) {
-      setTasks(previous); // revierte el optimistic update
+      setTasks(previous);
       throw err;
     }
   };
@@ -255,11 +269,31 @@ export function AppProvider({ children }) {
     return normalized;
   };
 
+  const updateLabel = async (id, { title, color }) => {
+  const updated = await updateLabelRequest(id, { title, color });
+  const normalized = normalizeLabel(updated);
+  setLabels((prev) => prev.map((l) => (l.id === id ? normalized : l)));
+  return normalized;
+};
+
+const deleteLabel = async (id) => {
+  await deleteLabelRequest(id);
+  setLabels((prev) => prev.filter((l) => l.id !== id));
+  // limpia la referencia en cualquier tarea que la tuviera asignada,
+  // para que la UI no siga mostrando una etiqueta borrada
+  setTasks((prev) =>
+    prev.map((t) =>
+      t.labelIds.includes(id) ? { ...t, labelIds: t.labelIds.filter((lid) => lid !== id) } : t
+    )
+  );
+};
+
   const value = {
+    currentUser,
     categories, categoriesLoading, categoriesError,
     activeCategory, setActiveCategory, addCategory, deleteCategory,
     columns: COLUMNS, sectors, users,
-    labels, labelsLoading, addLabel,
+    labels, labelsLoading, addLabel, updateLabel, deleteLabel,
     tasks, visibleTasks, tasksLoading, tasksError, reloadTasks: loadTasks,
     addTask, updateTask, deleteTask, moveTask,
     view, setView, search, setSearch,

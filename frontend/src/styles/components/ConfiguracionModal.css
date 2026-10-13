@@ -1,6 +1,6 @@
 .configuracion-modal__seccion h3 {
   margin: 0 0 8px;
-  color: var(--color-graphite);
+  color: var(--theme-text, var(--color-graphite));
   font-size: 14px;
   font-weight: 600;
 }
@@ -13,15 +13,15 @@
 
 .configuracion-modal__seccion + .configuracion-modal__seccion {
   padding-top: 18px;
-  border-top: 1px solid var(--color-border);
+  border-top: 1px solid var(--theme-border, var(--color-border));
 }
 
 .configuracion-modal__temas {
   display: flex;
   gap: 6px;
   padding: 4px;
-  background: var(--color-bone);
-  border: 1px solid var(--color-border);
+  background: var(--theme-background, var(--color-bone));
+  border: 1px solid var(--theme-border, var(--color-border));
   border-radius: var(--radius-sm);
 }
 
@@ -53,9 +53,9 @@
 }
 
 .configuracion-modal__opcion input:checked + span {
-  background: var(--color-white);
-  border-color: var(--color-border);
-  color: var(--color-graphite);
+  background: var(--theme-surface, var(--color-white));
+  border-color: var(--theme-border, var(--color-border));
+  color: var(--theme-text, var(--color-graphite));
 }
 
 .configuracion-modal__opcion input:checked + span svg {

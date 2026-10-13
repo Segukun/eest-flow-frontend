@@ -18,22 +18,14 @@ export default function TaskCard({ task, isDragging, onDragStart, onDragEnd, onD
     >
       <span className="task-card__priority" style={{ background: priority.color }} />
 
-      <button
-        className="task-card__edit"
-        title="Editar tarjeta"
-        onClick={(e) => { e.stopPropagation(); onEdit(task.id); }}
-      >
+      <button className="task-card__edit" title="Editar tarjeta" onClick={(e) => { e.stopPropagation(); onEdit(task.id); }}>
         ✎
       </button>
 
       {taskLabels.length > 0 && (
         <div className="task-card__labels">
           {taskLabels.map((l) => (
-            <span
-              key={l.id}
-              className="label"
-              style={{ color: l.color, background: `color-mix(in srgb, ${l.color} 14%, transparent)` }}
-            >
+            <span key={l.id} className="label" style={{ color: l.color, background: `color-mix(in srgb, ${l.color} 14%, transparent)` }}>
               {l.title || "·"}
             </span>
           ))}

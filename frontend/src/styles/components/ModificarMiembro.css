@@ -20,8 +20,8 @@
 
   overflow-y: auto;
 
-  background: var(--color-white);
-  border: 1px solid var(--color-border);
+  background: var(--theme-surface, var(--color-white));
+  border: 1px solid var(--theme-border, var(--color-border));
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
 
@@ -46,13 +46,13 @@
   justify-content: space-between;
 
   padding: 24px;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--theme-border, var(--color-border));
 }
 
 .modificar-modal-header h2 {
   margin: 0;
 
-  color: var(--color-graphite);
+  color: var(--theme-text, var(--color-graphite));
   font-size: 20px;
   font-weight: 800;
 }
@@ -74,8 +74,8 @@
 }
 
 .modificar-modal-close:hover {
-  color: var(--color-graphite);
-  background: var(--color-bone);
+  color: var(--theme-text, var(--color-graphite));
+  background: var(--theme-background, var(--color-bone));
 }
 
 .modificar-modal-form {
@@ -93,7 +93,7 @@
 }
 
 .modificar-campo label {
-  color: var(--color-graphite);
+  color: var(--theme-text, var(--color-graphite));
   font-size: 14px;
   font-weight: 700;
 }
@@ -104,10 +104,10 @@
 
   padding: 12px 14px;
 
-  color: var(--color-graphite);
-  background: var(--color-white);
+  color: var(--theme-text, var(--color-graphite));
+  background: var(--theme-surface, var(--color-white));
 
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--theme-border, var(--color-border));
   border-radius: var(--radius-sm);
 
   outline: none;
@@ -132,10 +132,10 @@
 
   padding: 12px;
 
-  color: var(--color-graphite);
-  background: var(--color-white);
+  color: var(--theme-text, var(--color-graphite));
+  background: var(--theme-surface, var(--color-white));
 
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--theme-border, var(--color-border));
   border-radius: var(--radius-sm);
 
   font-size: 14px;
@@ -158,7 +158,7 @@
 .modificar-error {
   margin: 0;
 
-  color: var(--color-danger);
+  color: var(--theme-danger-text, var(--color-danger));
   font-size: 12px;
   line-height: 1.4;
 }
@@ -173,7 +173,7 @@
   margin: 0;
   padding: 10px 12px;
 
-  color: var(--color-green);
+  color: var(--theme-green-text, var(--color-green));
   background: rgba(5, 144, 62, 0.08);
 
   border: 1px solid rgba(5, 144, 62, 0.2);
@@ -212,9 +212,9 @@
 }
 
 .modificar-btn.cancelar {
-  color: var(--color-graphite);
-  background: var(--color-white);
-  border: 1px solid var(--color-border);
+  color: var(--theme-text, var(--color-graphite));
+  background: var(--theme-surface, var(--color-white));
+  border: 1px solid var(--theme-border, var(--color-border));
 }
 
 .modificar-btn.guardar {

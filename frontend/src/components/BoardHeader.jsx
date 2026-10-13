@@ -7,13 +7,13 @@ import { FiChevronDown } from "react-icons/fi";
 
 export default function BoardHeader() {
   const {
-    categories, activeCategory, setActiveCategory,
+    categories, categoriesLoading, activeCategory, setActiveCategory,
     view, setView, search, setSearch, activeFiltersCount, visibleTasks,
   } = useApp();
 
   const [catOpen, setCatOpen] = useState(false);
-  const [filtersOpen, setFiltersOpen] = useState(false);       // dropdown desktop
-  const [filtersSheetOpen, setFiltersSheetOpen] = useState(false); // sheet mobile
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [filtersSheetOpen, setFiltersSheetOpen] = useState(false);
   const ref = useRef(null);
   const filtersRef = useRef(null);
   const current = categories.find((c) => c.id === activeCategory);
@@ -29,11 +29,8 @@ export default function BoardHeader() {
 
   const handleFiltersClick = () => {
     const isMobile = window.matchMedia("(max-width: 700px)").matches;
-    if (isMobile) {
-      setFiltersSheetOpen(true);
-    } else {
-      setFiltersOpen((v) => !v);
-    }
+    if (isMobile) setFiltersSheetOpen(true);
+    else setFiltersOpen((v) => !v);
   };
 
   return (
@@ -41,12 +38,12 @@ export default function BoardHeader() {
       <div className="board-header__row">
         <div className="cat-select" ref={ref}>
           <button className="cat-select__trigger" onClick={() => setCatOpen((v) => !v)}>
-            <h1 className="board-title">{current?.name}</h1>
-            <span className="cat-dot" style={{ background: current?.color }} />
+            <h1 className="board-title">{categoriesLoading ? "Cargando…" : current?.name ?? "Sin categorías"}</h1>
+            {current && <span className="cat-dot" style={{ background: current.color }} />}
             <FiChevronDown className="cat-select__chevron" />
           </button>
 
-          {catOpen && (
+          {catOpen && !categoriesLoading && (
             <div className="cat-select__menu">
               <div className="cat-select__menu-head">
                 Seleccionar categoría <small>{categories.length} disponibles</small>
@@ -64,7 +61,6 @@ export default function BoardHeader() {
                   {c.id === activeCategory && <span className="chip chip--active">Activa</span>}
                 </button>
               ))}
-              <button className="cat-select__add">+ Agregar categoría</button>
             </div>
           )}
         </div>
@@ -102,7 +98,6 @@ export default function BoardHeader() {
               {activeFiltersCount > 0 && <span className="filters-btn__count">{activeFiltersCount}</span>}
             </button>
 
-            {/* solo se monta en desktop */}
             {filtersOpen && <FiltersDropdown />}
           </div>
         </div>
@@ -112,7 +107,6 @@ export default function BoardHeader() {
         <span className="sync-dot" /> Tablero sincronizado · {visibleTasks.length} tareas
       </div>
 
-      {/* solo mobile */}
       {filtersSheetOpen && <FiltersPanel onClose={() => setFiltersSheetOpen(false)} />}
     </header>
   );
