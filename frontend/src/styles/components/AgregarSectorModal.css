@@ -1,4 +1,5 @@
-/* EEST Flow - Modal Agregar Sector - UI Kit */
+/* EEST Flow - Modales de sectores y miembros */
+
 .asm-overlay {
   position: fixed;
   inset: 0;
@@ -8,30 +9,52 @@
   align-items: center;
   justify-content: center;
   padding: 24px;
-  z-index: 1100; /* <-- FIX: más alto que el modal de administrar */
-  animation: asm-fade .2s ease;
+  z-index: 1100;
+  animation: asm-fade 0.2s ease;
 }
 
 .asm-modal {
   width: 100%;
   max-width: 560px;
+  max-height: 90vh;
   background: white;
   border-radius: 20px;
-  border: 1px solid #E6DCBF;
-  box-shadow: 0 20px 60px -12px rgba(31,21,28,0.25);
+  border: 1px solid #e6dcbf;
+  box-shadow: 0 20px 60px -12px rgba(31, 21, 28, 0.25);
   overflow: hidden;
-  animation: asm-slide .25s ease;
+  animation: asm-slide 0.25s ease;
 }
 
-@keyframes asm-fade { from { opacity: 0; } to { opacity: 1; } }
-@keyframes asm-slide { from { transform: translateY(12px) scale(0.98); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+@keyframes asm-fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes asm-slide {
+  from {
+    transform: translateY(12px) scale(0.98);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Header */
 
 .asm-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   padding: 24px;
-  border-bottom: 1px solid rgba(230,220,191,0.6);
+  border-bottom: 1px solid rgba(230, 220, 191, 0.6);
 }
 
 .asm-header-left {
@@ -40,49 +63,62 @@
   align-items: flex-start;
 }
 
-.asm-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  display: grid;
-  place-items: center;
-  font-size: 20px;
-  border: 1px solid rgba(230,220,191,0.8);
-}
-
 .asm-header h2 {
   font-size: 18px;
   font-weight: 700;
   margin: 0;
-  color: #1F151C;
+  color: #1f151c;
   line-height: 24px;
 }
 
 .asm-header p {
   font-size: 12px;
-  color: rgba(31,21,28,0.6);
+  color: rgba(31, 21, 28, 0.6);
   margin: 2px 0 0;
+}
+
+.asm-kicker {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: #05903e;
 }
 
 .asm-close {
   width: 32px;
   height: 32px;
   border-radius: 9999px;
-  border: 1px solid #E6DCBF;
-  background: #FFFCF7;
+  border: 1px solid #e6dcbf;
+  background: #fffcf7;
   display: grid;
   place-items: center;
   cursor: pointer;
-  color: rgba(31,21,28,0.6);
-  transition: .2s;
+  color: rgba(31, 21, 28, 0.6);
+  transition: 0.2s;
+  flex-shrink: 0;
 }
-.asm-close:hover { background: white; color: #1F151C; }
+
+.asm-close:hover {
+  background: white;
+  color: #1f151c;
+}
+
+.asm-close:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Formulario */
 
 .asm-form {
   padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 20px;
+  max-height: calc(90vh - 90px);
+  overflow-y: auto;
 }
 
 .asm-field {
@@ -94,48 +130,73 @@
 .asm-field label {
   font-size: 12px;
   font-weight: 600;
-  color: #1F151C;
+  color: #1f151c;
   letter-spacing: 0.2px;
 }
 
-.asm-required { color: #DC2626; }
-.asm-optional { font-weight: 400; color: rgba(31,21,28,0.5); }
+.asm-required {
+  color: #dc2626;
+}
+
+.asm-optional {
+  font-weight: 400;
+  color: rgba(31, 21, 28, 0.5);
+}
 
 .asm-field input,
 .asm-field select,
 .asm-field textarea {
+  width: 100%;
+  box-sizing: border-box;
   padding: 10px 14px;
   border-radius: 12px;
-  border: 1px solid #E6DCBF;
-  background: #FFFCF7;
+  border: 1px solid #e6dcbf;
+  background: #fffcf7;
   font-size: 14px;
   font-family: Inter, system-ui, sans-serif;
-  color: #1F151C;
+  color: #1f151c;
   outline: none;
-  transition: .2s;
+  transition: 0.2s;
+}
+
+.asm-field textarea {
+  resize: vertical;
+  min-height: 90px;
 }
 
 .asm-field input:focus,
 .asm-field select:focus,
 .asm-field textarea:focus {
   background: white;
-  border-color: #05903E;
-  box-shadow: 0 0 0 3px rgba(5,144,62,0.12);
+  border-color: #05903e;
+  box-shadow: 0 0 0 3px rgba(5, 144, 62, 0.12);
+}
+
+.asm-field input::placeholder,
+.asm-field textarea::placeholder {
+  color: rgba(31, 21, 28, 0.4);
 }
 
 .asm-input--error {
-  border-color: #DC2626 !important;
-  background: #FEF2F2 !important;
+  border-color: #dc2626 !important;
+  background: #fef2f2 !important;
 }
 
 .asm-error {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
+  margin: 0;
   font-size: 11px;
-  color: #DC2626;
+  color: #dc2626;
   font-weight: 500;
 }
+
+.asm-error svg {
+  flex-shrink: 0;
+}
+
+/* Filas */
 
 .asm-row {
   display: grid;
@@ -143,29 +204,46 @@
   gap: 16px;
 }
 
+/* Colores */
+
 .asm-colors {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   padding-top: 4px;
 }
 
 .asm-color {
   width: 32px;
   height: 32px;
+  padding: 0;
   border-radius: 9999px;
   border: 2px solid white;
-  box-shadow: 0 0 0 1px #E6DCBF;
+  background: transparent;
+  box-shadow: 0 0 0 1px #e6dcbf;
   cursor: pointer;
-  transition: .2s;
+  transition: 0.2s;
   position: relative;
+  display: grid;
+  place-items: center;
 }
 
-.asm-color--active {
-  box-shadow: 0 0 0 2px #1F151C;
+.asm-color:hover {
+  transform: scale(1.08);
+}
+
+.asm-color-selected {
+  box-shadow: 0 0 0 2px #1f151c;
   transform: scale(1.1);
 }
 
-.asm-color--active::after {
+.asm-color-circle {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: block;
+}
+
+.asm-color-selected::after {
   content: "✓";
   position: absolute;
   inset: 0;
@@ -174,28 +252,33 @@
   color: white;
   font-size: 12px;
   font-weight: 700;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
+/* Preview del sector */
+
 .asm-preview {
-  background: #FFFCF7;
-  border: 1px dashed #E6DCBF;
+  background: #fffcf7;
+  border: 1px dashed #e6dcbf;
   border-radius: 12px;
   padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .asm-preview-label {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.5px;
-  color: rgba(31,21,28,0.5);
+  color: rgba(31, 21, 28, 0.5);
   text-transform: uppercase;
 }
 
 .asm-preview-card {
   margin-top: 8px;
   background: white;
-  border: 1px solid #E6DCBF;
+  border: 1px solid #e6dcbf;
   border-radius: 12px;
   padding: 12px;
   display: flex;
@@ -206,11 +289,24 @@
 .asm-preview-icon {
   width: 40px;
   height: 40px;
+  min-width: 40px;
   border-radius: 10px;
   border: 1px solid;
   display: grid;
   place-items: center;
-  background: #FFF9ED;
+  background: #fff9ed;
+}
+
+.asm-preview strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1f151c;
+}
+
+.asm-preview span {
+  font-size: 12px;
+  color: rgba(31, 21, 28, 0.55);
 }
 
 .asm-preview-card h4 {
@@ -233,16 +329,18 @@
   font-weight: 500;
 }
 
+/* Footer */
+
 .asm-footer {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  padding-top: 4px;
-  border-top: 1px solid rgba(230,220,191,0.5);
+  padding-top: 16px;
+  border-top: 1px solid rgba(230, 220, 191, 0.5);
   margin-top: 4px;
 }
 
-.asm-btn {
+.asm-button {
   padding: 10px 18px;
   border-radius: 9999px;
   font-size: 13px;
@@ -250,26 +348,262 @@
   cursor: pointer;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  transition: .2s;
+  transition: 0.2s;
   border: 1px solid transparent;
 }
 
-.asm-btn--secondary {
-  background: white;
-  border-color: #E6DCBF;
-  color: #1F151C;
+.asm-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
-.asm-btn--secondary:hover { background: #FFFCF7; }
 
-.asm-btn--primary {
-  background: #05903E;
-  color: white;
-  box-shadow: 0 1px 2px rgba(5,144,62,0.2);
+.asm-button-cancel {
+  background: white;
+  border-color: #e6dcbf;
+  color: #1f151c;
 }
-.asm-btn--primary:hover { background: #047a35; }
+
+.asm-button-cancel:hover:not(:disabled) {
+  background: #fffcf7;
+}
+
+.asm-button-save {
+  background: #05903e;
+  color: white;
+  box-shadow: 0 1px 2px rgba(5, 144, 62, 0.2);
+}
+
+.asm-button-save:hover:not(:disabled) {
+  background: #047a35;
+}
+
+/* Buscador de usuarios */
+
+.asm-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #e6dcbf;
+  border-radius: 12px;
+  padding: 0 12px;
+  background: #fffcf7;
+  transition: 0.2s;
+}
+
+.asm-search:focus-within {
+  background: white;
+  border-color: #05903e;
+  box-shadow: 0 0 0 3px rgba(5, 144, 62, 0.12);
+}
+
+.asm-search > svg {
+  flex-shrink: 0;
+  color: rgba(31, 21, 28, 0.5);
+}
+
+.asm-search input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 12px 0;
+  font-size: 14px;
+  font-family: Inter, system-ui, sans-serif;
+  color: #1f151c;
+}
+
+.asm-search input::placeholder {
+  color: rgba(31, 21, 28, 0.4);
+}
+
+/* Modal de miembros */
+
+.asm-member-modal {
+  max-width: 520px;
+}
+
+.asm-users-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding-right: 3px;
+}
+
+.asm-users-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.asm-users-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.asm-users-list::-webkit-scrollbar-thumb {
+  background: #e6dcbf;
+  border-radius: 10px;
+}
+
+.asm-user-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+  border: 1px solid #e6dcbf;
+  border-radius: 12px;
+  background: white;
+  cursor: pointer;
+  text-align: left;
+  transition: 0.15s ease;
+}
+
+.asm-user-option:hover {
+  border-color: #05903e;
+  background: #fffcf7;
+}
+
+.asm-user-option-selected {
+  border-color: #05903e;
+  background: rgba(5, 144, 62, 0.06);
+}
+
+.asm-user-option:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.asm-user-avatar {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(5, 144, 62, 0.12);
+  color: #05903e;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.asm-user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.asm-user-info strong {
+  color: #1f151c;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.asm-user-info small {
+  color: rgba(31, 21, 28, 0.55);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.asm-user-check {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #05903e;
+  color: white;
+  flex-shrink: 0;
+}
+
+.asm-users-empty {
+  margin: 15px 0;
+  padding: 20px;
+  text-align: center;
+  color: rgba(31, 21, 28, 0.55);
+  font-size: 14px;
+  border: 1px dashed #e6dcbf;
+  border-radius: 12px;
+  background: #fffcf7;
+}
+
+.asm-selected-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(5, 144, 62, 0.06);
+  border: 1px solid rgba(5, 144, 62, 0.25);
+}
+
+.asm-selected-user > svg {
+  color: #05903e;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.asm-selected-user div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.asm-selected-user strong {
+  font-size: 14px;
+  color: #1f151c;
+}
+
+.asm-selected-user span {
+  font-size: 12px;
+  color: rgba(31, 21, 28, 0.55);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Responsive */
 
 @media (max-width: 600px) {
-  .asm-row { grid-template-columns: 1fr; }
-  .asm-modal { max-width: 100%; }
+  .asm-overlay {
+    padding: 12px;
+  }
+
+  .asm-modal {
+    max-width: 100%;
+    max-height: 94vh;
+    border-radius: 16px;
+  }
+
+  .asm-header {
+    padding: 18px;
+  }
+
+  .asm-form {
+    padding: 18px;
+    max-height: calc(94vh - 75px);
+  }
+
+  .asm-row {
+    grid-template-columns: 1fr;
+  }
+
+  .asm-footer {
+    flex-direction: column-reverse;
+  }
+
+  .asm-button {
+    width: 100%;
+  }
 }

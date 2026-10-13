@@ -9,53 +9,97 @@ import {
   FiPlus,
 } from "react-icons/fi";
 
-import { miembros, vistasRapidas } from "./equipodata";
+import api from "../api.js";
 import "../styles/pages/equipo.css";
 import AgregarMiembro from "../components/AgregarMiembro.jsx";
 import ModificarMiembro from "../components/ModificarMiembro.jsx";
 
-
 const MIEMBROS_POR_PAGINA = 6;
 
-// Qué campo de cada miembro decide si entra en cada vista rápida.
-// "administradores" se arma con el tipo de cuenta porque en los datos
-// todavía no existe un tipoRol de administración como tal.
-const filtrosPorVista = {
-  todos: () => true,
-  docentes: (miembro) => miembro.tipoRol === "docente",
-  tecnicos: (miembro) => miembro.tipoRol === "taller",
-  preceptoria: (miembro) => miembro.tipoRol === "preceptoria",
-  administradores: (miembro) => miembro.cuenta === "Admin",
+const obtenerIniciales = (nombre) => {
+  if (!nombre) return "";
+
+  const partes = nombre.trim().split(" ");
+
+  if (partes.length === 1) {
+    return partes[0].slice(0, 2).toUpperCase();
+  }
+
+  return (
+    partes[0][0] +
+    partes[partes.length - 1][0]
+  ).toUpperCase();
 };
 
-// Arma los números de página a mostrar, con "…" cuando hay muchas.
-// Con pocos miembros esto simplemente muestra todo, pero ya queda listo
-// para cuando la base de datos tenga más registros.
-const obtenerNumerosDePagina = (paginaActual, totalPaginas) => {
+const convertirMiembro = (usuario) => {
+  const esAdmin = usuario.accountType === "admin";
+
+  return {
+    id: usuario._id,
+    nombre: usuario.name || "",
+    iniciales: obtenerIniciales(usuario.name),
+    rol: esAdmin ? "Administrador" : "Colaborador",
+    tipoRol: esAdmin ? "direccion" : "",
+    cuenta: esAdmin ? "Admin" : "Colaborador",
+    area: "",
+    correo: usuario.email || "",
+  };
+};
+
+const obtenerNumerosDePagina = (
+  paginaActual,
+  totalPaginas
+) => {
   if (totalPaginas <= 5) {
-    return Array.from({ length: totalPaginas }, (_, i) => i + 1);
+    return Array.from(
+      { length: totalPaginas },
+      (_, i) => i + 1
+    );
   }
 
   const paginas = [1];
 
-  if (paginaActual > 3) paginas.push("…");
+  if (paginaActual > 3) {
+    paginas.push("…");
+  }
 
-  const inicio = Math.max(2, paginaActual - 1);
-  const fin = Math.min(totalPaginas - 1, paginaActual + 1);
+  const inicio = Math.max(
+    2,
+    paginaActual - 1
+  );
 
-  for (let pagina = inicio; pagina <= fin; pagina += 1) {
+  const fin = Math.min(
+    totalPaginas - 1,
+    paginaActual + 1
+  );
+
+  for (
+    let pagina = inicio;
+    pagina <= fin;
+    pagina += 1
+  ) {
     paginas.push(pagina);
   }
 
-  if (paginaActual < totalPaginas - 2) paginas.push("…");
+  if (
+    paginaActual <
+    totalPaginas - 2
+  ) {
+    paginas.push("…");
+  }
 
   paginas.push(totalPaginas);
 
   return paginas;
 };
 
-const MemberCard = ({ miembro, onModificar }) => {
-  const [menuOpen, setMenuOpen] = useState(false);
+const MemberCard = ({
+  miembro,
+  onModificar,
+}) => {
+  const [menuOpen, setMenuOpen] =
+    useState(false);
+
   const menuRef = useRef(null);
   const menuButtonRef = useRef(null);
 
@@ -63,28 +107,54 @@ const MemberCard = ({ miembro, onModificar }) => {
     if (!menuOpen) return;
 
     const cerrarAlClickAfuera = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(
+          e.target
+        )
+      ) {
         setMenuOpen(false);
       }
     };
 
-    document.addEventListener("mousedown", cerrarAlClickAfuera);
-    return () => document.removeEventListener("mousedown", cerrarAlClickAfuera);
+    document.addEventListener(
+      "mousedown",
+      cerrarAlClickAfuera
+    );
+
+    return () => {
+      document.removeEventListener(
+        "mousedown",
+        cerrarAlClickAfuera
+      );
+    };
   }, [menuOpen]);
 
   return (
     <article className="team-card">
       <div className="team-card-top">
-        <div className={`team-avatar team-avatar-${miembro.tipoRol}`}>
+        <div
+          className={`team-avatar ${
+            miembro.tipoRol
+              ? `team-avatar-${miembro.tipoRol}`
+              : ""
+          }`}
+        >
           {miembro.iniciales}
         </div>
 
         <div className="team-card-identity">
-          <h3 className="team-card-name">{miembro.nombre}</h3>
+          <h3 className="team-card-name">
+            {miembro.nombre}
+          </h3>
 
           <p className="team-card-roles">
             <span
-              className={`team-role team-role-${miembro.tipoRol}`}
+              className={`team-role ${
+                miembro.tipoRol
+                  ? `team-role-${miembro.tipoRol}`
+                  : ""
+              }`}
             >
               {miembro.rol}
             </span>
@@ -101,7 +171,13 @@ const MemberCard = ({ miembro, onModificar }) => {
           className="team-card-menu-wrapper"
           ref={menuRef}
           onBlur={(e) => {
-            if (!e.currentTarget.contains(e.relatedTarget)) setMenuOpen(false);
+            if (
+              !e.currentTarget.contains(
+                e.relatedTarget
+              )
+            ) {
+              setMenuOpen(false);
+            }
           }}
           onKeyDown={(e) => {
             if (e.key === "Escape") {
@@ -119,13 +195,19 @@ const MemberCard = ({ miembro, onModificar }) => {
             aria-controls={`miembro-opciones-${miembro.id}`}
             onClick={(e) => {
               e.stopPropagation();
-              setMenuOpen((open) => !open);
+              setMenuOpen(
+                (open) => !open
+              );
             }}
           >
             <FiMoreVertical aria-hidden="true" />
           </button>
+
           {menuOpen && (
-            <div className="user-menu team-card-dropdown" id={`miembro-opciones-${miembro.id}`}>
+            <div
+              className="user-menu team-card-dropdown"
+              id={`miembro-opciones-${miembro.id}`}
+            >
               <button
                 type="button"
                 className="user-menu__item"
@@ -149,41 +231,182 @@ const MemberCard = ({ miembro, onModificar }) => {
 
         <li>
           <FiMail />
+
           <a
-  href={`mailto:${miembro.correo}`}
-  onClick={(e) => e.stopPropagation()}
->
+            href={`mailto:${miembro.correo}`}
+            onClick={(e) =>
+              e.stopPropagation()
+            }
+          >
             {miembro.correo}
           </a>
         </li>
-
       </ul>
     </article>
   );
 };
 
 const Equipo = () => {
-  const [busqueda, setBusqueda] = useState("");
-  const [vistaActiva, setVistaActiva] = useState("todos");
-  const [rolSeleccionado, setRolSeleccionado] = useState("");
-  const [sectorSeleccionado, setSectorSeleccionado] = useState("");
-  const [paginaActual, setPaginaActual] = useState(1);
-  const [modalAgregarOpen, setModalAgregarOpen] = useState(false);
-  const [modalModificarOpen, setModalModificarOpen] = useState(false);
-  const [miembroSeleccionado, setMiembroSeleccionado] = useState(null);
+  const [miembros, setMiembros] =
+    useState([]);
 
-  // Las opciones de los selects salen de los datos reales, no de una
-  // lista aparte: si mañana se agrega un rol o un sector nuevo desde el
-  // backend, el select lo va a mostrar solo.
+  const [
+    cargandoMiembros,
+    setCargandoMiembros,
+  ] = useState(true);
+
+  const [
+    errorMiembros,
+    setErrorMiembros,
+  ] = useState("");
+
+  const [busqueda, setBusqueda] =
+    useState("");
+
+  const [vistaActiva, setVistaActiva] =
+    useState("todos");
+
+  const [
+    rolSeleccionado,
+    setRolSeleccionado,
+  ] = useState("");
+
+  const [
+    sectorSeleccionado,
+    setSectorSeleccionado,
+  ] = useState("");
+
+  const [
+    paginaActual,
+    setPaginaActual,
+  ] = useState(1);
+
+  const [
+    modalAgregarOpen,
+    setModalAgregarOpen,
+  ] = useState(false);
+
+  const [
+    modalModificarOpen,
+    setModalModificarOpen,
+  ] = useState(false);
+
+  const [
+    miembroSeleccionado,
+    setMiembroSeleccionado,
+  ] = useState(null);
+
+  const cargarMiembros = async () => {
+    try {
+      setCargandoMiembros(true);
+      setErrorMiembros("");
+
+      const response =
+        await api.get("/api/users");
+
+      const usuarios = Array.isArray(
+        response.data
+      )
+        ? response.data
+        : [];
+
+      const miembrosConvertidos =
+        usuarios.map(convertirMiembro);
+
+      setMiembros(miembrosConvertidos);
+      setPaginaActual(1);
+    } catch (error) {
+      console.error(
+        "Error al cargar miembros:",
+        error
+      );
+
+      if (
+        error.response?.status === 401
+      ) {
+        setErrorMiembros(
+          "Tu sesión expiró. Volvé a iniciar sesión."
+        );
+      } else {
+        setErrorMiembros(
+          "No se pudieron cargar los miembros."
+        );
+      }
+    } finally {
+      setCargandoMiembros(false);
+    }
+  };
+
+  useEffect(() => {
+    cargarMiembros();
+  }, []);
+
   const roles = useMemo(
-    () => [...new Set(miembros.map((miembro) => miembro.rol))],
-    []
+    () =>
+      [
+        ...new Set(
+          miembros
+            .map(
+              (miembro) =>
+                miembro.rol
+            )
+            .filter(Boolean)
+        ),
+      ],
+    [miembros]
   );
 
-  const sectores = useMemo(
-    () => [...new Set(miembros.map((miembro) => miembro.area))],
-    []
-  );
+  // Los sectores quedan vacíos por ahora.
+  const sectores = [];
+
+  const vistasRapidas =
+    useMemo(() => {
+      return [
+        {
+          id: "todos",
+          etiqueta: "Todos",
+          cantidad: miembros.length,
+        },
+        {
+          id: "docentes",
+          etiqueta: "Docentes de Aula",
+          cantidad: 0,
+        },
+        {
+          id: "tecnicos",
+          etiqueta: "Maestros Técnicos",
+          cantidad: 0,
+        },
+        {
+          id: "preceptoria",
+          etiqueta: "Preceptoría",
+          cantidad: 0,
+        },
+        {
+          id: "administradores",
+          etiqueta: "Administradores",
+          cantidad:
+            miembros.filter(
+              (miembro) =>
+                miembro.cuenta ===
+                "Admin"
+            ).length,
+        },
+      ];
+    }, [miembros]);
+
+  const filtrosPorVista = {
+    todos: () => true,
+
+    docentes: () => false,
+
+    tecnicos: () => false,
+
+    preceptoria: () => false,
+
+    administradores: (miembro) =>
+      miembro.cuenta === "Admin",
+  };
 
   const hayFiltrosActivos =
     busqueda.trim() !== "" ||
@@ -191,39 +414,78 @@ const Equipo = () => {
     rolSeleccionado !== "" ||
     sectorSeleccionado !== "";
 
-  const miembrosFiltrados = useMemo(() => {
-    const termino = busqueda.trim().toLowerCase();
+  const miembrosFiltrados =
+    useMemo(() => {
+      const termino =
+        busqueda.trim().toLowerCase();
 
-    return miembros.filter((miembro) => {
-      const pasaVista = filtrosPorVista[vistaActiva](miembro);
-      const pasaRol =
-        rolSeleccionado === "" || miembro.rol === rolSeleccionado;
-      const pasaSector =
-        sectorSeleccionado === "" || miembro.area === sectorSeleccionado;
-      const pasaBusqueda =
-        termino === "" ||
-        miembro.nombre.toLowerCase().includes(termino) ||
-        miembro.area.toLowerCase().includes(termino);
+      return miembros.filter(
+        (miembro) => {
+          const pasaVista =
+            filtrosPorVista[
+              vistaActiva
+            ](miembro);
 
-      return pasaVista && pasaRol && pasaSector && pasaBusqueda;
-    });
-  }, [busqueda, vistaActiva, rolSeleccionado, sectorSeleccionado]);
+          const pasaRol =
+            rolSeleccionado === "" ||
+            miembro.rol ===
+              rolSeleccionado;
 
-  const totalPaginas = Math.max(
-    1,
-    Math.ceil(miembrosFiltrados.length / MIEMBROS_POR_PAGINA)
+          const pasaSector =
+            sectorSeleccionado === "" ||
+            miembro.area ===
+              sectorSeleccionado;
+
+          const pasaBusqueda =
+            termino === "" ||
+            miembro.nombre
+              .toLowerCase()
+              .includes(termino) ||
+            miembro.area
+              .toLowerCase()
+              .includes(termino);
+
+          return (
+            pasaVista &&
+            pasaRol &&
+            pasaSector &&
+            pasaBusqueda
+          );
+        }
+      );
+    }, [
+      miembros,
+      busqueda,
+      vistaActiva,
+      rolSeleccionado,
+      sectorSeleccionado,
+    ]);
+
+  const totalPaginas =
+    Math.max(
+      1,
+      Math.ceil(
+        miembrosFiltrados.length /
+          MIEMBROS_POR_PAGINA
+      )
+    );
+
+  const paginaSegura = Math.min(
+    paginaActual,
+    totalPaginas
   );
 
-  const paginaSegura = Math.min(paginaActual, totalPaginas);
+  const miembrosDeLaPagina =
+    miembrosFiltrados.slice(
+      (paginaSegura - 1) *
+        MIEMBROS_POR_PAGINA,
+      paginaSegura *
+        MIEMBROS_POR_PAGINA
+    );
 
-  const miembrosDeLaPagina = miembrosFiltrados.slice(
-    (paginaSegura - 1) * MIEMBROS_POR_PAGINA,
-    paginaSegura * MIEMBROS_POR_PAGINA
-  );
-
-  // Cada vez que cambia un filtro, además de aplicarlo volvemos a la
-  // página 1: si no, se podía quedar en una página que ya no existe.
-  const cambiarFiltro = (actualizar) => {
+  const cambiarFiltro = (
+    actualizar
+  ) => {
     actualizar();
     setPaginaActual(1);
   };
@@ -236,32 +498,49 @@ const Equipo = () => {
     setPaginaActual(1);
   };
 
-  const abrirModalModificar = (miembro) => {
-  setMiembroSeleccionado(miembro);
-  setModalModificarOpen(true);
-};
+  const abrirModalModificar = (
+    miembro
+  ) => {
+    setMiembroSeleccionado(
+      miembro
+    );
+    setModalModificarOpen(true);
+  };
+
+  const cerrarModalModificar = () => {
+    setModalModificarOpen(false);
+    setMiembroSeleccionado(null);
+  };
 
   return (
     <>
       <main className="team-page">
         <header className="team-header">
           <div>
-            <h1>Equipo Institucional</h1>
+            <h1>
+              Equipo Institucional
+            </h1>
 
             <p>
-              Gestión de profesores, directivos, personal técnico de
-              taller y preceptoría.
+              Gestión de profesores,
+              directivos, personal
+              técnico de taller y
+              preceptoría.
             </p>
           </div>
 
-<button
-  type="button"
-  className="team-add-button"
-  onClick={() => setModalAgregarOpen(true)}
->
-  <FiPlus />
-  Agregar miembro
-</button>
+          <button
+            type="button"
+            className="team-add-button"
+            onClick={() =>
+              setModalAgregarOpen(
+                true
+              )
+            }
+          >
+            <FiPlus />
+            Agregar miembro
+          </button>
         </header>
 
         <section className="team-filters-panel">
@@ -275,28 +554,46 @@ const Equipo = () => {
                 aria-label="Buscar integrantes"
                 value={busqueda}
                 onChange={(e) =>
-                  cambiarFiltro(() => setBusqueda(e.target.value))
+                  cambiarFiltro(() =>
+                    setBusqueda(
+                      e.target.value
+                    )
+                  )
                 }
               />
-
             </div>
 
             <div className="team-select-wrapper">
               <select
                 className="team-select"
                 aria-label="Filtrar por sector"
-                value={sectorSeleccionado}
+                value={
+                  sectorSeleccionado
+                }
                 onChange={(e) =>
-                  cambiarFiltro(() => setSectorSeleccionado(e.target.value))
+                  cambiarFiltro(() =>
+                    setSectorSeleccionado(
+                      e.target.value
+                    )
+                  )
                 }
               >
-                <option value="">Todos los Sectores</option>
-                {sectores.map((sector) => (
-                  <option key={sector} value={sector}>
-                    {sector}
-                  </option>
-                ))}
+                <option value="">
+                  Todos los Sectores
+                </option>
+
+                {sectores.map(
+                  (sector) => (
+                    <option
+                      key={sector}
+                      value={sector}
+                    >
+                      {sector}
+                    </option>
+                  )
+                )}
               </select>
+
               <FiChevronDown className="team-select-icon" />
             </div>
 
@@ -304,18 +601,33 @@ const Equipo = () => {
               <select
                 className="team-select"
                 aria-label="Filtrar por rol"
-                value={rolSeleccionado}
+                value={
+                  rolSeleccionado
+                }
                 onChange={(e) =>
-                  cambiarFiltro(() => setRolSeleccionado(e.target.value))
+                  cambiarFiltro(() =>
+                    setRolSeleccionado(
+                      e.target.value
+                    )
+                  )
                 }
               >
-                <option value="">Todos los Roles</option>
-                {roles.map((rol) => (
-                  <option key={rol} value={rol}>
-                    {rol}
-                  </option>
-                ))}
+                <option value="">
+                  Todos los Roles
+                </option>
+
+                {roles.map(
+                  (rol) => (
+                    <option
+                      key={rol}
+                      value={rol}
+                    >
+                      {rol}
+                    </option>
+                  )
+                )}
               </select>
+
               <FiChevronDown className="team-select-icon" />
             </div>
 
@@ -334,37 +646,62 @@ const Equipo = () => {
               Vistas rápidas:
             </span>
 
-            {vistasRapidas.map((vista) => (
-              <button
-                key={vista.id}
-                type="button"
-                className={
-                  vistaActiva === vista.id
-                    ? "team-quick-view team-quick-view-active"
-                    : "team-quick-view"
-                }
-                onClick={() =>
-                  cambiarFiltro(() => setVistaActiva(vista.id))
-                }
-              >
-                {vista.etiqueta}
-              </button>
-            ))}
+            {vistasRapidas.map(
+              (vista) => (
+                <button
+                  key={vista.id}
+                  type="button"
+                  className={
+                    vistaActiva ===
+                    vista.id
+                      ? "team-quick-view team-quick-view-active"
+                      : "team-quick-view"
+                  }
+                  onClick={() =>
+                    cambiarFiltro(
+                      () =>
+                        setVistaActiva(
+                          vista.id
+                        )
+                    )
+                  }
+                >
+                  {vista.etiqueta}
+                </button>
+              )
+            )}
           </div>
         </section>
 
+        {errorMiembros && (
+          <p className="team-empty-state">
+            {errorMiembros}
+          </p>
+        )}
+
         <section className="team-grid">
-          {miembrosDeLaPagina.length > 0 ? (
-miembrosDeLaPagina.map((miembro) => (
-  <MemberCard
-    key={miembro.id}
-    miembro={miembro}
-    onModificar={abrirModalModificar}
-  />
-))
+          {cargandoMiembros ? (
+            <p className="team-empty-state">
+              Cargando integrantes...
+            </p>
+          ) : miembrosDeLaPagina.length >
+            0 ? (
+            miembrosDeLaPagina.map(
+              (miembro) => (
+                <MemberCard
+                  key={miembro.id}
+                  miembro={miembro}
+                  onModificar={
+                    abrirModalModificar
+                  }
+                />
+              )
+            )
           ) : (
             <p className="team-empty-state">
-              No se encontraron integrantes con esos filtros.
+              No se encontraron
+              integrantes con esos
+              filtros.
             </p>
           )}
         </section>
@@ -373,16 +710,28 @@ miembrosDeLaPagina.map((miembro) => (
           <p className="team-pagination-count">
             {hayFiltrosActivos ? (
               <>
-                Mostrando {miembrosDeLaPagina.length} de{" "}
-                {miembrosFiltrados.length} resultados filtrados
+                Mostrando{" "}
+                {
+                  miembrosDeLaPagina.length
+                }{" "}
+                de{" "}
+                {
+                  miembrosFiltrados.length
+                }{" "}
+                resultados filtrados
               </>
             ) : (
               <>
-                Mostrando {miembrosDeLaPagina.length} de {miembros.length}{" "}
+                Mostrando{" "}
+                {
+                  miembrosDeLaPagina.length
+                }{" "}
+                de {miembros.length}{" "}
                 miembros registrados
                 <span className="team-pagination-dot"></span>
                 <span className="team-pagination-link">
-                  Todos los sectores activos
+                  Todos los sectores
+                  activos
                 </span>
               </>
             )}
@@ -391,16 +740,32 @@ miembrosDeLaPagina.map((miembro) => (
           <nav className="team-pages">
             <button
               type="button"
-              onClick={() => setPaginaActual((p) => Math.max(1, p - 1))}
-              disabled={paginaSegura === 1}
+              onClick={() =>
+                setPaginaActual(
+                  (p) =>
+                    Math.max(
+                      1,
+                      p - 1
+                    )
+                )
+              }
+              disabled={
+                paginaSegura === 1
+              }
             >
               Anterior
             </button>
 
-            {obtenerNumerosDePagina(paginaSegura, totalPaginas).map(
+            {obtenerNumerosDePagina(
+              paginaSegura,
+              totalPaginas
+            ).map(
               (pagina, i) =>
                 pagina === "…" ? (
-                  <span key={`dots-${i}`} className="team-pages-dots">
+                  <span
+                    key={`dots-${i}`}
+                    className="team-pages-dots"
+                  >
                     …
                   </span>
                 ) : (
@@ -408,11 +773,16 @@ miembrosDeLaPagina.map((miembro) => (
                     key={pagina}
                     type="button"
                     className={
-                      pagina === paginaSegura
+                      pagina ===
+                      paginaSegura
                         ? "team-page-number team-page-active"
                         : "team-page-number"
                     }
-                    onClick={() => setPaginaActual(pagina)}
+                    onClick={() =>
+                      setPaginaActual(
+                        pagina
+                      )
+                    }
                   >
                     {pagina}
                   </button>
@@ -422,29 +792,52 @@ miembrosDeLaPagina.map((miembro) => (
             <button
               type="button"
               onClick={() =>
-                setPaginaActual((p) => Math.min(totalPaginas, p + 1))
+                setPaginaActual(
+                  (p) =>
+                    Math.min(
+                      totalPaginas,
+                      p + 1
+                    )
+                )
               }
-              disabled={paginaSegura === totalPaginas}
+              disabled={
+                paginaSegura ===
+                totalPaginas
+              }
             >
               Siguiente
             </button>
           </nav>
         </footer>
       </main>
+
       {modalAgregarOpen && (
-  <AgregarMiembro
-    onClose={() => setModalAgregarOpen(false)}
-  />
-)}
-{modalModificarOpen && miembroSeleccionado && (
-  <ModificarMiembro
-    miembro={miembroSeleccionado}
-    onClose={() => {
-      setModalModificarOpen(false);
-      setMiembroSeleccionado(null);
-    }}
-  />
-)}
+        <AgregarMiembro
+          onClose={() =>
+            setModalAgregarOpen(
+              false
+            )
+          }
+          onAgregado={
+            cargarMiembros
+          }
+        />
+      )}
+
+      {modalModificarOpen &&
+        miembroSeleccionado && (
+          <ModificarMiembro
+            miembro={
+              miembroSeleccionado
+            }
+            onClose={
+              cerrarModalModificar
+            }
+            onActualizado={
+              cargarMiembros
+            }
+          />
+        )}
     </>
   );
 };

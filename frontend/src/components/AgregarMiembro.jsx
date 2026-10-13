@@ -1,20 +1,49 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import api from "../api.js";
 import "../styles/components/AgregarMiembro.css";
-
-// Simulación de base de datos
-const miembrosDB = [];
 
 const AgregarMiembro = ({ onClose }) => {
   const [formulario, setFormulario] = useState({
     nombre: "",
     sector: "",
-    rol: "",
     email: "",
     password: "",
   });
 
+  const [sectores, setSectores] = useState([]);
   const [errores, setErrores] = useState({});
   const [mensaje, setMensaje] = useState("");
+  const [errorServidor, setErrorServidor] = useState("");
+  const [cargandoSectores, setCargandoSectores] = useState(true);
+  const [enviando, setEnviando] = useState(false);
+
+  useEffect(() => {
+    const cargarSectores = async () => {
+      try {
+        setCargandoSectores(true);
+
+        const response = await api.get("/api/sectors");
+
+        setSectores(response.data);
+      } catch (error) {
+        console.error("Error al cargar sectores:", error);
+
+        if (error.response?.status === 401) {
+          setErrorServidor(
+            "Tu sesión expiró. Volvé a iniciar sesión."
+          );
+        } else {
+          setErrorServidor(
+            "No se pudieron cargar los sectores."
+          );
+        }
+      } finally {
+        setCargandoSectores(false);
+      }
+    };
+
+    cargarSectores();
+  }, []);
 
   const manejarCambio = (e) => {
     const { name, value } = e.target;
@@ -24,33 +53,18 @@ const AgregarMiembro = ({ onClose }) => {
       [name]: value,
     }));
 
-    // Limpiar el error del campo al modificarlo
     setErrores((prev) => ({
       ...prev,
       [name]: "",
     }));
 
     setMensaje("");
-  };
-
-  const seleccionarRol = (rol) => {
-    setFormulario((prev) => ({
-      ...prev,
-      rol,
-    }));
-
-    setErrores((prev) => ({
-      ...prev,
-      rol: "",
-    }));
-
-    setMensaje("");
+    setErrorServidor("");
   };
 
   const validarFormulario = () => {
     const nuevosErrores = {};
 
-    // Validar nombre: solamente letras y espacios
     const nombreValido = /^[A-Za-zÁÉÍÓÚáéíóúÑñÜü\s]+$/;
 
     if (!formulario.nombre.trim()) {
@@ -60,28 +74,22 @@ const AgregarMiembro = ({ onClose }) => {
         "El nombre solo puede contener letras.";
     }
 
-    // Validar sector
     if (!formulario.sector) {
-      nuevosErrores.sector = "Debés seleccionar un sector.";
+      nuevosErrores.sector =
+        "Debés seleccionar un sector.";
     }
 
-    // Validar rol
-    if (!formulario.rol) {
-      nuevosErrores.rol = "Debés seleccionar un rol.";
-    }
-
-    // Validar email
     const emailValido =
       /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!formulario.email.trim()) {
-      nuevosErrores.email = "El email es obligatorio.";
-    } else if (!emailValido.test(formulario.email)) {
       nuevosErrores.email =
-        "Ingresá un email válido. Ejemplo: usuario@email.com";
+        "El email es obligatorio.";
+    } else if (!emailValido.test(formulario.email.trim())) {
+      nuevosErrores.email =
+        "Ingresá un email válido.";
     }
 
-    // Validar contraseña
     if (!formulario.password) {
       nuevosErrores.password =
         "La contraseña es obligatoria.";
@@ -95,39 +103,99 @@ const AgregarMiembro = ({ onClose }) => {
     return Object.keys(nuevosErrores).length === 0;
   };
 
-  const manejarSubmit = (e) => {
-    e.preventDefault();
-
-    setMensaje("");
-
-    if (!validarFormulario()) {
-      return;
-    }
-
-    // Simulación de guardado en la base de datos
-    const nuevoMiembro = {
-      id: miembrosDB.length + 1,
-      nombre: formulario.nombre.trim(),
-      sector: formulario.sector,
-      rol: formulario.rol,
-      email: formulario.email.trim(),
-      password: formulario.password,
-    };
-
-    miembrosDB.push(nuevoMiembro);
-
-    console.log("Miembro agregado:", nuevoMiembro);
-    console.log("Base de datos simulada:", miembrosDB);
-
-    setMensaje("Miembro agregado correctamente.");
-
+  const limpiarFormulario = () => {
     setFormulario({
       nombre: "",
       sector: "",
-      rol: "",
       email: "",
       password: "",
     });
+  };
+
+  const manejarSubmit = async (e) => {
+    e.preventDefault();
+
+    setMensaje("");
+    setErrorServidor("");
+
+    const formularioValido = validarFormulario();
+
+    if (!formularioValido) {
+      return;
+    }
+
+    try {
+      setEnviando(true);
+
+      const datos = {
+        name: formulario.nombre.trim(),
+        email: formulario.email.trim(),
+        password: formulario.password,
+        sectors: [formulario.sector],
+      };
+
+      console.log("Datos enviados:", datos);
+
+      const response = await api.post(
+        "/api/auth/accounts",
+        datos
+      );
+
+      console.log(
+        "Respuesta de creación:",
+        response.data
+      );
+
+      setMensaje(
+        "Miembro agregado correctamente."
+      );
+
+      limpiarFormulario();
+      setErrores({});
+    } catch (error) {
+      console.error(
+        "Error al crear miembro:",
+        error
+      );
+
+      const status = error.response?.status;
+      const serverMessage =
+        error.response?.data?.message;
+
+      if (status === 400) {
+        setErrorServidor(
+          serverMessage ||
+            "Hay campos requeridos faltantes o datos inválidos."
+        );
+      } else if (status === 401) {
+        setErrorServidor(
+          "Tu sesión expiró. Volvé a iniciar sesión."
+        );
+      } else if (status === 403) {
+        setErrorServidor(
+          "No tenés permisos de administrador para realizar esta acción."
+        );
+      } else if (status === 409) {
+        setErrorServidor(
+          "El correo electrónico ya se encuentra registrado."
+        );
+      } else if (status === 500) {
+        setErrorServidor(
+          "Ocurrió un error interno del servidor."
+        );
+      } else if (error.request) {
+        setErrorServidor(
+          "No se pudo conectar con el servidor. Verificá que el backend esté funcionando."
+        );
+      } else {
+        setErrorServidor(
+          serverMessage ||
+            "Ocurrió un error al crear el miembro."
+        );
+      }
+    } finally {
+      setEnviando(false);
+    }
   };
 
   return (
@@ -139,7 +207,6 @@ const AgregarMiembro = ({ onClose }) => {
         className="agregar-modal"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Encabezado */}
         <div className="agregar-modal-header">
           <h2>AGREGAR MIEMBRO</h2>
 
@@ -147,20 +214,21 @@ const AgregarMiembro = ({ onClose }) => {
             type="button"
             className="agregar-modal-close"
             onClick={onClose}
+            disabled={enviando}
           >
             ×
           </button>
         </div>
 
-        {/* Formulario */}
         <form
           className="agregar-modal-form"
           onSubmit={manejarSubmit}
           noValidate
         >
-          {/* Nombre */}
           <div className="agregar-campo">
-            <label htmlFor="nombre">Nombre</label>
+            <label htmlFor="nombre">
+              Nombre
+            </label>
 
             <input
               id="nombre"
@@ -169,6 +237,7 @@ const AgregarMiembro = ({ onClose }) => {
               placeholder="Ingresá el nombre completo"
               value={formulario.nombre}
               onChange={manejarCambio}
+              disabled={enviando}
             />
 
             {errores.nombre && (
@@ -178,27 +247,34 @@ const AgregarMiembro = ({ onClose }) => {
             )}
           </div>
 
-          {/* Sector */}
           <div className="agregar-campo">
-            <label htmlFor="sector">Sector</label>
+            <label htmlFor="sector">
+              Sector
+            </label>
 
             <select
               id="sector"
               name="sector"
               value={formulario.sector}
               onChange={manejarCambio}
+              disabled={
+                cargandoSectores || enviando
+              }
             >
               <option value="">
-                Seleccioná un sector
+                {cargandoSectores
+                  ? "Cargando sectores..."
+                  : "Seleccioná un sector"}
               </option>
 
-              <option value="taller electromecanica">
-                Taller Electromecánica
-              </option>
-
-              <option value="preceptoria">
-                Preceptoría
-              </option>
+              {sectores.map((sector) => (
+                <option
+                  key={sector._id}
+                  value={sector._id}
+                >
+                  {sector.name}
+                </option>
+              ))}
             </select>
 
             {errores.sector && (
@@ -208,48 +284,10 @@ const AgregarMiembro = ({ onClose }) => {
             )}
           </div>
 
-          {/* Rol */}
           <div className="agregar-campo">
-            <label>Rol</label>
-
-            <div className="agregar-roles">
-              <button
-                type="button"
-                className={
-                  formulario.rol === "colaborador"
-                    ? "agregar-rol-btn rol-seleccionado"
-                    : "agregar-rol-btn"
-                }
-                onClick={() =>
-                  seleccionarRol("colaborador")
-                }
-              >
-                Colaborador
-              </button>
-
-              <button
-                type="button"
-                className={
-                  formulario.rol === "admin"
-                    ? "agregar-rol-btn rol-seleccionado"
-                    : "agregar-rol-btn"
-                }
-                onClick={() => seleccionarRol("admin")}
-              >
-                Admin
-              </button>
-            </div>
-
-            {errores.rol && (
-              <p className="agregar-error">
-                {errores.rol}
-              </p>
-            )}
-          </div>
-
-          {/* Email */}
-          <div className="agregar-campo">
-            <label htmlFor="email">Email</label>
+            <label htmlFor="email">
+              Email
+            </label>
 
             <input
               id="email"
@@ -258,6 +296,7 @@ const AgregarMiembro = ({ onClose }) => {
               placeholder="Ingresá el email"
               value={formulario.email}
               onChange={manejarCambio}
+              disabled={enviando}
             />
 
             {errores.email && (
@@ -267,7 +306,6 @@ const AgregarMiembro = ({ onClose }) => {
             )}
           </div>
 
-          {/* Contraseña */}
           <div className="agregar-campo">
             <label htmlFor="password">
               Contraseña
@@ -280,6 +318,7 @@ const AgregarMiembro = ({ onClose }) => {
               placeholder="Ingresá una contraseña"
               value={formulario.password}
               onChange={manejarCambio}
+              disabled={enviando}
             />
 
             {errores.password && (
@@ -289,19 +328,24 @@ const AgregarMiembro = ({ onClose }) => {
             )}
           </div>
 
-          {/* Mensaje de éxito */}
+          {errorServidor && (
+            <p className="agregar-error">
+              {errorServidor}
+            </p>
+          )}
+
           {mensaje && (
             <p className="agregar-exito">
               {mensaje}
             </p>
           )}
 
-          {/* Botones */}
           <div className="agregar-modal-actions">
             <button
               type="button"
               className="agregar-btn cancelar"
               onClick={onClose}
+              disabled={enviando}
             >
               Cancelar
             </button>
@@ -309,8 +353,13 @@ const AgregarMiembro = ({ onClose }) => {
             <button
               type="submit"
               className="agregar-btn agregar"
+              disabled={
+                enviando || cargandoSectores
+              }
             >
-              Agregar
+              {enviando
+                ? "Agregando..."
+                : "Agregar"}
             </button>
           </div>
         </form>
