@@ -1,5 +1,4 @@
-import { readableAccent, avatarStyle } from "../theme";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   FiPlus,
   FiX,
@@ -12,64 +11,145 @@ import {
 } from "react-icons/fi";
 import AgregarSectorModal from "../components/AgregarSectorModal.jsx";
 import AgregarMiembroModal from "../components/AgregarMiembroModal.jsx";
+import api from "../api.js";
 import "../styles/pages/GestionSectores.css";
 
-const INITIAL_SECTORES = [
-  {
-    id: "profesores",
-    categoria: "SECTOR ACADÉMICO",
-    nombre: "PROFESORES",
-    color: "#05903E",
-    descripcion: "Docentes de materias técnicas y generales",
-    icon: FiUsers,
-    miembros: [
-      { id: "1", ini: "JS", nombre: "Juan Smoes", materia: "Electrotecnia General", color: "#05903E" },
-      { id: "2", ini: "MC", nombre: "Marta Costa", materia: "Sistemas Digitales", color: "#FF880F" },
-      { id: "3", ini: "RG", nombre: "Roberto Gómez", materia: "Física Aplicada", color: "#DC9655" },
-      { id: "4", ini: "LL", nombre: "Laura López", materia: "Taller de Informática", color: "#05903E" },
-    ],
-  },
-  {
-    id: "preceptoria",
-    categoria: "ASISTENCIA Y CONTROL",
-    nombre: "PRECEPTORÍA",
-    color: "#FF880F",
-    descripcion: "Control de asistencia y convivencia",
-    icon: FiClipboard,
-    miembros: [
-      { id: "5", ini: "CB", nombre: "Claudio Bravo", color: "#DC9655" },
-      { id: "6", ini: "SR", nombre: "Silvia Ramos", color: "#05903E" },
-    ],
-  },
-  {
-    id: "tesoreria",
-    categoria: "ADMINISTRACIÓN Y FINANZAS",
-    nombre: "TESORERÍA",
-    color: "#1F151C",
-    descripcion: "Administración contable",
-    icon: FiDollarSign,
-    miembros: [
-      { id: "7", ini: "VG", nombre: "Valeria García", color: "#05903E" },
-    ],
-  },
-];
+const ICONOS = {
+  FiUsers,
+  FiClipboard,
+  FiDollarSign,
+  FiUserPlus,
+};
+
+const obtenerIcono = (nombre) => {
+  return ICONOS[nombre] || FiUsers;
+};
+
+const obtenerIniciales = (nombre = "") => {
+  return nombre
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((parte) => parte[0])
+    .join("")
+    .substring(0, 2)
+    .toUpperCase();
+};
+
+const readableAccent = (color) => {
+  if (!color) {
+    return "#05903E";
+  }
+
+  const hex = color.replace("#", "");
+
+  if (hex.length !== 6) {
+    return color;
+  }
+
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+
+  const luminosidad =
+    (r * 299 + g * 587 + b * 114) / 1000;
+
+  return luminosidad > 150 ? "#1F151C" : color;
+};
+
+const avatarStyle = (color) => ({
+  background: `${color || "#05903E"}20`,
+  color: readableAccent(color),
+  border: `1px solid ${color || "#05903E"}`,
+});
+
+const convertirMiembro = (miembro) => ({
+  id: miembro._id,
+  nombre: miembro.name || "",
+  email: miembro.email || "",
+  accountType: miembro.accountType || "collaborator",
+  ini: obtenerIniciales(miembro.name),
+  color: "#05903E",
+  sectors: miembro.sectors || [],
+});
+
+const convertirSector = (sector, miembros = []) => ({
+  id: sector._id,
+  nombre: sector.name || "",
+  descripcion: sector.description || "",
+  color: sector.color || "#05903E",
+  icon: obtenerIcono(sector.icon),
+  miembros: miembros.map(convertirMiembro),
+});
 
 export default function GestionSectores() {
-  const [sectores, setSectores] = useState(INITIAL_SECTORES);
+  const [sectores, setSectores] = useState([]);
+  const [cargando, setCargando] = useState(true);
+
   const [isSectorModalOpen, setIsSectorModalOpen] = useState(false);
   const [editingSector, setEditingSector] = useState(null);
 
-  // Modal Administrar (detalle)
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const [adminSectorId, setAdminSectorId] = useState(null);
 
-  // Modal Miembros
   const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
   const [editingMember, setEditingMember] = useState(null);
 
-  const adminSector = sectores.find((s) => s.id === adminSectorId);
+  const adminSector = sectores.find(
+    (sector) => sector.id === adminSectorId
+  );
 
-  // --- SECTORES ---
+  useEffect(() => {
+    cargarSectores();
+  }, []);
+
+  const cargarSectores = async () => {
+    try {
+      setCargando(true);
+
+      const response = await api.get("/api/sectors");
+
+      const listaSectores = Array.isArray(response.data)
+        ? response.data
+        : response.data.sectors || [];
+
+      const sectoresConvertidos = await Promise.all(
+        listaSectores.map(async (sector) => {
+          try {
+            const miembrosResponse = await api.get(
+              `/api/sectors/${sector._id}/members`
+            );
+
+            const miembros = Array.isArray(miembrosResponse.data)
+              ? miembrosResponse.data
+              : miembrosResponse.data.members || [];
+
+            return convertirSector(sector, miembros);
+          } catch (error) {
+            console.error(
+              `Error al obtener miembros del sector ${sector._id}:`,
+              error
+            );
+
+            return convertirSector(sector, []);
+          }
+        })
+      );
+
+      setSectores(sectoresConvertidos);
+    } catch (error) {
+      console.error("Error al cargar sectores:", error);
+
+      if (error.response?.status === 401) {
+        alert("La sesión expiró. Volvé a iniciar sesión.");
+      } else {
+        alert("No se pudieron cargar los sectores.");
+      }
+    } finally {
+      setCargando(false);
+    }
+  };
+
   const openCreateSector = () => {
     setEditingSector(null);
     setIsSectorModalOpen(true);
@@ -80,84 +160,338 @@ export default function GestionSectores() {
     setIsSectorModalOpen(true);
   };
 
-  const handleSaveSector = (formData) => {
-    if (editingSector) {
-      setSectores((prev) =>
-        prev.map((s) =>
-          s.id === editingSector.id ? { ...s, ...formData, nombre: formData.nombre } : s
-        )
-      );
-    } else {
-      if (sectores.some((s) => s.nombre === formData.nombre)) {
-        alert("Ya existe un sector con ese nombre");
-        return;
+  const handleSaveSector = async (formData) => {
+    try {
+      const datos = {
+        name: formData.nombre.trim(),
+        description: formData.descripcion.trim(),
+        color: formData.color,
+      };
+
+      if (editingSector) {
+        await api.put(
+          `/api/sectors/${editingSector.id}`,
+          datos
+        );
+      } else {
+        await api.post("/api/sectors", datos);
       }
-      const newId = formData.nombre.toLowerCase().replace(/\s+/g, "-") + "-" + Date.now();
-      setSectores((prev) => [
-        ...prev,
-        {
-          id: newId,
-          icon: FiUsers,
-          miembros: [],
-          ...formData,
-        },
-      ]);
+
+      setIsSectorModalOpen(false);
+      setEditingSector(null);
+
+      await cargarSectores();
+    } catch (error) {
+      console.error("Error al guardar sector:", error);
+
+      const status = error.response?.status;
+      const message = error.response?.data?.message;
+
+      if (status === 400) {
+        alert(
+          message || "Los datos del sector no son válidos."
+        );
+      } else if (status === 403) {
+        alert(
+          "No tenés permisos para realizar esta acción."
+        );
+      } else if (status === 409) {
+        alert(
+          message || "Ya existe un sector con ese nombre."
+        );
+      } else {
+        alert("No se pudo guardar el sector.");
+      }
     }
-    setEditingSector(null);
   };
 
-  const handleDeleteSector = (id) => {
-    if (!window.confirm(`¿Eliminar ${sectores.find((s) => s.id === id)?.nombre}?`)) return;
-    setSectores((prev) => prev.filter((s) => s.id !== id));
-    setIsAdminModalOpen(false);
+  const handleDeleteSector = async (id) => {
+    const sector = sectores.find(
+      (item) => item.id === id
+    );
+
+    if (!sector) {
+      return;
+    }
+
+    const confirmar = window.confirm(
+      `¿Eliminar el sector "${sector.nombre}"?`
+    );
+
+    if (!confirmar) {
+      return;
+    }
+
+    try {
+      await api.delete(`/api/sectors/${id}`);
+
+      setIsAdminModalOpen(false);
+      setAdminSectorId(null);
+
+      await cargarSectores();
+    } catch (error) {
+      console.error("Error al eliminar sector:", error);
+
+      const status = error.response?.status;
+      const message = error.response?.data?.message;
+
+      if (status === 409) {
+        alert(
+          message ||
+            "No se puede eliminar el sector porque tiene miembros asignados."
+        );
+      } else if (status === 403) {
+        alert(
+          "No tenés permisos para eliminar este sector."
+        );
+      } else {
+        alert("No se pudo eliminar el sector.");
+      }
+    }
   };
 
-  // --- ADMINISTRAR MODAL ---
-  const openAdminModal = (id) => {
+  const openAdminModal = async (id) => {
     setAdminSectorId(id);
     setIsAdminModalOpen(true);
+
+    try {
+      const response = await api.get(
+        `/api/sectors/${id}/members`
+      );
+
+      const miembros = Array.isArray(response.data)
+        ? response.data
+        : response.data.members || [];
+
+      setSectores((prev) =>
+        prev.map((sector) =>
+          sector.id === id
+            ? {
+                ...sector,
+                miembros: miembros.map(convertirMiembro),
+              }
+            : sector
+        )
+      );
+    } catch (error) {
+      console.error(
+        "Error al cargar miembros del sector:",
+        error
+      );
+    }
   };
 
   const closeAdminModal = () => {
     setIsAdminModalOpen(false);
     setAdminSectorId(null);
+    setEditingMember(null);
   };
 
-  // --- MIEMBROS ---
   const openCreateMember = () => {
     setEditingMember(null);
     setIsMemberModalOpen(true);
   };
 
-  const openEditMember = (m) => {
-    setEditingMember(m);
+  const openEditMember = (member) => {
+    setEditingMember(member);
     setIsMemberModalOpen(true);
   };
 
-  const handleSaveMember = (formData) => {
-    const ini = formData.nombre.split(" ").map((n) => n[0]).join("").substring(0, 2).toUpperCase();
-    if (editingMember) {
+  const handleSaveMember = async (usuario) => {
+    if (!usuario?._id && !usuario?.id) {
+      alert("No se seleccionó un usuario válido.");
+      return;
+    }
+
+    if (!adminSectorId) {
+      alert("No se seleccionó un sector.");
+      return;
+    }
+
+    const userId = usuario._id || usuario.id;
+
+    try {
+      const userResponse = await api.get(
+        `/api/users/${userId}`
+      );
+
+      const usuarioActual = userResponse.data?.user || userResponse.data;
+
+      const sectoresActuales = Array.isArray(
+        usuarioActual.sectors
+      )
+        ? usuarioActual.sectors
+        : [];
+
+      const sectoresIds = sectoresActuales.map((sector) => {
+        if (typeof sector === "string") {
+          return sector;
+        }
+
+        return sector?._id || sector?.id;
+      });
+
+      let nuevosSectores = [...sectoresIds];
+
+      if (editingMember) {
+        const sectorAnterior = editingMember.sectors?.find?.(
+          (sector) => {
+            if (typeof sector === "string") {
+              return sector !== adminSectorId;
+            }
+
+            return (
+              (sector?._id || sector?.id) !== adminSectorId
+            );
+          }
+        );
+
+        if (sectorAnterior) {
+          const sectorAnteriorId =
+            typeof sectorAnterior === "string"
+              ? sectorAnterior
+              : sectorAnterior._id || sectorAnterior.id;
+
+          nuevosSectores = nuevosSectores.filter(
+            (id) => id !== sectorAnteriorId
+          );
+        }
+      }
+
+      if (!nuevosSectores.includes(adminSectorId)) {
+        nuevosSectores.push(adminSectorId);
+      }
+
+      await api.put(`/api/users/${userId}`, {
+        sectors: nuevosSectores,
+      });
+
+      setIsMemberModalOpen(false);
+      setEditingMember(null);
+
+      await cargarSectores();
+
+      const sectorActualizado = await api.get(
+        `/api/sectors/${adminSectorId}/members`
+      );
+
+      const miembrosActualizados = Array.isArray(
+        sectorActualizado.data
+      )
+        ? sectorActualizado.data
+        : sectorActualizado.data.members || [];
+
       setSectores((prev) =>
-        prev.map((s) =>
-          s.id === adminSectorId
-            ? { ...s, miembros: s.miembros.map((m) => (m.id === editingMember.id ? { ...m, ...formData, ini } : m)) }
-            : s
+        prev.map((sector) =>
+          sector.id === adminSectorId
+            ? {
+                ...sector,
+                miembros:
+                  miembrosActualizados.map(convertirMiembro),
+              }
+            : sector
         )
       );
-    } else {
-      const nuevo = { id: Date.now().toString(), ini, ...formData };
-      setSectores((prev) =>
-        prev.map((s) => (s.id === adminSectorId ? { ...s, miembros: [...s.miembros, nuevo] } : s))
+    } catch (error) {
+      console.error(
+        "Error al asignar miembro:",
+        error
       );
+
+      const status = error.response?.status;
+      const message = error.response?.data?.message;
+
+      if (status === 400) {
+        alert(
+          message || "Los datos del usuario no son válidos."
+        );
+      } else if (status === 403) {
+        alert(
+          "No tenés permisos para modificar este usuario."
+        );
+      } else if (status === 404) {
+        alert("El usuario no existe.");
+      } else {
+        alert("No se pudo asignar el usuario al sector.");
+      }
     }
   };
 
-  const handleDeleteMember = (memberId) => {
-    setSectores((prev) =>
-      prev.map((s) =>
-        s.id === adminSectorId ? { ...s, miembros: s.miembros.filter((m) => m.id !== memberId) } : s
-      )
+  const handleDeleteMember = async (member) => {
+    if (!member?.id) {
+      return;
+    }
+
+    const confirmar = window.confirm(
+      `¿Quitar a ${member.nombre} de este sector?`
     );
+
+    if (!confirmar) {
+      return;
+    }
+
+    try {
+      const userResponse = await api.get(
+        `/api/users/${member.id}`
+      );
+
+      const usuario = userResponse.data?.user || userResponse.data;
+
+      const sectoresActuales = Array.isArray(usuario.sectors)
+        ? usuario.sectors
+        : [];
+
+      const sectoresIds = sectoresActuales.map((sector) => {
+        if (typeof sector === "string") {
+          return sector;
+        }
+
+        return sector?._id || sector?.id;
+      });
+
+      const nuevosSectores = sectoresIds.filter(
+        (id) => id !== adminSectorId
+      );
+
+      if (nuevosSectores.length === 0) {
+        alert(
+          "El usuario debe pertenecer al menos a un sector."
+        );
+        return;
+      }
+
+      await api.put(`/api/users/${member.id}`, {
+        sectors: nuevosSectores,
+      });
+
+      await cargarSectores();
+
+      const miembrosResponse = await api.get(
+        `/api/sectors/${adminSectorId}/members`
+      );
+
+      const miembros = Array.isArray(miembrosResponse.data)
+        ? miembrosResponse.data
+        : miembrosResponse.data.members || [];
+
+      setSectores((prev) =>
+        prev.map((sector) =>
+          sector.id === adminSectorId
+            ? {
+                ...sector,
+                miembros: miembros.map(convertirMiembro),
+              }
+            : sector
+        )
+      );
+    } catch (error) {
+      console.error(
+        "Error al quitar miembro:",
+        error
+      );
+
+      alert("No se pudo quitar el miembro del sector.");
+    }
   };
 
   return (
@@ -166,115 +500,273 @@ export default function GestionSectores() {
         <div className="gs-header">
           <div>
             <h1>Gestión de Sectores</h1>
-            <p>Organización y administración de roles, áreas y dependencias técnicas de la escuela.</p>
+            <p>
+              Organización y administración de los sectores
+              de la escuela.
+            </p>
           </div>
         </div>
 
-        {/* SOLO LISTA, SIN PANEL LATERAL */}
-        <div className="gs-sectores-list gs-sectores-list--full">
-          {sectores.map((sec) => (
-            <div key={sec.id} className="gs-sector-card">
-              <div className="gs-sector-card-head">
-                <div className="gs-sector-icon" style={{ color: readableAccent(sec.color), borderColor: sec.color }}>
-                  <sec.icon />
+        {cargando ? (
+          <div className="gs-empty">
+            Cargando sectores...
+          </div>
+        ) : sectores.length === 0 ? (
+          <div className="gs-empty">
+            No hay sectores registrados.
+          </div>
+        ) : (
+          <div className="gs-sectores-list gs-sectores-list--full">
+            {sectores.map((sec) => {
+              const IconoSector = sec.icon;
+
+              return (
+                <div
+                  key={sec.id}
+                  className="gs-sector-card"
+                >
+                  <div className="gs-sector-card-head">
+                    <div
+                      className="gs-sector-icon"
+                      style={{
+                        color: sec.color,
+                        borderColor: sec.color,
+                      }}
+                    >
+                      <IconoSector />
+                    </div>
+
+                    <div>
+                      <span
+                        className="gs-sector-cat"
+                        style={{
+                          color: readableAccent(sec.color),
+                        }}
+                      >
+                        SECTOR
+                      </span>
+
+                      <h3>{sec.nombre}</h3>
+                    </div>
+
+                    <span
+                      className="gs-sector-badge"
+                      style={{
+                        background: `${sec.color}15`,
+                        color: readableAccent(sec.color),
+                      }}
+                    >
+                      {sec.miembros.length}{" "}
+                      {sec.miembros.length === 1
+                        ? "Miembro"
+                        : "Miembros"}
+                    </span>
+                  </div>
+
+                  <p className="gs-sector-description">
+                    {sec.descripcion ||
+                      "Sin descripción"}
+                  </p>
+
+                  <div className="gs-sector-members-preview">
+                    {sec.miembros.length === 0 ? (
+                      <span className="gs-empty">
+                        Sin miembros asignados
+                      </span>
+                    ) : (
+                      <>
+                        {sec.miembros
+                          .slice(0, 3)
+                          .map((member) => (
+                            <div
+                              key={member.id}
+                              className="gs-member-preview"
+                            >
+                              <span
+                                className="gs-member-avatar"
+                                style={{
+                                  background:
+                                    member.color,
+                                }}
+                              >
+                                {member.ini}
+                              </span>
+
+                              <span>
+                                {member.nombre}
+                              </span>
+                            </div>
+                          ))}
+
+                        {sec.miembros.length > 3 && (
+                          <span className="gs-more">
+                            +{sec.miembros.length - 3} más
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </div>
+
+                  <div className="gs-sector-card-foot">
+                    <button
+                      className="gs-secondary"
+                      style={{
+                        borderColor: sec.color,
+                        color: readableAccent(sec.color),
+                      }}
+                      onClick={() =>
+                        openAdminModal(sec.id)
+                      }
+                    >
+                      Administrar sector
+                    </button>
+                  </div>
                 </div>
-                <div>
-                  <span className="gs-sector-cat" style={{ color: readableAccent(sec.color === "#1F151C" ? "#DC9655" : sec.color) }}>
-                    {sec.categoria}
-                  </span>
-                  <h3>{sec.nombre}</h3>
-                </div>
-                <span className="gs-sector-badge" style={{ background: `${sec.color}15`, color: readableAccent(sec.color) }}>
-                  {sec.miembros.length} {sec.miembros.length === 1 ? "Miembro" : "Miembros"}
-                </span>
-              </div>
+              );
+            })}
 
-              <div className="gs-sector-members-preview">
-                {sec.miembros.length === 0 ? (
-                  <span className="gs-empty">Sin miembros asignados</span>
-                ) : (
-                  <>
-                    {sec.miembros.slice(0, 3).map((m) => (
-                      <div key={m.id} className="gs-member-preview">
-                        <span className="gs-member-avatar" style={avatarStyle(m.color)}>
-                          {m.ini}
-                        </span>
-                        <span>{m.nombre}</span>
-                      </div>
-                    ))}
-                    {sec.miembros.length > 3 && <span className="gs-more">+{sec.miembros.length - 3} más</span>}
-                  </>
-                )}
-              </div>
+            <button
+              className="gs-add-sector"
+              onClick={openCreateSector}
+            >
+              <span className="gs-add-sector-icon">
+                <FiPlus />
+              </span>
 
-              <div className="gs-sector-card-foot">
-                <button className="gs-secondary" style={{ borderColor: sec.color, color: readableAccent(sec.color) }} onClick={() => openAdminModal(sec.id)}>
-                  Administrar sector
-                </button>
-              </div>
-            </div>
-          ))}
-
-          <button className="gs-add-sector" onClick={openCreateSector}>
-            <span className="gs-add-sector-icon"><FiPlus /></span> Agregar nuevo sector
-          </button>
-        </div>
+              Agregar nuevo sector
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* MODAL AGREGAR/EDITAR SECTOR */}
       <AgregarSectorModal
         isOpen={isSectorModalOpen}
-        onClose={() => { setIsSectorModalOpen(false); setEditingSector(null); }}
+        onClose={() => {
+          setIsSectorModalOpen(false);
+          setEditingSector(null);
+        }}
         onSave={handleSaveSector}
         initialData={editingSector}
       />
 
-      {/* MODAL MIEMBRO */}
       <AgregarMiembroModal
         isOpen={isMemberModalOpen}
-        onClose={() => { setIsMemberModalOpen(false); setEditingMember(null); }}
+        onClose={() => {
+          setIsMemberModalOpen(false);
+          setEditingMember(null);
+        }}
         onSave={handleSaveMember}
         initialData={editingMember}
+        sectorId={adminSectorId}
       />
 
-      {/* MODAL ADMINISTRAR SECTOR - APARECE SOLO AL TOCAR ADMINISTRAR */}
       {isAdminModalOpen && adminSector && (
-        <div className="gsd-overlay" onClick={(e) => e.target === e.currentTarget && closeAdminModal()}>
+        <div
+          className="gsd-overlay"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              closeAdminModal();
+            }
+          }}
+        >
           <div className="gsd-modal">
             <div className="gsd-header">
               <div className="gsd-header-left">
-                <div className="gs-sector-icon gs-sector-icon--large" style={{ background: `${adminSector.color}15`, color: readableAccent(adminSector.color) }}>
+                <div
+                  className="gs-sector-icon gs-sector-icon--large"
+                  style={{
+                    background: `${adminSector.color}15`,
+                    color: readableAccent(
+                      adminSector.color
+                    ),
+                  }}
+                >
                   <adminSector.icon />
                 </div>
+
                 <div>
                   <h2>{adminSector.nombre}</h2>
-                  <span>{adminSector.categoria} • {adminSector.descripcion || "Sin descripción"}</span>
+
+                  <span>
+                    {adminSector.descripcion ||
+                      "Sin descripción"}
+                  </span>
                 </div>
               </div>
-              <button className="gs-icon-btn" onClick={closeAdminModal}><FiX /></button>
+
+              <button
+                className="gs-icon-btn"
+                onClick={closeAdminModal}
+              >
+                <FiX />
+              </button>
             </div>
 
             <div className="gsd-members-head">
-              <h4>MIEMBROS ASIGNADOS ({adminSector.miembros.length})</h4>
-              <button className="gs-chip" onClick={openCreateMember}><FiUserPlus /> Agregar miembro</button>
+              <h4>
+                MIEMBROS ASIGNADOS (
+                {adminSector.miembros.length})
+              </h4>
+
+              <button
+                className="gs-chip"
+                onClick={openCreateMember}
+              >
+                <FiUserPlus />
+                Agregar miembro
+              </button>
             </div>
 
             <div className="gs-detail-members gsd-members-list">
               {adminSector.miembros.length === 0 ? (
-                <p className="gs-empty">Este sector aún no tiene miembros.</p>
+                <p className="gs-empty">
+                  Este sector aún no tiene miembros.
+                </p>
               ) : (
-                adminSector.miembros.map((m) => (
-                  <div key={m.id} className="gs-detail-member">
+                adminSector.miembros.map((member) => (
+                  <div
+                    key={member.id}
+                    className="gs-detail-member"
+                  >
                     <div className="gs-detail-member-left">
-                      <span className="gs-member-avatar gs-member-avatar--lg" style={{ background: `${m.color}33`, color: readableAccent(m.color) }}>{m.ini}</span>
+                      <span
+                        className="gs-member-avatar gs-member-avatar--lg"
+                        style={avatarStyle(
+                          member.color
+                        )}
+                      >
+                        {member.ini}
+                      </span>
+
                       <div>
-                        <p className="gs-dm-name">{m.nombre}</p>
-                        {m.materia && <p className="gs-dm-sub">{m.materia}</p>}
+                        <p className="gs-dm-name">
+                          {member.nombre}
+                        </p>
+
+                        <p className="gs-dm-sub">
+                          {member.email}
+                        </p>
                       </div>
                     </div>
+
                     <div className="gs-dm-actions">
-                      <button onClick={() => openEditMember(m)}><FiEdit2 /></button>
-                      <button onClick={() => handleDeleteMember(m.id)}><FiTrash2 /></button>
+                      <button
+                        onClick={() =>
+                          openEditMember(member)
+                        }
+                        title="Cambiar sector"
+                      >
+                        <FiEdit2 />
+                      </button>
+
+                      <button
+                        onClick={() =>
+                          handleDeleteMember(member)
+                        }
+                        title="Quitar del sector"
+                      >
+                        <FiTrash2 />
+                      </button>
                     </div>
                   </div>
                 ))
@@ -282,8 +774,27 @@ export default function GestionSectores() {
             </div>
 
             <div className="gs-detail-foot">
-              <button onClick={() => { closeAdminModal(); openEditSector(adminSector); }}><FiEdit2 /> Editar sector</button>
-              <button className="gs-danger" onClick={() => handleDeleteSector(adminSector.id)}><FiTrash2 /> Eliminar sector</button>
+              <button
+                onClick={() => {
+                  closeAdminModal();
+                  openEditSector(adminSector);
+                }}
+              >
+                <FiEdit2 />
+                Editar sector
+              </button>
+
+              <button
+                className="gs-danger"
+                onClick={() =>
+                  handleDeleteSector(
+                    adminSector.id
+                  )
+                }
+              >
+                <FiTrash2 />
+                Eliminar sector
+              </button>
             </div>
           </div>
         </div>
