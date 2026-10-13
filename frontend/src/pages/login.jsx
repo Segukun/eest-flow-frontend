@@ -195,9 +195,7 @@ const Login = () => {
             type="button"
             className="admin-link-button"
             onClick={() => {
-              setServerError(
-                "La recuperación de contraseña todavía no está disponible.",
-              );
+              navigate("/OlvidarContrasenia")
             }}
           >
             ¿Olvidaste tu contraseña?
