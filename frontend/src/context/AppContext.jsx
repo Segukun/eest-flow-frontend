@@ -223,6 +223,8 @@ export function AppProvider({ children }) {
     return n;
   }, [filters]);
 
+  const sectorIdOf = (s) => (s && typeof s === "object" ? s._id ?? s.id : s);
+
   const visibleTasks = useMemo(() => {
     const now = new Date();
     const diffDays = (d) => (new Date(d) - now) / 86400000;
@@ -232,6 +234,13 @@ export function AppProvider({ children }) {
       if (search && !t.title.toLowerCase().includes(search.toLowerCase())) return false;
       if (filters.priorities.length && !filters.priorities.includes(t.priority)) return false;
       if (filters.onlyMine && currentUser && !t.members.includes(currentUser.id)) return false;
+
+      if (filters.sector) {
+        const category = categories.find((c) => c.id === t.categoryId);
+        const ids = (category?.sectors ?? []).map(sectorIdOf);
+        if (!ids.includes(filters.sector)) return false;
+      }
+
       if (filters.due && t.dueDate) {
         const d = diffDays(t.dueDate);
         if (filters.due === "hoy" && !(d >= -1 && d < 1)) return false;
@@ -240,7 +249,7 @@ export function AppProvider({ children }) {
       }
       return true;
     });
-  }, [tasks, activeCategory, search, filters, currentUser]);
+  }, [tasks, categories, activeCategory, search, filters, currentUser]);
 
   /* ---------- acciones: tareas ---------- */
 

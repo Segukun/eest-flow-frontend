@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { useApp } from "../context/AppContext";
-import { PRIORITIES } from "../mock/db";
+import { useApp, PRIORITIES } from "../context/AppContext";
 import "../styles/components/filters-dropdown.css";
 
 const BRANCH_ROWS = [
@@ -126,12 +125,12 @@ export default function FiltersDropdown() {
                     {sectors.map((s) => (
                       <button
                         type="button"
-                        key={s}
-                        className={"filters-dd__opt" + (filters.sector === s ? " is-on" : "")}
-                        onClick={() => setSector(s)}
+                        key={s.id}
+                        className={"filters-dd__opt" + (filters.sector === s.id ? " is-on" : "")}
+                        onClick={() => setSector(s.id)}
                       >
-                        {s}
-                        {filters.sector === s && <span className="filters-dd__check">✓</span>}
+                        {s.name}
+                        {filters.sector === s.id && <span className="filters-dd__check">✓</span>}
                       </button>
                     ))}
                   </div>

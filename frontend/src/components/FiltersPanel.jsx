@@ -1,5 +1,4 @@
-import { useApp } from "../context/AppContext";
-import { PRIORITIES } from "../mock/db";
+import { useApp, PRIORITIES } from "../context/AppContext";
 import "../styles/components/filters.css";
 
 export default function FiltersPanel({ onClose }) {
@@ -86,7 +85,9 @@ export default function FiltersPanel({ onClose }) {
               onChange={(e) => setFilters((f) => ({ ...f, sector: e.target.value }))}
             >
               <option value="">Todos los sectores</option>
-              {sectors.map((s) => <option key={s} value={s}>{s}</option>)}
+              {sectors.map((s) => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
             </select>
           </div>
 
