@@ -40,10 +40,21 @@
 
 /* ---------- Olvidar contraseña ---------- */
 
-.olvidar-card {
+/* Cada paso (email / código / contraseña) es un formulario en columna */
+.olvidar-step {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  animation: olvidarStepIn 0.2s ease;
+}
+
+@keyframes olvidarStepIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .olvidar-title {
@@ -86,23 +97,12 @@
   border-color: var(--theme-danger-text, var(--color-danger));
 }
 
-.olvidar-code__input.is-ok {
-  border-color: var(--theme-green-text, var(--color-green));
-  color: var(--theme-green-text, var(--color-green));
-}
-
 .olvidar-code__input:disabled {
+  opacity: 0.6;
   cursor: default;
 }
 
-.olvidar-hint {
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.45;
-  color: var(--theme-secondary, var(--color-muted));
-}
-
-/* Campos de nueva contraseña */
+/* Campos de texto / email / contraseña */
 .olvidar-field {
   display: flex;
   flex-direction: column;
@@ -116,6 +116,7 @@
 }
 
 .olvidar-field__input {
+  width: 100%;
   height: 44px;
   padding: 0 14px;
   font-size: 15px;
@@ -132,29 +133,12 @@
   box-shadow: 0 0 0 3px rgba(255, 136, 15, 0.25);
 }
 
-/* Estado bloqueado: título e input en gris */
-.olvidar-field.is-disabled .olvidar-field__label {
-  color: #a79ea3;
-}
-
 .olvidar-field__input:disabled {
-  background: #ece7e9;
-  border-color: #ddd5d9;
-  color: #a79ea3;
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
-:root[data-theme="oscuro"] .olvidar-field.is-disabled .olvidar-field__label {
-  color: #7d6f78;
-}
-
-:root[data-theme="oscuro"] .olvidar-field__input:disabled {
-  background: #261e24;
-  border-color: #46393f;
-  color: #7d6f78;
-}
-
-/* Mensajes de error (sin alerts) */
+/* Mensajes (sin alerts) */
 .olvidar-error {
   margin: -4px 0 0;
   font-size: 13px;
@@ -162,7 +146,42 @@
   color: var(--theme-danger-text, var(--color-danger));
 }
 
-/* Botón */
+.olvidar-info {
+  margin: -4px 0 0;
+  font-size: 13px;
+  color: var(--theme-secondary, var(--color-muted));
+}
+
+.olvidar-success {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--theme-green-text, var(--color-green));
+}
+
+/* Botón chico "Reenviar código" */
+.olvidar-resend {
+  align-self: flex-start;
+  padding: 2px 0;
+  margin: -4px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--theme-green-text, var(--color-green));
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.olvidar-resend:hover:not(:disabled) {
+  text-decoration-thickness: 2px;
+}
+
+.olvidar-resend:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Botón principal (también usado como link "Volver al Log In") */
 .olvidar-submit {
   height: 46px;
   margin-top: 4px;
@@ -172,6 +191,12 @@
   background: var(--theme-green-fill, var(--color-green));
   border-radius: var(--radius-md);
   transition: background 0.15s ease;
+}
+
+.olvidar-submit--link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .olvidar-submit:hover:not(:disabled) {
