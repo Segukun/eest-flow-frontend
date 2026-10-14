@@ -304,3 +304,45 @@ font-family: var(--font-family-base);
     width: 250px;
   }
 }
+
+/* ===== PEGAR AL FINAL DE login.css =====
+   Ojito para mostrar / ocultar la contraseña en el Login */
+
+/* El contenedor toma el mismo ancho que el input (350 / 340 / 250px según
+   el media query), así el ojito siempre queda pegado a su borde derecho */
+.admin-password {
+  position: relative;
+  width: fit-content;
+  max-width: 100%;
+}
+
+/* Deja lugar a la derecha para que el texto no quede debajo del ojito */
+.admin-field .admin-password input {
+  padding-right: 44px;
+}
+
+.admin-password-toggle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 44px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--theme-secondary, #666666);
+  border-radius: 0 7px 7px 0;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.admin-password-toggle:hover:not(:disabled) {
+  color: var(--theme-text, var(--color-graphite));
+}
+
+.admin-password-toggle:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
