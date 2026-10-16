@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useApp } from "../context/AppContext";
 import "../styles/components/category-modal.css";
-import { useApp } from "../context/AppContext";
 
 const PRESET_COLORS = [
   "var(--color-green)",
@@ -11,8 +10,13 @@ const PRESET_COLORS = [
   "var(--color-bone)",
 ];
 
+// Roles de cuenta (user.accountType): "admin" | "collaborator"
+const ROL_ADMIN = "admin";
+const MSG_SOLO_ADMIN =
+  "No puedes agregar categorías porque tu cuenta no es de administrador.";
+
 export default function AddCategoryModal({ onClose }) {
-  const { addCategory, sectors } = useApp();
+  const { addCategory, sectors, currentUser } = useApp();
   const [name, setName] = useState("");
   const [color, setColor] = useState(PRESET_COLORS[0]);
   const [customColor, setCustomColor] = useState(null);
@@ -20,7 +24,12 @@ export default function AddCategoryModal({ onClose }) {
   const [selectedSectorIds, setSelectedSectorIds] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
-  const { currentUser } = useApp();
+
+  // Solo los administradores pueden agregar categorías
+  const isAdmin = currentUser?.accountType === ROL_ADMIN;
+
+  // Si no es admin, el mensaje se muestra apenas se abre el modal
+  const shownError = !isAdmin ? MSG_SOLO_ADMIN : error;
 
   const finalColor = customColor || color;
 
@@ -30,6 +39,12 @@ export default function AddCategoryModal({ onClose }) {
     );
 
   const handleSubmit = async () => {
+    // Defensa extra: un colaborador nunca llega a enviar la petición
+    if (!isAdmin) {
+      setError(MSG_SOLO_ADMIN);
+      return;
+    }
+
     const trimmed = name.trim();
     if (!trimmed) return;
 
@@ -49,7 +64,12 @@ export default function AddCategoryModal({ onClose }) {
       await addCategory({ name: trimmed, color: finalColor, sectors: sectorIds });
       onClose();
     } catch (err) {
-      setError(err?.response?.data?.message || "No se pudo crear la categoría.");
+      // 403 = el backend rechazó el permiso (en vez de mostrar "Forbidden")
+      if (err?.response?.status === 403) {
+        setError(MSG_SOLO_ADMIN);
+      } else {
+        setError(err?.response?.data?.message || "No se pudo crear la categoría.");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -76,6 +96,7 @@ export default function AddCategoryModal({ onClose }) {
               placeholder="Ej: Matrícula y Legajo"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              disabled={!isAdmin}
               autoFocus
             />
           </label>
@@ -145,12 +166,16 @@ export default function AddCategoryModal({ onClose }) {
             )}
           </div>
 
-          {error && <p className="label-creator__error">{error}</p>}
+          {shownError && <p className="label-creator__error">{shownError}</p>}
         </div>
 
         <footer className="category-modal__foot">
           <button className="link-btn" onClick={onClose}>Cancelar</button>
-          <button className="btn btn--primary" onClick={handleSubmit} disabled={!name.trim() || submitting}>
+          <button
+            className="btn btn--primary"
+            onClick={handleSubmit}
+            disabled={!isAdmin || !name.trim() || submitting}
+          >
             {submitting ? "Agregando…" : "Agregar"}
           </button>
         </footer>

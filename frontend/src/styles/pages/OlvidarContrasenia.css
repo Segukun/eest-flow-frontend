@@ -64,6 +64,8 @@
   line-height: 1.3;
   color: var(--theme-text, var(--color-graphite));
   overflow-wrap: anywhere;
+  justify-content: center;
+  align-items: center;
 }
 
 /* Encabezado del paso 1 (título + subtítulo) */
@@ -78,6 +80,8 @@
   font-size: 14px;
   line-height: 1.4;
   color: var(--theme-secondary, var(--color-muted));
+  justify-content: center;
+  align-items: center;
 }
 
 /* Link "Volver al inicio de sesión" */
