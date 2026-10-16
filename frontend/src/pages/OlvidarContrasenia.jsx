@@ -108,6 +108,61 @@ async function guardarNuevaContrasenia(email, tokenReset, nuevaContrasenia) {
 
 /* ===================================================================== */
 
+/* Input de contraseña con el "ojito" adentro para mostrar / ocultar.
+   Cada instancia guarda su propio estado, así que cada input se
+   muestra u oculta de forma independiente. Los íconos son SVG en línea
+   (no hace falta instalar nada ni tener imágenes). */
+const InputContrasenia = ({ value, onChange, disabled }) => {
+  const [visible, setVisible] = useState(false)
+
+  return (
+    <div className="olvidar-password">
+      <input
+        className="olvidar-field__input olvidar-password__input"
+        type={visible ? "text" : "password"}
+        autoComplete="new-password"
+        value={value}
+        disabled={disabled}
+        onChange={onChange}
+      />
+      <button
+        className="olvidar-password__toggle"
+        type="button"
+        disabled={disabled}
+        aria-label={visible ? "Ocultar contraseña" : "Mostrar contraseña"}
+        aria-pressed={visible}
+        onClick={() => setVisible((v) => !v)}
+      >
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          {!visible ? (
+            <>
+              {/* ojo TACHADO = contraseña oculta (puntitos), click para mostrar */}
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+              <line x1="1" y1="1" x2="23" y2="23" />
+            </>
+          ) : (
+            <>
+              {/* ojo SIN tachar = contraseña visible, click para ocultar */}
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+              <circle cx="12" cy="12" r="3" />
+            </>
+          )}
+        </svg>
+      </button>
+    </div>
+  )
+}
+
 const OlvidarContrasenia = () => {
   // "email" -> "codigo" -> "contrasenia"
   const [paso, setPaso] = useState("email")
@@ -309,45 +364,55 @@ const OlvidarContrasenia = () => {
       <div className="admin-login-content">
         <div className="admin-card olvidar-card">
           {/* ===== PASO 1: pedir el email ===== */}
-          {paso === "email" && (
-            <form
-              className="olvidar-step"
-              onSubmit={handleEmailSubmit}
-              noValidate
-            >
-              <h1 className="olvidar-title">
-                Indique el email al cual desearía que el código sea enviado
-              </h1>
+{paso === "email" && (
+  <form
+    className="olvidar-step"
+    onSubmit={handleEmailSubmit}
+    noValidate
+  >
+    <div className="olvidar-head">
+      <h1 className="olvidar-title">Recuperar contraseña</h1>
+      <p className="olvidar-subtitle">
+        Ingrese el email asociado a su cuenta
+      </p>
+    </div>
 
-              <input
-                className="olvidar-field__input"
-                type="email"
-                placeholder="nombre@correo.com"
-                autoComplete="email"
-                aria-label="Email"
-                value={email}
-                disabled={cargando}
-                onChange={(e) => {
-                  setEmail(e.target.value)
-                  setError("")
-                }}
-              />
+    <label className="olvidar-field">
+      <span className="olvidar-field__label">Email</span>
+      <input
+        className="olvidar-field__input"
+        type="email"
+        placeholder="nombre@correo.com"
+        autoComplete="email"
+        value={email}
+        disabled={cargando}
+        onChange={(e) => {
+          setEmail(e.target.value)
+          setError("")
+        }}
+      />
+    </label>
 
-              {error && (
-                <p className="olvidar-error" role="alert">
-                  {error}
-                </p>
-              )}
+    {error && (
+      <p className="olvidar-error" role="alert">
+        {error}
+      </p>
+    )}
 
-              <button
-                className="olvidar-submit"
-                type="submit"
-                disabled={cargando}
-              >
-                {cargando ? "Continuando..." : "Continuar"}
-              </button>
-            </form>
-          )}
+    <button
+      className="olvidar-submit"
+      type="submit"
+      disabled={cargando}
+    >
+      {cargando ? "Enviando..." : "Enviar código"}
+    </button>
+
+    {/* Ruta "/" = pantalla de Log In */}
+    <Link className="olvidar-back" to="/">
+      Volver al inicio de sesión
+    </Link>
+  </form>
+)}
 
           {/* ===== PASO 2: ingresar el código ===== */}
           {paso === "codigo" && (
@@ -437,10 +502,7 @@ const OlvidarContrasenia = () => {
                     <span className="olvidar-field__label">
                       Nueva contraseña
                     </span>
-                    <input
-                      className="olvidar-field__input"
-                      type="password"
-                      autoComplete="new-password"
+                    <InputContrasenia
                       value={nueva}
                       disabled={cargando}
                       onChange={(e) => {
@@ -454,10 +516,7 @@ const OlvidarContrasenia = () => {
                     <span className="olvidar-field__label">
                       Reescriba la nueva contraseña
                     </span>
-                    <input
-                      className="olvidar-field__input"
-                      type="password"
-                      autoComplete="new-password"
+                    <InputContrasenia
                       value={repetir}
                       disabled={cargando}
                       onChange={(e) => {
