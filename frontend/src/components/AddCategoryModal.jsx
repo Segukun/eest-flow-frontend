@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useApp } from "../context/AppContext";
 import "../styles/components/category-modal.css";
+import { useApp } from "../context/AppContext";
 
 const PRESET_COLORS = [
   "var(--color-green)",
@@ -19,6 +20,7 @@ export default function AddCategoryModal({ onClose }) {
   const [selectedSectorIds, setSelectedSectorIds] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const { currentUser } = useApp();
 
   const finalColor = customColor || color;
 
