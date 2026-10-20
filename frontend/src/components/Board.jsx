@@ -14,6 +14,7 @@ export default function Board() {
   const [dragging, setDragging] = useState(null);
   const [viewingId, setViewingId] = useState(null);
   const [editingId, setEditingId] = useState(null);
+  const [addingTaskColumnId, setAddingTaskColumnId] = useState(null);
 
   const handleDrop = async (columnId) => {
     if (!dragging) return;
@@ -66,6 +67,11 @@ export default function Board() {
             onDrop={handleDrop}
             onView={setViewingId}
             onEdit={setEditingId}
+            addingTaskColumnId={addingTaskColumnId}
+            onAddTaskOpen={setAddingTaskColumnId}
+            onAddTaskClose={(columnId) =>
+              setAddingTaskColumnId((actual) => actual === columnId ? null : actual)
+            }
           />
         ))}
       </div>

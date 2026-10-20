@@ -240,3 +240,35 @@
     width: 100%;
   }
 }
+.modificar-sectores-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 150px;
+  overflow-y: auto;
+  padding: 10px 12px;
+  border: 1px solid var(--theme-border, var(--color-border));
+  border-radius: var(--radius-sm);
+  background: var(--theme-surface, var(--color-white));
+}
+
+.modificar-sector-option {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--theme-text, var(--color-graphite));
+}
+
+.modificar-sector-option input {
+  width: auto;
+  accent-color: var(--color-orange);
+}
+
+.modificar-mensaje-error {
+  padding: 10px 12px;
+  border: 1px solid rgba(190, 50, 50, 0.2);
+  border-radius: var(--radius-sm);
+  background: rgba(190, 50, 50, 0.08);
+}

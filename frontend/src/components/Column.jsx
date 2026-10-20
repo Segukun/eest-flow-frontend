@@ -2,9 +2,22 @@ import { useState } from "react";
 import TaskCard from "./TaskCard";
 import AddTask from "./AddTask";
 
-export default function Column({ column, tasks, dragging, onDragStart, onDragEnd, onDrop, onView, onEdit }) {
+export default function Column({
+  column,
+  tasks,
+  dragging,
+  onDragStart,
+  onDragEnd,
+  onDrop,
+  onView,
+  onEdit,
+  addingTaskColumnId,
+  onAddTaskOpen,
+  onAddTaskClose,
+}) {
   const [over, setOver] = useState(false);
   const isEmpty = tasks.length === 0;
+  const isAddingTask = addingTaskColumnId === column.id;
 
   return (
     <section
@@ -23,11 +36,11 @@ export default function Column({ column, tasks, dragging, onDragStart, onDragEnd
       </header>
 
       <div className="column__body">
-        {tasks.map((t) => (
+        {tasks.map((task) => (
           <TaskCard
-            key={t.id}
-            task={t}
-            isDragging={dragging === t.id}
+            key={task.id}
+            task={task}
+            isDragging={dragging === task.id}
             onDragStart={onDragStart}
             onDragEnd={onDragEnd}
             onDropBefore={(beforeId) => onDrop(column.id, beforeId)}
@@ -36,11 +49,13 @@ export default function Column({ column, tasks, dragging, onDragStart, onDragEnd
           />
         ))}
 
-        {isEmpty ? (
-          <AddTask columnId={column.id} variant="empty" />
-        ) : (
-          <AddTask columnId={column.id} />
-        )}
+        <AddTask
+          columnId={column.id}
+          variant={isEmpty ? "empty" : "default"}
+          isOpen={isAddingTask}
+          onOpen={onAddTaskOpen}
+          onClose={() => onAddTaskClose?.(column.id)}
+        />
       </div>
     </section>
   );
