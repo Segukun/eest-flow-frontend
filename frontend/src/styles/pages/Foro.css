@@ -1181,3 +1181,64 @@
   flex-wrap: nowrap;
   padding-bottom: 4px;
 }
+
+
+
+
+/* PAGINACIÓN FORO */
+.foro-pagination {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  padding: 24px 0;
+  margin-top: 8px;
+}
+
+.foro-pagination-info {
+  font-size: 13px;
+  color: var(--text-secondary, #6b7280);
+}
+
+.foro-pagination-controls {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.foro-pagination-btn {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--border, #e5e7eb);
+  background: var(--card, #fff);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.foro-pagination-btn:hover:not(:disabled) {
+  background: var(--hover, #ffffff);
+  color:#1f151c;
+  border-color: var(--primary, #05903E);
+}
+
+.foro-pagination-btn.active {
+  background: var(--primary, #05903E);
+  color: white;
+  border-color: var(--theme-secondary, #fff7ed);
+}
+
+.foro-pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.foro-pagination-dots {
+  padding: 0 4px;
+  color: var(--text-secondary, #9ca3af);
+}
