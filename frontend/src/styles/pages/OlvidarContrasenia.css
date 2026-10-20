@@ -89,7 +89,7 @@
   align-self: center;
   font-size: 14px;
   font-weight: 600;
-  color: var(--theme-green-text, var(--color-green));
+  color: var(--theme-green-text, var(--color-terracotta));
   text-decoration: underline;
   text-underline-offset: 3px;
 }
@@ -252,7 +252,7 @@
   font-size: 15px;
   font-weight: 700;
   color: #fff;
-  background: var(--theme-green-fill, var(--color-green));
+  background:  var(--color-terracotta);
   border-radius: var(--radius-md);
   transition: background 0.15s ease;
 }
@@ -264,7 +264,7 @@
 }
 
 .olvidar-submit:hover:not(:disabled) {
-  background: var(--theme-green-hover, #047a35);
+  background: var(--color-orange);
 }
 
 .olvidar-submit:disabled {

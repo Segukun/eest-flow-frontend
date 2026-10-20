@@ -171,14 +171,18 @@
   padding: 0;
   margin: 18px auto 0;
   background: transparent;
-  color: var(--theme-secondary, #666666);
+  color: var(--color-terracotta);
   font-size: 15px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 4px;
   cursor: pointer;
   transition: color 0.2s ease;
 }
 
 .admin-link-button:hover {
-  color: var(--theme-text, var(--color-graphite));
+  font-weight: bold;
+  text-decoration-thickness: 1.5px;
 }
 
 .admin-card-success {

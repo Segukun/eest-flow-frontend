@@ -168,8 +168,6 @@
 .asm-field select:focus,
 .asm-field textarea:focus {
   background: var(--theme-surface, white);
-  border-color: var(--theme-green-text, #05903e);
-  box-shadow: 0 0 0 3px rgba(5, 144, 62, 0.12);
 }
 
 .asm-field input::placeholder,

@@ -171,11 +171,11 @@ export default function AgregarMiembroModal({
         );
       } else if (error.response?.status === 403) {
         setError(
-          "No tenés permisos para consultar los usuarios."
+          "No tenés permisos para consultar los miembros."
         );
       } else {
         setError(
-          "No se pudieron cargar los usuarios."
+          "No se pudieron cargar los miembros."
         );
       }
     } finally {
@@ -197,7 +197,7 @@ export default function AgregarMiembroModal({
 
     if (!usuarioSeleccionado) {
       setError(
-        "Seleccioná un usuario de la lista."
+        "Seleccioná un miembro de la lista."
       );
       return;
     }
@@ -221,7 +221,7 @@ export default function AgregarMiembroModal({
       );
 
       setError(
-        "No se pudo asignar el usuario al sector."
+        "No se pudo asignar el miembro al sector."
       );
     } finally {
       setGuardando(false);
@@ -257,7 +257,7 @@ export default function AgregarMiembroModal({
 
             <h2>
               {isEditing
-                ? "Cambiar usuario"
+                ? "Cambiar miembro"
                 : "Agregar miembro"}
             </h2>
           </div>
@@ -278,7 +278,7 @@ export default function AgregarMiembroModal({
         >
           <div className="asm-field">
             <label htmlFor="buscar-usuario">
-              Buscar usuario
+              Buscar miembro
             </label>
 
             <div className="asm-search">
@@ -309,11 +309,11 @@ export default function AgregarMiembroModal({
           <div className="asm-users-list">
             {cargando ? (
               <p className="asm-users-empty">
-                Cargando usuarios...
+                Cargando miembros...
               </p>
             ) : usuariosFiltrados.length === 0 ? (
               <p className="asm-users-empty">
-                No hay usuarios disponibles.
+                No hay miembros disponibles.
               </p>
             ) : (
               usuariosFiltrados.map((usuario) => {
