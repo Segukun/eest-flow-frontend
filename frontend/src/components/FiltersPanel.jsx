@@ -22,7 +22,7 @@ export default function FiltersPanel({ onClose }) {
         <div className="filters-sheet__head">
           <div className="filters-sheet__title">
             <span className="filters-sheet__icon">
-              <img src="/icons/funnel.svg" alt="" className="icon-sm" />
+              <span aria-hidden="true" className="icon-sm themed-icon themed-icon--filter" />
             </span>
             <div>
               <h3>Filtros</h3>
@@ -39,7 +39,7 @@ export default function FiltersPanel({ onClose }) {
           <div className="switch-row">
             <div className="switch-row__left">
               <span className="switch-row__icon">
-                <img src="/icons/user.svg" alt="" className="icon-sm" />
+                <span aria-hidden="true" className="icon-sm themed-icon themed-icon--user" />
               </span>
               <div>
                 <strong>Mis tareas</strong>

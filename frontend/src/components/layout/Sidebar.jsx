@@ -126,11 +126,11 @@ export default function Sidebar({ onOpenPerfil, onOpenConfiguracion, onOpenAddCa
         {menuOpen && (
           <div className="user-menu">
             <button className="user-menu__item" onClick={() => { onOpenPerfil(); setMenuOpen(false); }}>
-              <img src="/icons/user.svg" alt="" className="icon-sm" />
+              <span aria-hidden="true" className="icon-sm themed-icon themed-icon--user" />
               Editar perfil
             </button>
             <button className="user-menu__item" onClick={() => { onOpenConfiguracion(); setMenuOpen(false); }}>
-              <img src="/icons/settingsgear.svg" alt="" className="icon-sm" /> Configuración
+              <span aria-hidden="true" className="icon-sm themed-icon themed-icon--settings" /> Configuración
             </button>
             <button
               className="user-menu__item user-menu__item--danger"

@@ -171,6 +171,14 @@
   padding: 2px 8px;
 }
 
+:root[data-theme="oscuro"] .filters-btn .themed-icon {
+  color: var(--theme-green-text);
+}
+
+:root[data-theme="oscuro"] .board-header .search .themed-icon {
+  color: var(--theme-secondary);
+}
+
 .board-header__meta {
   display: flex;
   align-items: center;

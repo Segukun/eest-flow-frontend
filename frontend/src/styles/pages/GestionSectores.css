@@ -27,6 +27,11 @@
 .gs-sector-card { background: var(--theme-surface, white); border: 1px solid var(--theme-border, #E6DCBF); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 4px 20px -2px rgba(31,21,28,.05); transition: .2s; min-width: 100%; }
 .gs-sector-card:hover { border-color: var(--theme-border, #DC9655); }
 
+/* Preserve each sector's hue while lifting it against dark surfaces. */
+:root[data-theme="oscuro"] :is(.gs-sector-card, .gsd-modal) {
+  --gs-accent: color-mix(in srgb, var(--sector-color) var(--theme-accent-weight), var(--color-bone));
+}
+
 .gs-sector-card-head { display: flex; align-items: center; gap: 12px; }
 .gs-sector-icon { width: 48px; height: 48px; background: var(--theme-background, #FFF9ED); border: 1px solid var(--theme-border, #E6DCBF); border-radius: 12px; display: grid; place-items: center; font-size: 20px; }
 .gs-sector-icon--large { width: 44px; height: 44px; border: 0; }

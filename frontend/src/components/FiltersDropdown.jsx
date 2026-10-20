@@ -54,7 +54,7 @@ export default function FiltersDropdown() {
       {/* Mis tareas: switch inline, no ramifica */}
       <button type="button" className="filters-dd__row" onClick={toggleMine}>
         <span className="filters-dd__row-left">
-          <img src="/icons/user.svg" alt="" className="icon-sm" />
+          <span aria-hidden="true" className="icon-sm themed-icon themed-icon--user" />
           Mis tareas
         </span>
         <span className={"switch switch--sm" + (filters.onlyMine ? " switch--on" : "")}>
@@ -81,7 +81,11 @@ export default function FiltersDropdown() {
               onClick={() => toggleRow(row.id)}
             >
               <span className="filters-dd__row-left">
-                <img src={row.icon} alt="" className="icon-sm" />
+                <span
+                  aria-hidden="true"
+                  className="icon-sm themed-icon"
+                  style={{ "--icon-image": `url("${row.icon}")` }}
+                />
                 {row.label}
               </span>
               <span className="filters-dd__row-right">
