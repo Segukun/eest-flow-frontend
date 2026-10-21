@@ -15,12 +15,13 @@ export default function Board() {
   const [viewingId, setViewingId] = useState(null);
   const [editingId, setEditingId] = useState(null);
 
-  const handleDrop = async (columnId) => {
+  // CORREGIDO: ahora recibe beforeId y se lo pasa a moveTask
+  const handleDrop = async (columnId, beforeId = null) => {
     if (!dragging) return;
     const id = dragging;
     setDragging(null);
     try {
-      await moveTask(id, columnId);
+      await moveTask(id, columnId, beforeId);
     } catch {
       // moveTask ya revierte
     }
