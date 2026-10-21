@@ -4,6 +4,7 @@ import { fetchCategories, createCategoryRequest, deleteCategoryRequest } from ".
 import { fetchLabels, createLabelRequest, updateLabelRequest, deleteLabelRequest } from "../api/labels";
 import { fetchSectors } from "../api/sectors";
 import { fetchUsers } from "../api/users";
+import { fetchUnreadCount } from "../api/notifications";
 
 const AppContext = createContext(null);
 
@@ -89,6 +90,9 @@ export function AppProvider({ children }) {
   const [tasks, setTasks] = useState([]);
   const [tasksLoading, setTasksLoading] = useState(true);
   const [tasksError, setTasksError] = useState(null);
+
+  // ---- notificaciones ----
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const [view, setView] = useState("tablero");
   const [search, setSearch] = useState("");
@@ -205,6 +209,34 @@ export function AppProvider({ children }) {
       document.removeEventListener("visibilitychange", refresh);
     };
   }, [loadTasks]);
+
+  /* ---------- notificaciones: contador para el badge ---------- */
+
+  const loadUnreadCount = useCallback(async () => {
+    try {
+      const res = await fetchUnreadCount();
+      setUnreadCount(res?.data?.count ?? res?.count ?? 0);
+    } catch {
+      // el badge no debe romper el resto de la app
+    }
+  }, []);
+
+  useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState === "visible") {
+        loadUnreadCount();
+      }
+    };
+
+    refresh();
+    const id = setInterval(refresh, POLL_INTERVAL_MS);
+    document.addEventListener("visibilitychange", refresh);
+
+    return () => {
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, [loadUnreadCount]);
 
   /* ---------- etiquetas: dependen de la categoría activa ---------- */
 
@@ -423,6 +455,7 @@ export function AppProvider({ children }) {
     labels, labelsLoading, addLabel, updateLabel, deleteLabel,
     tasks, visibleTasks, tasksLoading, tasksError, reloadTasks: () => loadTasks(),
     addTask, updateTask, deleteTask, moveTask,
+    unreadCount, reloadUnreadCount: loadUnreadCount,
     view, setView, search, setSearch,
     filters, setFilters, activeFiltersCount,
   };
