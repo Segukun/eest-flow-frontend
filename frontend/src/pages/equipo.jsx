@@ -5,7 +5,6 @@ import {
   FiRefreshCw,
   FiMoreVertical,
   FiMail,
-  FiBookmark,
   FiPlus,
 } from "react-icons/fi";
 
@@ -33,6 +32,14 @@ const obtenerIniciales = (nombre) => {
 
 const convertirMiembro = (usuario) => {
   const esAdmin = usuario.accountType === "admin";
+  const sectoresUsuario = Array.isArray(usuario.sectors) ? usuario.sectors : [];
+  const sectoresIds = sectoresUsuario
+    .map((sector) => typeof sector === "string" ? sector : sector?._id || sector?.id)
+    .filter(Boolean)
+    .map(String);
+  const nombresSectores = sectoresUsuario
+    .map((sector) => typeof sector === "object" ? sector?.name : "")
+    .filter(Boolean);
 
   return {
     id: usuario._id,
@@ -41,7 +48,10 @@ const convertirMiembro = (usuario) => {
     rol: esAdmin ? "Administrador" : "Colaborador",
     tipoRol: esAdmin ? "direccion" : "",
     cuenta: esAdmin ? "Admin" : "Colaborador",
-    area: "",
+    accountType: esAdmin ? "admin" : "collaborator",
+    sectors: sectoresIds,
+    sectoresNombres: nombresSectores,
+    area: nombresSectores.length ? nombresSectores.join(", ") : "Sin sector asignado",
     correo: usuario.email || "",
   };
 };
@@ -159,11 +169,6 @@ const MemberCard = ({
               {miembro.rol}
             </span>
 
-            <span className="team-separator"></span>
-
-            <span className="team-account-type">
-              {miembro.cuenta}
-            </span>
           </p>
         </div>
 
@@ -225,7 +230,6 @@ const MemberCard = ({
 
       <ul className="team-card-details">
         <li>
-          <FiBookmark />
           <span>{miembro.area}</span>
         </li>
 
@@ -356,8 +360,10 @@ const Equipo = () => {
     [miembros]
   );
 
-  // Los sectores quedan vacíos por ahora.
-  const sectores = [];
+  const sectores = useMemo(
+    () => [...new Set(miembros.flatMap((miembro) => miembro.sectoresNombres || []))].sort((a, b) => a.localeCompare(b, "es")),
+    [miembros]
+  );
 
   const vistasRapidas =
     useMemo(() => {
@@ -433,8 +439,7 @@ const Equipo = () => {
 
           const pasaSector =
             sectorSeleccionado === "" ||
-            miembro.area ===
-              sectorSeleccionado;
+            (miembro.sectoresNombres || []).includes(sectorSeleccionado);
 
           const pasaBusqueda =
             termino === "" ||

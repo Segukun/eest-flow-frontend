@@ -32,11 +32,20 @@
   letter-spacing: 0;
   text-transform: none;
   font-weight: 700;
-  color: var(--color-orange);
+  color: var(--theme-warm-text, var(--color-orange));
 }
 .filters-dd__clear:disabled {
   opacity: 0.4;
   cursor: default;
+}
+
+:root[data-theme="oscuro"] .filters-dd__clear:disabled {
+  color: var(--theme-secondary);
+  opacity: 1;
+}
+
+:root[data-theme="oscuro"] .filters-dd :is(.themed-icon, .filters-dd__chevron) {
+  color: var(--theme-green-text);
 }
 
 .filters-dd__branch {

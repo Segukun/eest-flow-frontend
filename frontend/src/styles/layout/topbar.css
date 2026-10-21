@@ -33,7 +33,7 @@
 .topbar__burger span {
   width: 22px;
   height: 2px;
-  background: var(--color-graphite);
+  background: var(--theme-green-text, var(--color-graphite));
   border-radius: 2px;
 }
 

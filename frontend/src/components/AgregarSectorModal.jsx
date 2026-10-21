@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { readableAccent } from "../theme";
 import {
   FiX,
   FiPlus,
@@ -253,8 +254,8 @@ export default function AgregarSectorModal({
               className="asm-preview-icon"
               style={{
                 backgroundColor: `${form.color}20`,
-                color: form.color,
-                borderColor: form.color,
+                color: readableAccent(form.color),
+                borderColor: readableAccent(form.color),
               }}
             >
               <FiPlus />

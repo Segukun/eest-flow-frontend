@@ -66,7 +66,6 @@
   filter: brightness(0) invert(1);
 }
 :root[data-theme="oscuro"] :focus-visible {
-  outline: 2px solid var(--theme-warm-text);
   outline-offset: 3px;
 }
 
@@ -122,6 +121,22 @@ ul {
   height: 20px;
   object-fit: contain;
 }
+.themed-icon {
+  display: inline-block;
+  flex-shrink: 0;
+  background: var(--icon-image) center / 100% 100% no-repeat;
+}
+.themed-icon--user { --icon-image: url("/icons/user.svg"); }
+.themed-icon--settings { --icon-image: url("/icons/settingsgear.svg"); }
+.themed-icon--filter { --icon-image: url("/icons/funnel.svg"); }
+.themed-icon--search { --icon-image: url("/icons/search.svg"); }
+
+/* These SVG assets embed raster images: use their alpha as a mask in dark mode. */
+:root[data-theme="oscuro"] .themed-icon {
+  background: currentColor;
+  mask: var(--icon-image) center / 100% 100% no-repeat;
+}
+
 .icon-sm {
   width: 16px;
   height: 16px;

@@ -59,8 +59,8 @@ const readableAccent = (color) => {
 
 const avatarStyle = (color) => ({
   background: `${color || "#05903E"}20`,
-  color: readableAccent(color),
-  border: `1px solid ${color || "#05903E"}`,
+  color: `var(--theme-green-text, ${readableAccent(color)})`,
+  border: `1px solid var(--theme-green-text, ${color || "#05903E"})`,
 });
 
 const convertirMiembro = (miembro) => ({
@@ -524,13 +524,14 @@ export default function GestionSectores() {
                 <div
                   key={sec.id}
                   className="gs-sector-card"
+                  style={{ "--sector-color": sec.color }}
                 >
                   <div className="gs-sector-card-head">
                     <div
                       className="gs-sector-icon"
                       style={{
-                        color: sec.color,
-                        borderColor: sec.color,
+                        color: `var(--gs-accent, ${sec.color})`,
+                        borderColor: `var(--gs-accent, ${sec.color})`,
                       }}
                     >
                       <IconoSector />
@@ -540,7 +541,7 @@ export default function GestionSectores() {
                       <span
                         className="gs-sector-cat"
                         style={{
-                          color: readableAccent(sec.color),
+                          color: `var(--theme-secondary, ${readableAccent(sec.color)})`,
                         }}
                       >
                         SECTOR
@@ -552,8 +553,8 @@ export default function GestionSectores() {
                     <span
                       className="gs-sector-badge"
                       style={{
-                        background: `${sec.color}15`,
-                        color: readableAccent(sec.color),
+                        background: `var(--theme-surface-soft, ${sec.color}15)`,
+                        color: `var(--theme-secondary, ${readableAccent(sec.color)})`,
                       }}
                     >
                       {sec.miembros.length}{" "}
@@ -586,7 +587,7 @@ export default function GestionSectores() {
                                 className="gs-member-avatar"
                                 style={{
                                   background:
-                                    member.color,
+                                    `var(--theme-green-fill, ${member.color})`,
                                 }}
                               >
                                 {member.ini}
@@ -611,8 +612,8 @@ export default function GestionSectores() {
                     <button
                       className="gs-secondary"
                       style={{
-                        borderColor: sec.color,
-                        color: readableAccent(sec.color),
+                        borderColor: `var(--gs-accent, ${sec.color})`,
+                        color: `var(--gs-accent, ${readableAccent(sec.color)})`,
                       }}
                       onClick={() =>
                         openAdminModal(sec.id)
@@ -669,16 +670,14 @@ export default function GestionSectores() {
             }
           }}
         >
-          <div className="gsd-modal">
+          <div className="gsd-modal" style={{ "--sector-color": adminSector.color }}>
             <div className="gsd-header">
               <div className="gsd-header-left">
                 <div
                   className="gs-sector-icon gs-sector-icon--large"
                   style={{
                     background: `${adminSector.color}15`,
-                    color: readableAccent(
-                      adminSector.color
-                    ),
+                    color: `var(--gs-accent, ${readableAccent(adminSector.color)})`,
                   }}
                 >
                   <adminSector.icon />

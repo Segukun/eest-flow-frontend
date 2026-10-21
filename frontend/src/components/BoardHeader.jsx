@@ -82,7 +82,7 @@ export default function BoardHeader() {
           </div>
 
           <label className="search">
-            <img src="/icons/search.svg" alt="" className="icon-sm" />
+            <span aria-hidden="true" className="icon-sm themed-icon themed-icon--search" />
             <input
               type="text"
               placeholder="Buscar tarea"
@@ -93,7 +93,7 @@ export default function BoardHeader() {
 
           <div className="filters-anchor" ref={filtersRef}>
             <button className="filters-btn" onClick={handleFiltersClick}>
-              <img src="/icons/funnel.svg" alt="" className="icon-sm" />
+              <span aria-hidden="true" className="icon-sm themed-icon themed-icon--filter" />
               Filtros
               {activeFiltersCount > 0 && <span className="filters-btn__count">{activeFiltersCount}</span>}
             </button>

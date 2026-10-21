@@ -2,12 +2,25 @@ import { useRef, useState } from "react";
 import TaskCard from "./TaskCard";
 import AddTask from "./AddTask";
 
-export default function Column({ column, tasks, dragging, onDragStart, onDragEnd, onDrop, onView, onEdit }) {
+export default function Column({
+  column,
+  tasks,
+  dragging,
+  onDragStart,
+  onDragEnd,
+  onDrop,
+  onView,
+  onEdit,
+  addingTaskColumnId,
+  onAddTaskOpen,
+  onAddTaskClose,
+}) {
   const [over, setOver] = useState(false);
   // Posición donde caería la tarea: 0 = antes de la primera, tasks.length = al final
   const [overIndex, setOverIndex] = useState(null);
   const bodyRef = useRef(null);
   const isEmpty = tasks.length === 0;
+  const isAddingTask = addingTaskColumnId === column.id;
 
   // Calcula la posición según la altura (Y) del mouse, comparándola con la
   // mitad de cada tarjeta. Así funciona en cualquier lugar de la columna
@@ -71,11 +84,11 @@ export default function Column({ column, tasks, dragging, onDragStart, onDragEnd
       </header>
 
       <div className="column__body" ref={bodyRef}>
-        {tasks.map((t, i) => (
+        {tasks.map((task, i) => (
           <TaskCard
-            key={t.id}
-            task={t}
-            isDragging={dragging === t.id}
+            key={task.id}
+            task={task}
+            isDragging={dragging === task.id}
             dropMarker={markerFor(i)}
             onDragStart={onDragStart}
             onDragEnd={() => {
@@ -87,11 +100,13 @@ export default function Column({ column, tasks, dragging, onDragStart, onDragEnd
           />
         ))}
 
-        {isEmpty ? (
-          <AddTask columnId={column.id} variant="empty" />
-        ) : (
-          <AddTask columnId={column.id} />
-        )}
+        <AddTask
+          columnId={column.id}
+          variant={isEmpty ? "empty" : "default"}
+          isOpen={isAddingTask}
+          onOpen={onAddTaskOpen}
+          onClose={() => onAddTaskClose?.(column.id)}
+        />
       </div>
     </section>
   );

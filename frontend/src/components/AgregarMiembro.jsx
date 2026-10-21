@@ -2,12 +2,13 @@ import { useEffect, useState } from "react";
 import api from "../api.js";
 import "../styles/components/AgregarMiembro.css";
 
-const AgregarMiembro = ({ onClose }) => {
+const AgregarMiembro = ({ onClose, onAgregado }) => {
   const [formulario, setFormulario] = useState({
     nombre: "",
     sector: "",
     email: "",
     password: "",
+    accountType: "collaborator",
   });
 
   const [sectores, setSectores] = useState([]);
@@ -109,6 +110,7 @@ const AgregarMiembro = ({ onClose }) => {
       sector: "",
       email: "",
       password: "",
+      accountType: "collaborator",
     });
   };
 
@@ -131,6 +133,7 @@ const AgregarMiembro = ({ onClose }) => {
         name: formulario.nombre.trim(),
         email: formulario.email.trim(),
         password: formulario.password,
+        accountType: formulario.accountType,
         sectors: [formulario.sector],
       };
 
@@ -152,6 +155,10 @@ const AgregarMiembro = ({ onClose }) => {
 
       limpiarFormulario();
       setErrores({});
+
+      if (onAgregado) {
+        await onAgregado();
+      }
     } catch (error) {
       console.error(
         "Error al crear miembro:",
@@ -282,6 +289,27 @@ const AgregarMiembro = ({ onClose }) => {
                 {errores.sector}
               </p>
             )}
+          </div>
+
+          <div className="agregar-campo">
+            <label htmlFor="accountType">
+              Tipo de cuenta
+            </label>
+
+            <select
+              id="accountType"
+              name="accountType"
+              value={formulario.accountType}
+              onChange={manejarCambio}
+              disabled={enviando}
+            >
+              <option value="collaborator">Colaborador</option>
+              <option value="admin">Administrador</option>
+            </select>
+
+            <small className="agregar-ayuda">
+              Solo una cuenta Administrativa puede crear nuevas cuentas.
+            </small>
           </div>
 
           <div className="agregar-campo">

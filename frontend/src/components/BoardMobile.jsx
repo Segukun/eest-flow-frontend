@@ -11,6 +11,7 @@ export default function BoardMobile() {
   const [dragging, setDragging] = useState(null);
   const [viewingId, setViewingId] = useState(null);
   const [editingId, setEditingId] = useState(null);
+  const [addingTaskColumnId, setAddingTaskColumnId] = useState(null);
   const [emblaRef, emblaApi] = useEmblaCarousel({ align: "start", loop: false });
   const [selected, setSelected] = useState(0);
 
@@ -69,6 +70,11 @@ export default function BoardMobile() {
                   onDrop={handleDrop}
                   onView={setViewingId}
                   onEdit={setEditingId}
+                  addingTaskColumnId={addingTaskColumnId}
+                  onAddTaskOpen={setAddingTaskColumnId}
+                  onAddTaskClose={(columnId) =>
+              setAddingTaskColumnId((actual) => actual === columnId ? null : actual)
+            }
                 />
               </div>
             ))}

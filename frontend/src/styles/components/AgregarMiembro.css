@@ -273,3 +273,8 @@
     width: 100%;
   }
 }
+.agregar-ayuda {
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 1.4;
+}

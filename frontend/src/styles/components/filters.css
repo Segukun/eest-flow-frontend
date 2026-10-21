@@ -52,6 +52,10 @@
   display: grid;
   place-items: center;
 }
+
+:root[data-theme="oscuro"] .filters-sheet .themed-icon {
+  color: var(--theme-green-text);
+}
 .filters-sheet__head-actions {
   display: flex;
   gap: 10px;

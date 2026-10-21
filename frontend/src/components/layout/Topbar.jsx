@@ -112,7 +112,7 @@ export default function Topbar({ onOpenConfiguracion, onOpenAddCategory, onReque
         </div>
         <div className="drawer__actions">
           <button className="user-menu__item" onClick={() => { onOpenConfiguracion(); setOpen(false); }}>
-            <img src="/icons/settingsgear.svg" alt="" className="icon-sm" /> Configuración
+            <span aria-hidden="true" className="icon-sm themed-icon themed-icon--settings" /> Configuración
           </button>
           <button
             className="user-menu__item user-menu__item--danger"
