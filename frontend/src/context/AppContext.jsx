@@ -33,6 +33,8 @@ function normalizeTask(raw) {
     members: raw.assignedUser ?? [],
     labelIds: raw.labels ?? [],
     dueDate: raw.dueDate ? raw.dueDate.slice(0, 10) : "",
+    // posición de la tarea dentro de su columna (las viejas sin order valen 0)
+    order: raw.order ?? 0,
   };
 }
 
@@ -123,8 +125,9 @@ export function AppProvider({ children }) {
     }
   }, []);
 
-/* ---------- actualizacion en tiempo real ---------- */
+  /* ---------- actualización en tiempo real ---------- */
   const mutationsInFlight = useRef(0);
+  const mutationVersion = useRef(0); // CORREGIDO: cuenta cuántas escrituras terminaron
   const tasksSignature = useRef("");
 
   // envuelve cualquier escritura para que el polling no la pise
@@ -134,6 +137,7 @@ export function AppProvider({ children }) {
       return await fn();
     } finally {
       mutationsInFlight.current -= 1;
+      mutationVersion.current += 1; // CORREGIDO: avisa que hubo un cambio
     }
   };
 
@@ -142,11 +146,21 @@ export function AppProvider({ children }) {
       setTasksLoading(true);
       setTasksError(null);
     }
+
+    // CORREGIDO: guardamos en qué "versión" empezó este pedido
+    const versionAtStart = mutationVersion.current;
+
     try {
       const raw = await fetchTasks();
 
-      // si hay una escritura en curso, descartamos esta respuesta (puede estar vieja)
-      if (silent && mutationsInFlight.current > 0) return;
+      // CORREGIDO: descartamos la respuesta si hay una escritura en curso
+      // O si hubo alguna escritura mientras este pedido viajaba (datos viejos)
+      if (
+        silent &&
+        (mutationsInFlight.current > 0 || mutationVersion.current !== versionAtStart)
+      ) {
+        return;
+      }
 
       // si no cambió nada, no re-renderizamos
       const signature = JSON.stringify(raw);
@@ -229,75 +243,128 @@ export function AppProvider({ children }) {
     const now = new Date();
     const diffDays = (d) => (new Date(d) - now) / 86400000;
 
-    return tasks.filter((t) => {
-      if (t.categoryId !== activeCategory) return false;
-      if (search && !t.title.toLowerCase().includes(search.toLowerCase())) return false;
-      if (filters.priorities.length && !filters.priorities.includes(t.priority)) return false;
-      if (filters.onlyMine && currentUser && !t.members.includes(currentUser.id)) return false;
+    return tasks
+      .filter((t) => {
+        if (t.categoryId !== activeCategory) return false;
+        if (search && !t.title.toLowerCase().includes(search.toLowerCase())) return false;
+        if (filters.priorities.length && !filters.priorities.includes(t.priority)) return false;
+        if (filters.onlyMine && currentUser && !t.members.includes(currentUser.id)) return false;
 
-      if (filters.sector) {
-        const category = categories.find((c) => c.id === t.categoryId);
-        const ids = (category?.sectors ?? []).map(sectorIdOf);
-        if (!ids.includes(filters.sector)) return false;
-      }
+        if (filters.sector) {
+          const category = categories.find((c) => c.id === t.categoryId);
+          const ids = (category?.sectors ?? []).map(sectorIdOf);
+          if (!ids.includes(filters.sector)) return false;
+        }
 
-      if (filters.due && t.dueDate) {
-        const d = diffDays(t.dueDate);
-        if (filters.due === "hoy" && !(d >= -1 && d < 1)) return false;
-        if (filters.due === "48" && !(d < 2)) return false;
-        if (filters.due === "7" && !(d < 7)) return false;
-      }
-      return true;
-    });
+        if (filters.due && t.dueDate) {
+          const d = diffDays(t.dueDate);
+          if (filters.due === "hoy" && !(d >= -1 && d < 1)) return false;
+          if (filters.due === "48" && !(d < 2)) return false;
+          if (filters.due === "7" && !(d < 7)) return false;
+        }
+        return true;
+      })
+      // ordena por posición. sort() es estable: las tareas con el mismo
+      // order (por ejemplo las viejas, todas en 0) conservan su orden actual.
+      .sort((a, b) => a.order - b.order);
   }, [tasks, categories, activeCategory, search, filters, currentUser]);
 
   /* ---------- acciones: tareas ---------- */
 
-const addTask = (columnId, title) =>
-  track(async () => {
-    if (!activeCategory) return;
-    const created = await createTaskRequest({
-      title,
-      description: "Sin descripción",
-      priority: "medium",
-      state: columnId,
-      category: activeCategory,
+  const addTask = (columnId, title) =>
+    track(async () => {
+      if (!activeCategory) return;
+
+      // la tarea nueva va al final de su columna
+      const sameColumn = tasks.filter(
+        (t) => t.column === columnId && t.categoryId === activeCategory
+      );
+      const nextOrder = sameColumn.length
+        ? Math.max(...sameColumn.map((t) => t.order)) + 1
+        : 0;
+
+      const created = await createTaskRequest({
+        title,
+        description: "Sin descripción",
+        priority: "medium",
+        state: columnId,
+        category: activeCategory,
+        order: nextOrder,
+      });
+      setTasks((prev) => [...prev, normalizeTask(created)]);
     });
-    setTasks((prev) => [...prev, normalizeTask(created)]);
-  });
 
-const updateTask = (id, patch) =>
-  track(async () => {
-    const payload = {};
-    if (patch.title !== undefined) payload.title = patch.title;
-    if (patch.description !== undefined) payload.description = patch.description;
-    if (patch.priority !== undefined) payload.priority = patch.priority;
-    if (patch.column !== undefined) payload.state = patch.column;
-    if (patch.members !== undefined) payload.assignedUser = patch.members;
-    if (patch.labelIds !== undefined) payload.labels = patch.labelIds;
-    if (patch.dueDate !== undefined) payload.dueDate = patch.dueDate || null;
+  const updateTask = (id, patch) =>
+    track(async () => {
+      const payload = {};
+      if (patch.title !== undefined) payload.title = patch.title;
+      if (patch.description !== undefined) payload.description = patch.description;
+      if (patch.priority !== undefined) payload.priority = patch.priority;
+      if (patch.column !== undefined) payload.state = patch.column;
+      if (patch.members !== undefined) payload.assignedUser = patch.members;
+      if (patch.labelIds !== undefined) payload.labels = patch.labelIds;
+      if (patch.dueDate !== undefined) payload.dueDate = patch.dueDate || null;
+      if (patch.order !== undefined) payload.order = patch.order; // CORREGIDO
 
-    const updated = await updateTaskRequest(id, payload);
-    setTasks((prev) => prev.map((t) => (t.id === id ? normalizeTask(updated) : t)));
-  });
+      const updated = await updateTaskRequest(id, payload);
+      setTasks((prev) => prev.map((t) => (t.id === id ? normalizeTask(updated) : t)));
+    });
 
-const deleteTask = (id) =>
-  track(async () => {
-    await deleteTaskRequest(id);
-    setTasks((prev) => prev.filter((t) => t.id !== id));
-  });
+  const deleteTask = (id) =>
+    track(async () => {
+      await deleteTaskRequest(id);
+      setTasks((prev) => prev.filter((t) => t.id !== id));
+    });
 
-const moveTask = (id, columnId) =>
-  track(async () => {
-    const previous = tasks;
-    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, column: columnId } : t)));
-    try {
-      await updateTaskRequest(id, { state: columnId });
-    } catch (err) {
-      setTasks(previous);
-      throw err;
-    }
-  });
+  /* moveTask(id, columnId)            -> manda la tarea al FINAL de la columna
+     moveTask(id, columnId, beforeId)  -> la pone justo ANTES de la tarea beforeId
+     Sirve para mover entre columnas y también para reordenar dentro de la misma. */
+  const moveTask = (id, columnId, beforeId = null) =>
+    track(async () => {
+      const previous = tasks;
+      const moving = tasks.find((t) => t.id === id);
+      if (!moving || id === beforeId) return;
+
+      // Tareas de la columna destino (de la misma categoría), ordenadas,
+      // sin la que estamos moviendo
+      const target = tasks
+        .filter(
+          (t) =>
+            t.column === columnId &&
+            t.categoryId === moving.categoryId &&
+            t.id !== id
+        )
+        .sort((a, b) => a.order - b.order);
+
+      // Insertar antes de beforeId (o al final si no hay)
+      const index = beforeId ? target.findIndex((t) => t.id === beforeId) : -1;
+      target.splice(index === -1 ? target.length : index, 0, {
+        ...moving,
+        column: columnId,
+      });
+
+      // Renumerar la columna: 0, 1, 2, ...
+      const renumbered = target.map((t, i) => ({ ...t, order: i }));
+
+      // Solo se mandan al backend las tareas que realmente cambiaron
+      const changed = renumbered.filter((t) => {
+        const old = tasks.find((o) => o.id === t.id);
+        return !old || old.order !== t.order || old.column !== t.column;
+      });
+
+      // Actualización optimista (se ve al instante)
+      const byId = new Map(renumbered.map((t) => [t.id, t]));
+      setTasks((prev) => prev.map((t) => byId.get(t.id) ?? t));
+
+      try {
+        await Promise.all(
+          changed.map((t) => updateTaskRequest(t.id, { state: t.column, order: t.order }))
+        );
+      } catch (err) {
+        setTasks(previous);
+        throw err;
+      }
+    });
 
   /* ---------- acciones: categorías ---------- */
 
@@ -330,23 +397,23 @@ const moveTask = (id, columnId) =>
   };
 
   const updateLabel = async (id, { title, color }) => {
-  const updated = await updateLabelRequest(id, { title, color });
-  const normalized = normalizeLabel(updated);
-  setLabels((prev) => prev.map((l) => (l.id === id ? normalized : l)));
-  return normalized;
-};
+    const updated = await updateLabelRequest(id, { title, color });
+    const normalized = normalizeLabel(updated);
+    setLabels((prev) => prev.map((l) => (l.id === id ? normalized : l)));
+    return normalized;
+  };
 
-const deleteLabel = async (id) => {
-  await deleteLabelRequest(id);
-  setLabels((prev) => prev.filter((l) => l.id !== id));
-  // limpia la referencia en cualquier tarea que la tuviera asignada,
-  // para que la UI no siga mostrando una etiqueta borrada
-  setTasks((prev) =>
-    prev.map((t) =>
-      t.labelIds.includes(id) ? { ...t, labelIds: t.labelIds.filter((lid) => lid !== id) } : t
-    )
-  );
-};
+  const deleteLabel = async (id) => {
+    await deleteLabelRequest(id);
+    setLabels((prev) => prev.filter((l) => l.id !== id));
+    // limpia la referencia en cualquier tarea que la tuviera asignada,
+    // para que la UI no siga mostrando una etiqueta borrada
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.labelIds.includes(id) ? { ...t, labelIds: t.labelIds.filter((lid) => lid !== id) } : t
+      )
+    );
+  };
 
   const value = {
     currentUser,

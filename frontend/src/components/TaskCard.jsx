@@ -1,19 +1,27 @@
 import { useApp, PRIORITIES } from "../context/AppContext";
 
-export default function TaskCard({ task, isDragging, onDragStart, onDragEnd, onDropBefore, onView, onEdit }) {
+// dropMarker: "before" | "after" | null -> línea naranja que muestra dónde va a caer la tarea
+export default function TaskCard({ task, isDragging, dropMarker, onDragStart, onDragEnd, onView, onEdit }) {
   const { users, labels } = useApp();
   const priority = PRIORITIES[task.priority];
   const members = task.members.map((id) => users.find((u) => u.id === id)).filter(Boolean);
   const taskLabels = task.labelIds.map((id) => labels.find((l) => l.id === id)).filter(Boolean);
 
+  // box-shadow no cambia el tamaño ni la posición de las tarjetas, así que
+  // la línea no "mueve" nada mientras arrastrás
+  const markerStyle = dropMarker
+    ? { boxShadow: `0 ${dropMarker === "before" ? "-4px" : "4px"} 0 0 var(--color-orange)` }
+    : undefined;
+
+  // El drop ya no se maneja acá: se maneja en la columna (Column.jsx), que
+  // calcula la posición exacta según la altura del mouse.
   return (
     <article
       className={"task-card" + (isDragging ? " task-card--dragging" : "")}
+      style={markerStyle}
       draggable
       onDragStart={(e) => { e.dataTransfer.effectAllowed = "move"; onDragStart(task.id); }}
       onDragEnd={onDragEnd}
-      onDragOver={(e) => e.preventDefault()}
-      onDrop={(e) => { e.preventDefault(); e.stopPropagation(); onDropBefore(task.id); }}
       onClick={() => onView(task.id)}
     >
       <span className="task-card__priority" style={{ background: priority.color }} />
