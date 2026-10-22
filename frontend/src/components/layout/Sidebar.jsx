@@ -7,11 +7,11 @@ const NAV = [
   { to: "/", label: "Inicio", icon: "/icons/home.svg", end: true },
   { to: "/sectores", label: "Sectores", icon: "/icons/teamsection.svg" },
   { to: "/foro", label: "Foro", icon: "/icons/forum.svg" },
-  { to: "/notificaciones", label: "Notificaciones", icon: "/icons/bell.svg", badge: 3 },
+  { to: "/notificaciones", label: "Notificaciones", icon: "/icons/bell.svg" },
 ];
 
 export default function Sidebar({ onOpenPerfil, onOpenConfiguracion, onOpenAddCategory, onRequestDeleteCategory }) {
-  const { categories, categoriesLoading, activeCategory, setActiveCategory, currentUser } = useApp();
+  const { categories, categoriesLoading, activeCategory, setActiveCategory, currentUser, unreadCount } = useApp();
   const [menuOpen, setMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const ref = useRef(null);
@@ -53,7 +53,9 @@ export default function Sidebar({ onOpenPerfil, onOpenConfiguracion, onOpenAddCa
           >
             <img src={item.icon} alt="" className="icon" />
             {!collapsed && <span>{item.label}</span>}
-            {!collapsed && item.badge && <span className="nav-item__badge">{item.badge}</span>}
+            {!collapsed && item.to === "/notificaciones" && unreadCount > 0 && (
+              <span className="nav-item__badge">{unreadCount > 99 ? "99+" : unreadCount}</span>
+            )}
           </NavLink>
         ))}
       </nav>

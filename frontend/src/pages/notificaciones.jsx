@@ -1,155 +1,241 @@
-import { useState } from "react";
-import "../styles/pages/notificaciones.css"
+import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+import { useApp } from "../context/AppContext";
+import {
+  fetchNotifications,
+  markAllNotificationsRead,
+  markNotificationRead,
+} from "../api/notifications";
+import { formatRelativeDate } from "../components/ForoHelpers.js";
+import "../styles/pages/notificaciones.css";
+
+const PAGE_SIZE = 20;
+
+const FILTROS = [
+  { id: "all", label: "Todas" },
+  { id: "unread", label: "No leídas" },
+  { id: "system", label: "Sistema" },
+  { id: "forum", label: "Foro" },
+];
+
+const TYPE_LABELS = {
+  post_like: "Me gusta",
+  post_comment: "Comentario",
+  comment_reply: "Respuesta",
+};
+
+const mapNotification = (notification) => ({
+  id: notification._id,
+  tipo:
+    TYPE_LABELS[notification.type] ??
+    (notification.category === "forum" ? "Foro" : "Sistema"),
+  titulo: notification.title,
+  descripcion: [notification.actor?.name, notification.description]
+    .filter(Boolean)
+    .join(" · "),
+  tiempo: formatRelativeDate(notification.createdAt),
+  categoria: notification.category,
+  leida: notification.read,
+  link: notification.link || "",
+});
 
 const Notificaciones = () => {
-  const [filtroActivo, setFiltroActivo] = useState("Todas");
+  const navigate = useNavigate();
+  const { reloadUnreadCount } = useApp();
 
-  // Datos simulados de una base de datos
-  const notificaciones = [
-    {
-      id: 1,
-      tipo: "Vencimiento",
-      titulo: "La tarea: Actualizar planilla ha vencido",
-      descripcion: "Departamento de Alumnos • Ciclo Lectivo 2026",
-      tiempo: "Hace 1 h",
-      categoria: "Sistema",
-      leida: false,
-    },
-    {
-      id: 2,
-      tipo: "Gestión de sectores",
-      titulo: "Has sido movido de sector",
-      descripcion: "Nuevo: Taller Electromecánica",
-      tiempo: "Hace 3 h",
-      categoria: "Sistema",
-      leida: false,
-    },
-    {
-      id: 3,
-      tipo: "Comunidad escolar",
-      titulo: "Tu publicación ha sido anclada en el foro",
-      descripcion: '"Pautas de seguridad e higiene en pañol 2026"',
-      tiempo: "Ayer",
-      categoria: "Foro",
-      leida: true,
-    },
-    {
-      id: 4,
-      tipo: "Preceptoría",
-      titulo: "Nuevo aviso: Cronograma de mesas previas y equivalencias",
-      descripcion: "Publicado por Regencia Técnica",
-      tiempo: "Hace 2 d",
-      categoria: "Sistema",
-      leida: true,
-    },
-    {
-      id: 5,
-      tipo: "Sistema",
-      titulo: "Se actualizó el calendario académico",
-      descripcion: "Ya podés consultar las nuevas fechas.",
-      tiempo: "Hace 3 d",
-      categoria: "Sistema",
-      leida: true,
-    },
-  ];
+  const [filtroActivo, setFiltroActivo] = useState("all");
+  const [notificaciones, setNotificaciones] = useState([]);
+  const [noLeidas, setNoLeidas] = useState(0);
+  const [pagination, setPagination] = useState({ page: 1, totalPages: 1 });
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [marking, setMarking] = useState(false);
+  const [error, setError] = useState("");
 
-  // Filtrar notificaciones según el botón seleccionado
-  const notificacionesFiltradas = notificaciones.filter((notificacion) => {
-    if (filtroActivo === "Todas") return true;
+  const applyResponse = useCallback((payload, { append }) => {
+    const items = (payload.notifications ?? []).map(mapNotification);
 
-    if (filtroActivo === "No leídas") {
-      return !notificacion.leida;
+    setNotificaciones((prev) => (append ? [...prev, ...items] : items));
+    setNoLeidas(payload.unreadCount ?? 0);
+    setPagination(payload.pagination ?? { page: 1, totalPages: 1 });
+    setError("");
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const run = async () => {
+      try {
+        const response = await fetchNotifications({
+          filter: filtroActivo,
+          page: 1,
+          limit: PAGE_SIZE,
+        });
+        if (cancelled) return;
+        applyResponse(response?.data ?? {}, { append: false });
+      } catch (err) {
+        if (!cancelled) {
+          setError(err.response?.data?.message || "No se pudieron cargar las notificaciones.");
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [filtroActivo, applyResponse]);
+
+  const handleFiltro = (id) => {
+    if (id === filtroActivo) return;
+    setLoading(true);
+    setFiltroActivo(id);
+  };
+
+  const handleCargarMas = async () => {
+    setLoadingMore(true);
+    try {
+      const response = await fetchNotifications({
+        filter: filtroActivo,
+        page: pagination.page + 1,
+        limit: PAGE_SIZE,
+      });
+      applyResponse(response?.data ?? {}, { append: true });
+    } catch (err) {
+      setError(err.response?.data?.message || "No se pudieron cargar las notificaciones.");
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  const handleVer = async (notificacion) => {
+    if (!notificacion.leida) {
+      try {
+        await markNotificationRead(notificacion.id);
+        setNotificaciones((prev) =>
+          prev.map((n) => (n.id === notificacion.id ? { ...n, leida: true } : n)),
+        );
+        setNoLeidas((count) => Math.max(0, count - 1));
+        reloadUnreadCount();
+      } catch {
+        // si no se puede marcar, igual dejamos navegar
+      }
     }
 
-    return notificacion.categoria === filtroActivo;
-  });
+    if (notificacion.link) navigate(notificacion.link);
+  };
 
-  const cantidadNoLeidas = notificaciones.filter(
-    (notificacion) => !notificacion.leida
-  ).length;
+  const handleMarcarTodas = async () => {
+    setMarking(true);
+    setError("");
+    try {
+      await markAllNotificationsRead();
+      setNotificaciones((prev) => prev.map((n) => ({ ...n, leida: true })));
+      setNoLeidas(0);
+      reloadUnreadCount();
+    } catch (err) {
+      setError(err.response?.data?.message || "No se pudieron marcar como leídas.");
+    } finally {
+      setMarking(false);
+    }
+  };
 
   return (
     <div id="contenedorNotificaciones">
-
       <main id="paginaNotificaciones">
         <div className="encabezadoNotificaciones">
           <div>
             <p className="marcaNotificaciones">EEST FLOW</p>
             <h1>Notificaciones</h1>
           </div>
+
+          {noLeidas > 0 && (
+            <button
+              className="botonMarcarLeidas"
+              onClick={handleMarcarTodas}
+              disabled={marking}
+              type="button"
+            >
+              {marking ? "Marcando…" : "Marcar todas como leídas"}
+            </button>
+          )}
         </div>
 
         <div id="filtrosNotificaciones">
-          <button
-            className={`filtroNotificacion ${
-              filtroActivo === "Todas" ? "activo" : ""
-            }`}
-            onClick={() => setFiltroActivo("Todas")}
-          >
-            Todas
-          </button>
-
-          <button
-            className={`filtroNotificacion ${
-              filtroActivo === "No leídas" ? "activo" : ""
-            }`}
-            onClick={() => setFiltroActivo("No leídas")}
-          >
-            No leídas
-            <span className="contadorNoLeidas">{cantidadNoLeidas}</span>
-          </button>
-
-          <button
-            className={`filtroNotificacion ${
-              filtroActivo === "Sistema" ? "activo" : ""
-            }`}
-            onClick={() => setFiltroActivo("Sistema")}
-          >
-            Sistema
-          </button>
-
-          <button
-            className={`filtroNotificacion ${
-              filtroActivo === "Foro" ? "activo" : ""
-            }`}
-            onClick={() => setFiltroActivo("Foro")}
-          >
-            Foro
-          </button>
+          {FILTROS.map((filtro) => (
+            <button
+              key={filtro.id}
+              className={`filtroNotificacion ${
+                filtroActivo === filtro.id ? "activo" : ""
+              }`}
+              onClick={() => handleFiltro(filtro.id)}
+              type="button"
+            >
+              {filtro.label}
+              {filtro.id === "unread" && noLeidas > 0 && (
+                <span className="contadorNoLeidas">{noLeidas}</span>
+              )}
+            </button>
+          ))}
         </div>
 
         <section className="listaNotificaciones">
-          {notificacionesFiltradas.length > 0 ? (
-            notificacionesFiltradas.map((notificacion) => (
-              <article
-                className={`notificacion ${
-                  !notificacion.leida ? "noLeida" : ""
-                }`}
-                key={notificacion.id}
-              >
-                <div className="contenidoNotificacion">
-                  <div className="cabeceraNotificacion">
-                    <span className="tipoNotificacion">
-                      {notificacion.tipo}
-                    </span>
+          {loading ? (
+            <div className="sinNotificaciones">
+              <h2>Cargando notificaciones…</h2>
+            </div>
+          ) : error ? (
+            <div className="sinNotificaciones">
+              <h2>Algo salió mal</h2>
+              <p>{error}</p>
+            </div>
+          ) : notificaciones.length > 0 ? (
+            <>
+              {notificaciones.map((notificacion) => (
+                <article
+                  className={`notificacion ${!notificacion.leida ? "noLeida" : ""}`}
+                  key={notificacion.id}
+                >
+                  <div className="contenidoNotificacion">
+                    <div className="cabeceraNotificacion">
+                      <span className="tipoNotificacion">{notificacion.tipo}</span>
 
-                    <span className="tiempoNotificacion">
-                      {notificacion.tiempo}
-                    </span>
+                      <span className="tiempoNotificacion">{notificacion.tiempo}</span>
+                    </div>
+
+                    <h2>{notificacion.titulo}</h2>
+
+                    {notificacion.descripcion && (
+                      <p className="descripcionNotificacion">
+                        {notificacion.descripcion}
+                      </p>
+                    )}
                   </div>
 
-                  <h2>{notificacion.titulo}</h2>
+                  <button
+                    className="botonVerNotificacion"
+                    onClick={() => handleVer(notificacion)}
+                    type="button"
+                  >
+                    Ver <span>›</span>
+                  </button>
+                </article>
+              ))}
 
-                  <p className="descripcionNotificacion">
-                    {notificacion.descripcion}
-                  </p>
-                </div>
-
-                <button className="botonVerNotificacion">
-                  Ver <span>›</span>
+              {pagination.page < pagination.totalPages && (
+                <button
+                  className="botonCargarMas"
+                  onClick={handleCargarMas}
+                  disabled={loadingMore}
+                  type="button"
+                >
+                  {loadingMore ? "Cargando…" : "Cargar más"}
                 </button>
-              </article>
-            ))
+              )}
+            </>
           ) : (
             <div className="sinNotificaciones">
               <h2>No hay notificaciones</h2>
