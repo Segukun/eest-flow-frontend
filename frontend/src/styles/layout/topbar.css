@@ -124,3 +124,15 @@
     display: none;
   }
 }
+
+.topbar__burger { position: relative; }
+.topbar__burger-dot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--color-orange);
+  border: 2px solid var(--theme-surface, #fff);
+}

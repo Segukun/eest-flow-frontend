@@ -4,7 +4,7 @@ export const fetchComments = async (
   postId,
   {
     page = 1,
-    limit = 20,
+    limit = 100,
   } = {},
 ) => {
   const { data } = await api.get(

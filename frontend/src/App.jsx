@@ -13,6 +13,7 @@ import ProtectedRoute from "./components/ProtectedRoutes";
 
 import { AppProvider } from "./context/AppContext";
 import { ToastProvider } from "./components/Toast.jsx";
+import { NotificationsProvider } from "./context/NotificationsContext";
 
 function App() {
   return (
@@ -28,7 +29,9 @@ function App() {
             <ProtectedRoute>
               <AppProvider>
                 <ToastProvider>
-                  <Layout />
+                  <NotificationsProvider>
+                    <Layout />
+                  </NotificationsProvider>
                 </ToastProvider>
               </AppProvider>
             </ProtectedRoute>

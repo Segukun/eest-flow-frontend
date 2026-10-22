@@ -2,18 +2,20 @@ import { useState, useRef, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
 import "../../styles/layout/sidebar.css";
+import { useNotifications } from "../../context/NotificationsContext";
 
 const NAV = [
   { to: "/", label: "Inicio", icon: "/icons/home.svg", end: true },
   { to: "/sectores", label: "Sectores", icon: "/icons/teamsection.svg" },
   { to: "/foro", label: "Foro", icon: "/icons/forum.svg" },
-  { to: "/notificaciones", label: "Notificaciones", icon: "/icons/bell.svg", badge: 3 },
+  { to: "/notificaciones", label: "Notificaciones", icon: "/icons/bell.svg", badgeKey: "notifications" },
 ];
 
 export default function Sidebar({ onOpenPerfil, onOpenConfiguracion, onOpenAddCategory, onRequestDeleteCategory }) {
   const { categories, categoriesLoading, activeCategory, setActiveCategory, currentUser } = useApp();
   const [menuOpen, setMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const { unreadCount } = useNotifications();
   const ref = useRef(null);
 
   useEffect(() => {
@@ -43,19 +45,24 @@ export default function Sidebar({ onOpenPerfil, onOpenConfiguracion, onOpenAddCa
       </div>
 
       <nav className="sidebar__nav">
-        {NAV.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.end}
-            className={({ isActive }) => "nav-item" + (isActive ? " nav-item--active" : "")}
-            title={collapsed ? item.label : undefined}
-          >
-            <img src={item.icon} alt="" className="icon" />
-            {!collapsed && <span>{item.label}</span>}
-            {!collapsed && item.badge && <span className="nav-item__badge">{item.badge}</span>}
-          </NavLink>
-        ))}
+        {NAV.map((item) => {
+          const badge = item.badgeKey === "notifications" ? unreadCount : 0;
+          return (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.end}
+              className={({ isActive }) => "nav-item" + (isActive ? " nav-item--active" : "")}
+              title={collapsed ? item.label : undefined}
+            >
+              <img src={item.icon} alt="" className="icon" />
+              {!collapsed && <span>{item.label}</span>}
+              {!collapsed && badge > 0 && (
+                <span className="nav-item__badge">{badge > 67 ? "67+" : badge}</span>
+              )}
+            </NavLink>
+          );
+        })}
       </nav>
 
       {!collapsed && (
