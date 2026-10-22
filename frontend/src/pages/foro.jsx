@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { FiPlus } from "react-icons/fi";
+import { useSearchParams } from "react-router-dom";
 import ComentariosModal from "../components/ComentariosModal.jsx";
 import PublicarModal from "../components/PublicarModal.jsx";
 import { useToast } from "../components/Toast.jsx";
-import { fetchPosts, createPostRequest, updatePostRequest, deletePostRequest } from "../api/posts";
+import { fetchPosts, fetchPostById, createPostRequest, updatePostRequest, deletePostRequest } from "../api/posts";
 import { likePostRequest, unlikePostRequest } from "../api/likes";
 import { fetchSectors } from "../api/sectors";
 
@@ -12,8 +13,8 @@ import ForoCreate from "../components/ForoCreate.jsx";
 import ForoFeed from "../components/ForoFeed.jsx";
 import ForoImageModal from "../components/ForoImageModal.jsx";
 import ForoPagination from "../components/ForoPagination.jsx";
-import { getCurrentUser, getCurrentUserId, mapPostFromApi } from "../components/foroHelpers.js";
-import { CHAR_LIMIT, CHAR_STEP } from "../components/foroConstants.js";
+import { getCurrentUser, getCurrentUserId, mapPostFromApi } from "../components/ForoHelpers.js";
+import { CHAR_LIMIT, CHAR_STEP } from "../components/ForoConstants.js";
 import "../styles/pages/Foro.css";
 
 export default function Foro() {
@@ -25,7 +26,8 @@ export default function Foro() {
   const [newPost, setNewPost] = useState("");
   const [inlineFiles, setInlineFiles] = useState([]);
   const [search, setSearch] = useState("");
-  const [selectedPostId, setSelectedPostId] = useState(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [selectedPostId, setSelectedPostId] = useState(() => searchParams.get("post"));
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [isCreateActive, setIsCreateActive] = useState(false);
   const [openMenuId, setOpenMenuId] = useState(null);
@@ -62,6 +64,39 @@ export default function Foro() {
     };
     load();
   }, [currentUserId, sectors]);
+
+  // Si el post del enlace directo no está entre los primeros cargados, lo traemos aparte.
+  useEffect(() => {
+    if (loading || !selectedPostId) return;
+    if (posts.some((p) => String(p.id) === String(selectedPostId))) return;
+
+    let cancelled = false;
+
+    const loadPost = async () => {
+      try {
+        const res = await fetchPostById(selectedPostId);
+        const raw = res?.data ?? res;
+        if (cancelled || !raw?._id) return;
+        setPosts((prev) => [mapPostFromApi(raw, sectors, currentUserId), ...prev]);
+      } catch {
+        if (!cancelled) toast.error("No se pudo abrir la publicación.");
+      }
+    };
+
+    loadPost();
+    return () => {
+      cancelled = true;
+    };
+  }, [loading, selectedPostId, posts, sectors, currentUserId, toast]);
+
+  const closeComments = () => {
+    setSelectedPostId(null);
+    if (searchParams.get("post")) {
+      const next = new URLSearchParams(searchParams);
+      next.delete("post");
+      setSearchParams(next, { replace: true });
+    }
+  };
 
   useEffect(() => {
     const handler = (e) => {
@@ -296,7 +331,7 @@ export default function Foro() {
       <ComentariosModal
         isOpen={!!selectedPostId}
         post={selectedPost}
-        onClose={() => setSelectedPostId(null)}
+        onClose={closeComments}
         onCommentCreated={(id) =>
           setPosts((prev) => prev.map((p) => String(p.id) === String(id) ? { ...p, commentsCount: p.commentsCount + 1 } : p))
         }

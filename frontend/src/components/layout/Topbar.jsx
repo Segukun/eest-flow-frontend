@@ -1,20 +1,18 @@
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
-import { useNotifications } from "../../context/NotificationsContext";
 import "../../styles/layout/topbar.css";
 
 const NAV = [
   { to: "/", label: "Inicio", icon: "/icons/home.svg", end: true },
   { to: "/sectores", label: "Sectores", icon: "/icons/teamsection.svg" },
   { to: "/foro", label: "Foro", icon: "/icons/forum.svg" },
-  { to: "/notificaciones", label: "Notificaciones", icon: "/icons/bell.svg", badgeKey: "notifications" },
+  { to: "/notificaciones", label: "Notificaciones", icon: "/icons/bell.svg" },
   { to: "/equipo", label: "Mi Equipo", icon: "/icons/team.svg" },
 ];
 
 export default function Topbar({ onOpenConfiguracion, onOpenAddCategory, onRequestDeleteCategory }) {
-  const { categories, categoriesLoading, activeCategory, setActiveCategory, currentUser } = useApp();
-  const { unreadCount } = useNotifications();
+  const { categories, categoriesLoading, activeCategory, setActiveCategory, currentUser, unreadCount } = useApp();
   const [open, setOpen] = useState(false);
   const [catsOpen, setCatsOpen] = useState(false);
 
@@ -27,7 +25,6 @@ export default function Topbar({ onOpenConfiguracion, onOpenAddCategory, onReque
         </div>
         <button className="topbar__burger" onClick={() => setOpen(true)} aria-label="Abrir menú">
           <span /><span /><span />
-          {unreadCount > 0 && <span className="topbar__burger-dot" />}
         </button>
       </header>
 
@@ -46,22 +43,21 @@ export default function Topbar({ onOpenConfiguracion, onOpenAddCategory, onReque
         </div>
 
         <nav className="drawer__nav">
-          {NAV.map((i) => {
-            const badge = i.badgeKey === "notifications" ? unreadCount : 0;
-            return (
-              <NavLink
-                key={i.to}
-                to={i.to}
-                end={i.end}
-                onClick={() => setOpen(false)}
-                className={({ isActive }) => "nav-item" + (isActive ? " nav-item--active" : "")}
-              >
-                <img src={i.icon} alt="" className="icon" />
-                <span>{i.label}</span>
-                {badge > 0 && <span className="nav-item__badge">{badge > 99 ? "99+" : badge}</span>}
-              </NavLink>
-            );
-          })}
+          {NAV.map((i) => (
+            <NavLink
+              key={i.to}
+              to={i.to}
+              end={i.end}
+              onClick={() => setOpen(false)}
+              className={({ isActive }) => "nav-item" + (isActive ? " nav-item--active" : "")}
+            >
+              <img src={i.icon} alt="" className="icon" />
+              <span>{i.label}</span>
+              {i.to === "/notificaciones" && unreadCount > 0 && (
+                <span className="nav-item__badge">{unreadCount > 99 ? "99+" : unreadCount}</span>
+              )}
+            </NavLink>
+          ))}
 
           <button className="nav-item" onClick={() => setCatsOpen((v) => !v)}>
             <img src="/icons/list.svg" alt="" className="icon" />

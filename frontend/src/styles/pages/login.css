@@ -181,8 +181,7 @@
 }
 
 .admin-link-button:hover {
-  font-weight: bold;
-  text-decoration-thickness: 1.5px;
+  text-decoration-thickness: 2px;
 }
 
 .admin-card-success {

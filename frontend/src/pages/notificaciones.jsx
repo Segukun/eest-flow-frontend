@@ -1,120 +1,146 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+
+import { useApp } from "../context/AppContext";
 import {
   fetchNotifications,
-  markNotificationRead,
   markAllNotificationsRead,
-} from "../api/notification";
-import { useNotifications } from "../context/NotificationsContext";
+  markNotificationRead,
+} from "../api/notifications";
+import { formatRelativeDate } from "../components/ForoHelpers.js";
 import "../styles/pages/notificaciones.css";
 
-const POLL_INTERVAL_MS = 10000;
+const PAGE_SIZE = 20;
+
+const FILTROS = [
+  { id: "all", label: "Todas" },
+  { id: "unread", label: "No leídas" },
+  { id: "system", label: "Sistema" },
+  { id: "forum", label: "Foro" },
+];
 
 const TYPE_LABELS = {
-  task_assigned: "Tarea asignada",
-  task_due_soon: "Vencimiento próximo",
-  task_overdue: "Vencimiento",
-  sector_changed: "Gestión de sectores",
-  post_pinned: "Comunidad escolar",
-  post_comment: "Foro",
-  comment_reply: "Foro",
-  post_like: "Foro",
+  post_like: "Me gusta",
+  post_comment: "Comentario",
+  comment_reply: "Respuesta",
 };
 
-const FILTERS = ["Todas", "No leídas", "Tareas", "Sistema", "Foro"];
-const CATEGORY_OF_FILTER = { Tareas: "task", Sistema: "system", Foro: "forum" };
-
-function formatRelative(dateString) {
-  const date = new Date(dateString);
-  if (Number.isNaN(date.getTime())) return "";
-  const minutes = Math.floor((Date.now() - date.getTime()) / 60000);
-  if (minutes < 1) return "Ahora";
-  if (minutes < 60) return `Hace ${minutes} min`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `Hace ${hours} h`;
-  const days = Math.floor(hours / 24);
-  if (days === 1) return "Ayer";
-  if (days < 7) return `Hace ${days} d`;
-  return date.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "numeric" });
-}
+const mapNotification = (notification) => ({
+  id: notification._id,
+  tipo:
+    TYPE_LABELS[notification.type] ??
+    (notification.category === "forum" ? "Foro" : "Sistema"),
+  titulo: notification.title,
+  descripcion: [notification.actor?.name, notification.description]
+    .filter(Boolean)
+    .join(" · "),
+  tiempo: formatRelativeDate(notification.createdAt),
+  categoria: notification.category,
+  leida: notification.read,
+  link: notification.link || "",
+});
 
 const Notificaciones = () => {
   const navigate = useNavigate();
-  const { refreshUnreadCount } = useNotifications();
+  const { reloadUnreadCount } = useApp();
 
-  const [filtroActivo, setFiltroActivo] = useState("Todas");
-  const [notifications, setNotifications] = useState([]);
+  const [filtroActivo, setFiltroActivo] = useState("all");
+  const [notificaciones, setNotificaciones] = useState([]);
+  const [noLeidas, setNoLeidas] = useState(0);
+  const [pagination, setPagination] = useState({ page: 1, totalPages: 1 });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const signature = useRef("");
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [marking, setMarking] = useState(false);
+  const [error, setError] = useState("");
 
-  const load = useCallback(async ({ silent = false } = {}) => {
-    if (!silent) {
-      setLoading(true);
-      setError(null);
-    }
-    try {
-      const result = await fetchNotifications({ filter: "all", limit: 50 });
-      const sig = JSON.stringify(result.notifications);
-      if (silent && sig === signature.current) return; // sin cambios: no re-renderiza
-      signature.current = sig;
-      setNotifications(result.notifications);
-    } catch (err) {
-      if (!silent) {
-        setError(err?.response?.data?.message || "No se pudieron cargar las notificaciones.");
-      }
-    } finally {
-      if (!silent) setLoading(false);
-    }
+  const applyResponse = useCallback((payload, { append }) => {
+    const items = (payload.notifications ?? []).map(mapNotification);
+
+    setNotificaciones((prev) => (append ? [...prev, ...items] : items));
+    setNoLeidas(payload.unreadCount ?? 0);
+    setPagination(payload.pagination ?? { page: 1, totalPages: 1 });
+    setError("");
   }, []);
 
   useEffect(() => {
-    load();
+    let cancelled = false;
 
-    const refresh = () => {
-      if (document.visibilityState === "visible") load({ silent: true });
-    };
-    const id = setInterval(refresh, POLL_INTERVAL_MS);
-    document.addEventListener("visibilitychange", refresh);
-
-    return () => {
-      clearInterval(id);
-      document.removeEventListener("visibilitychange", refresh);
-    };
-  }, [load]);
-
-  const cantidadNoLeidas = notifications.filter((n) => !n.read).length;
-
-  const filtradas = notifications.filter((n) => {
-    if (filtroActivo === "Todas") return true;
-    if (filtroActivo === "No leídas") return !n.read;
-    return n.category === CATEGORY_OF_FILTER[filtroActivo];
-  });
-
-  const handleVer = async (notification) => {
-    if (!notification.read) {
-      // actualización optimista y luego confirmamos con el backend
-      setNotifications((prev) =>
-        prev.map((n) => (n._id === notification._id ? { ...n, read: true } : n)),
-      );
+    const run = async () => {
       try {
-        await markNotificationRead(notification._id);
-      } catch {
-        // si falla, el próximo polling restaura el estado real
+        const response = await fetchNotifications({
+          filter: filtroActivo,
+          page: 1,
+          limit: PAGE_SIZE,
+        });
+        if (cancelled) return;
+        applyResponse(response?.data ?? {}, { append: false });
+      } catch (err) {
+        if (!cancelled) {
+          setError(err.response?.data?.message || "No se pudieron cargar las notificaciones.");
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-      refreshUnreadCount();
-    }
-    if (notification.link) navigate(notification.link);
+    };
+
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [filtroActivo, applyResponse]);
+
+  const handleFiltro = (id) => {
+    if (id === filtroActivo) return;
+    setLoading(true);
+    setFiltroActivo(id);
   };
 
-  const handleMarkAll = async () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  const handleCargarMas = async () => {
+    setLoadingMore(true);
+    try {
+      const response = await fetchNotifications({
+        filter: filtroActivo,
+        page: pagination.page + 1,
+        limit: PAGE_SIZE,
+      });
+      applyResponse(response?.data ?? {}, { append: true });
+    } catch (err) {
+      setError(err.response?.data?.message || "No se pudieron cargar las notificaciones.");
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  const handleVer = async (notificacion) => {
+    if (!notificacion.leida) {
+      try {
+        await markNotificationRead(notificacion.id);
+        setNotificaciones((prev) =>
+          prev.map((n) => (n.id === notificacion.id ? { ...n, leida: true } : n)),
+        );
+        setNoLeidas((count) => Math.max(0, count - 1));
+        reloadUnreadCount();
+      } catch {
+        // si no se puede marcar, igual dejamos navegar
+      }
+    }
+
+    if (notificacion.link) navigate(notificacion.link);
+  };
+
+  const handleMarcarTodas = async () => {
+    setMarking(true);
+    setError("");
     try {
       await markAllNotificationsRead();
-    } catch {
-      load({ silent: true });
+      setNotificaciones((prev) => prev.map((n) => ({ ...n, leida: true })));
+      setNoLeidas(0);
+      reloadUnreadCount();
+    } catch (err) {
+      setError(err.response?.data?.message || "No se pudieron marcar como leídas.");
+    } finally {
+      setMarking(false);
     }
-    refreshUnreadCount();
   };
 
   return (
@@ -125,23 +151,32 @@ const Notificaciones = () => {
             <p className="marcaNotificaciones">EEST FLOW</p>
             <h1>Notificaciones</h1>
           </div>
-          {cantidadNoLeidas > 0 && (
-            <button className="filtroNotificacion" onClick={handleMarkAll}>
-              Marcar todas como leídas
+
+          {noLeidas > 0 && (
+            <button
+              className="botonMarcarLeidas"
+              onClick={handleMarcarTodas}
+              disabled={marking}
+              type="button"
+            >
+              {marking ? "Marcando…" : "Marcar todas como leídas"}
             </button>
           )}
         </div>
 
         <div id="filtrosNotificaciones">
-          {FILTERS.map((nombre) => (
+          {FILTROS.map((filtro) => (
             <button
-              key={nombre}
-              className={`filtroNotificacion ${filtroActivo === nombre ? "activo" : ""}`}
-              onClick={() => setFiltroActivo(nombre)}
+              key={filtro.id}
+              className={`filtroNotificacion ${
+                filtroActivo === filtro.id ? "activo" : ""
+              }`}
+              onClick={() => handleFiltro(filtro.id)}
+              type="button"
             >
-              {nombre}
-              {nombre === "No leídas" && cantidadNoLeidas > 0 && (
-                <span className="contadorNoLeidas">{cantidadNoLeidas}</span>
+              {filtro.label}
+              {filtro.id === "unread" && noLeidas > 0 && (
+                <span className="contadorNoLeidas">{noLeidas}</span>
               )}
             </button>
           ))}
@@ -149,32 +184,58 @@ const Notificaciones = () => {
 
         <section className="listaNotificaciones">
           {loading ? (
-            <div className="sinNotificaciones"><p>Cargando notificaciones…</p></div>
+            <div className="sinNotificaciones">
+              <h2>Cargando notificaciones…</h2>
+            </div>
           ) : error ? (
             <div className="sinNotificaciones">
-              <h2>No se pudieron cargar</h2>
+              <h2>Algo salió mal</h2>
               <p>{error}</p>
-              <button className="filtroNotificacion" style={{ margin: "14px auto 0" }} onClick={() => load()}>
-                Reintentar
-              </button>
             </div>
-          ) : filtradas.length > 0 ? (
-            filtradas.map((n) => (
-              <article key={n._id} className={`notificacion ${!n.read ? "noLeida" : ""}`}>
-                <div className="contenidoNotificacion">
-                  <div className="cabeceraNotificacion">
-                    <span className="tipoNotificacion">{TYPE_LABELS[n.type] ?? "Sistema"}</span>
-                    <span className="tiempoNotificacion">{formatRelative(n.createdAt)}</span>
-                  </div>
-                  <h2>{n.title}</h2>
-                  {n.description && <p className="descripcionNotificacion">{n.description}</p>}
-                </div>
+          ) : notificaciones.length > 0 ? (
+            <>
+              {notificaciones.map((notificacion) => (
+                <article
+                  className={`notificacion ${!notificacion.leida ? "noLeida" : ""}`}
+                  key={notificacion.id}
+                >
+                  <div className="contenidoNotificacion">
+                    <div className="cabeceraNotificacion">
+                      <span className="tipoNotificacion">{notificacion.tipo}</span>
 
-                <button className="botonVerNotificacion" onClick={() => handleVer(n)}>
-                  Ver <span>›</span>
+                      <span className="tiempoNotificacion">{notificacion.tiempo}</span>
+                    </div>
+
+                    <h2>{notificacion.titulo}</h2>
+
+                    {notificacion.descripcion && (
+                      <p className="descripcionNotificacion">
+                        {notificacion.descripcion}
+                      </p>
+                    )}
+                  </div>
+
+                  <button
+                    className="botonVerNotificacion"
+                    onClick={() => handleVer(notificacion)}
+                    type="button"
+                  >
+                    Ver <span>›</span>
+                  </button>
+                </article>
+              ))}
+
+              {pagination.page < pagination.totalPages && (
+                <button
+                  className="botonCargarMas"
+                  onClick={handleCargarMas}
+                  disabled={loadingMore}
+                  type="button"
+                >
+                  {loadingMore ? "Cargando…" : "Cargar más"}
                 </button>
-              </article>
-            ))
+              )}
+            </>
           ) : (
             <div className="sinNotificaciones">
               <h2>No hay notificaciones</h2>
