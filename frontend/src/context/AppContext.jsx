@@ -23,9 +23,9 @@ export const COLUMNS = [
 ];
 
 export const PRIORITIES = {
-  low: { id: "low", label: "Baja", color: "#FF4D4D" },
+  low: { id: "low", label: "Baja", color: "#2ECC71" },
   medium: { id: "medium", label: "Media", color: "#FFA500" },
-  high: { id: "high", label: "Alta", color: "#2ECC71" },
+  high: { id: "high", label: "Alta", color: "#FF4D4D" },
 };
 
 function normalizeTask(raw) {
