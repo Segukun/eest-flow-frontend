@@ -12,12 +12,12 @@ export default function ConfirmPinModal({
   if (!open) return null;
 
   const title = pinned
-    ? "¿Pinear esta publicación?"
-    : "¿Quitar el pin de esta publicación?";
+    ? "¿Anlcar esta publicación?"
+    : "¿Desanclar esta publicación?";
 
   const description = pinned
-    ? "Esta publicación quedará fijada al principio del foro. Si hay otra publicación pineada, se desanclará automáticamente."
-    : "La publicación dejará de estar fijada y volverá a ordenarse junto con las demás.";
+    ? "Esta publicación quedará fijada al principio del foro. Si hay otra publicación anclada, se desanclará automáticamente."
+    : "La publicación dejará de estar anclada y volverá a ordenarse junto con las demás.";
 
   return (
     <div
