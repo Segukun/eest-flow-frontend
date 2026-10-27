@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useApp } from "../context/AppContext";
+import useTaskFromUrl from "../hooks/useTaskFromUrl";
 import Column from "./Column";
 import TaskDetailModal from "./TaskDetailModal";
 import TaskActionsModal from "./taskmodal/TaskActionsModal.jsx";
@@ -16,7 +17,14 @@ export default function Board() {
   const [editingId, setEditingId] = useState(null);
   const [addingTaskColumnId, setAddingTaskColumnId] = useState(null);
 
-  // CORREGIDO: ahora recibe beforeId y se lo pasa a moveTask
+  // los hooks van antes de cualquier return anticipado
+  const clearTaskParam = useTaskFromUrl(setViewingId);
+
+  const closeViewing = () => {
+    setViewingId(null);
+    clearTaskParam();
+  };
+
   const handleDrop = async (columnId, beforeId = null) => {
     if (!dragging) return;
     const id = dragging;
@@ -71,7 +79,7 @@ export default function Board() {
             addingTaskColumnId={addingTaskColumnId}
             onAddTaskOpen={setAddingTaskColumnId}
             onAddTaskClose={(columnId) =>
-              setAddingTaskColumnId((actual) => actual === columnId ? null : actual)
+              setAddingTaskColumnId((actual) => (actual === columnId ? null : actual))
             }
           />
         ))}
@@ -80,8 +88,8 @@ export default function Board() {
       {viewingId && (
         <TaskDetailModal
           taskId={viewingId}
-          onClose={() => setViewingId(null)}
-          onEdit={(id) => { setViewingId(null); setEditingId(id); }}
+          onClose={closeViewing}
+          onEdit={(id) => { closeViewing(); setEditingId(id); }}
         />
       )}
       {editingId && (

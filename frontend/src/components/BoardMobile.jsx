@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import { useApp } from "../context/AppContext";
+import useTaskFromUrl from "../hooks/useTaskFromUrl";
 import Column from "./Column";
 import TaskDetailModal from "./TaskDetailModal";
 import TaskActionsModal from "./taskmodal/TaskActionsModal.jsx";
@@ -15,6 +16,13 @@ export default function BoardMobile() {
   const [emblaRef, emblaApi] = useEmblaCarousel({ align: "start", loop: false });
   const [selected, setSelected] = useState(0);
 
+  const clearTaskParam = useTaskFromUrl(setViewingId);
+
+  const closeViewing = () => {
+    setViewingId(null);
+    clearTaskParam();
+  };
+
   const onSelect = useCallback(() => {
     if (emblaApi) setSelected(emblaApi.selectedScrollSnap());
   }, [emblaApi]);
@@ -25,12 +33,12 @@ export default function BoardMobile() {
     onSelect();
   }, [emblaApi, onSelect]);
 
-  const handleDrop = async (columnId) => {
+  const handleDrop = async (columnId, beforeId = null) => {
     if (!dragging) return;
     const id = dragging;
     setDragging(null);
     try {
-      await moveTask(id, columnId);
+      await moveTask(id, columnId, beforeId);
     } catch {
       // moveTask revierte internamente
     }
@@ -73,8 +81,8 @@ export default function BoardMobile() {
                   addingTaskColumnId={addingTaskColumnId}
                   onAddTaskOpen={setAddingTaskColumnId}
                   onAddTaskClose={(columnId) =>
-              setAddingTaskColumnId((actual) => actual === columnId ? null : actual)
-            }
+                    setAddingTaskColumnId((actual) => (actual === columnId ? null : actual))
+                  }
                 />
               </div>
             ))}
@@ -96,8 +104,8 @@ export default function BoardMobile() {
       {viewingId && (
         <TaskDetailModal
           taskId={viewingId}
-          onClose={() => setViewingId(null)}
-          onEdit={(id) => { setViewingId(null); setEditingId(id); }}
+          onClose={closeViewing}
+          onEdit={(id) => { closeViewing(); setEditingId(id); }}
         />
       )}
       {editingId && (
