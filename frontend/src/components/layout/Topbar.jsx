@@ -7,12 +7,12 @@ const NAV = [
   { to: "/", label: "Inicio", icon: "/icons/home.svg", end: true },
   { to: "/sectores", label: "Sectores", icon: "/icons/teamsection.svg" },
   { to: "/foro", label: "Foro", icon: "/icons/forum.svg" },
-  { to: "/notificaciones", label: "Notificaciones", icon: "/icons/bell.svg", badge: 3 },
+  { to: "/notificaciones", label: "Notificaciones", icon: "/icons/bell.svg" },
   { to: "/equipo", label: "Mi Equipo", icon: "/icons/team.svg" },
 ];
 
 export default function Topbar({ onOpenConfiguracion, onOpenAddCategory, onRequestDeleteCategory }) {
-  const { categories, categoriesLoading, activeCategory, setActiveCategory, currentUser } = useApp();
+  const { categories, categoriesLoading, activeCategory, setActiveCategory, currentUser, unreadCount } = useApp();
   const [open, setOpen] = useState(false);
   const [catsOpen, setCatsOpen] = useState(false);
 
@@ -53,7 +53,9 @@ export default function Topbar({ onOpenConfiguracion, onOpenAddCategory, onReque
             >
               <img src={i.icon} alt="" className="icon" />
               <span>{i.label}</span>
-              {i.badge && <span className="nav-item__badge">{i.badge}</span>}
+              {i.to === "/notificaciones" && unreadCount > 0 && (
+                <span className="nav-item__badge">{unreadCount > 99 ? "99+" : unreadCount}</span>
+              )}
             </NavLink>
           ))}
 

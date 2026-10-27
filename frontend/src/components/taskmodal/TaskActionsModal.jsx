@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useApp, PRIORITIES } from "../../context/AppContext";
 import "../../styles/components/task-actions-modal.css";
 
-import { IoEnterOutline, IoList, IoPricetagOutline, IoCalendarClear, IoTrashBinOutline, IoPencil, IoClose, IoCheckmark } from "react-icons/io5";
+import { IoEnterOutline, IoList, IoPricetagOutline, IoCalendarClear, IoTrashBinOutline, IoPencil, IoClose, IoCheckmark, IoSearch } from "react-icons/io5";
 import { HiMiniArrowsRightLeft } from "react-icons/hi2";
 
 const OPTIONS = [
@@ -24,6 +24,9 @@ export default function TaskActionsModal({ taskId, onClose, onView }) {
   const { tasks, users, labels, columns, updateTask, deleteTask, addLabel, updateLabel, deleteLabel } = useApp();
   const [panel, setPanel] = useState(null);
 
+  // ---- búsqueda de personal ----
+  const [memberSearch, setMemberSearch] = useState("");
+
   // ---- creación de etiqueta nueva ----
   const [newLabelTitle, setNewLabelTitle] = useState("");
   const [newLabelColor, setNewLabelColor] = useState(null); // sin default: el usuario debe elegir
@@ -42,6 +45,16 @@ export default function TaskActionsModal({ taskId, onClose, onView }) {
   const priority = PRIORITIES[task.priority];
   const members = task.members.map((id) => users.find((u) => u.id === id)).filter(Boolean);
   const taskLabels = task.labelIds.map((id) => labels.find((l) => l.id === id)).filter(Boolean);
+
+  // usuarios filtrados por nombre o email
+  const searchText = memberSearch.trim().toLowerCase();
+  const filteredUsers = searchText
+    ? users.filter(
+        (u) =>
+          (u.name || "").toLowerCase().includes(searchText) ||
+          (u.email || "").toLowerCase().includes(searchText)
+      )
+    : users;
 
   const toggleMember = (userId) =>
     updateTask(task.id, {
@@ -127,6 +140,7 @@ export default function TaskActionsModal({ taskId, onClose, onView }) {
     if (id === "delete") { deleteTask(task.id); onClose(); return; }
     setPanel(id);
     if (id === "labels") { cancelEditLabel(); setLabelError(null); }
+    if (id === "members") setMemberSearch("");
   };
 
   return (
@@ -326,17 +340,46 @@ export default function TaskActionsModal({ taskId, onClose, onView }) {
           {panel === "members" && (
             <div className="actions-modal__panel">
               <PanelHead title="Asignar personal" onBack={() => setPanel(null)} />
-              <div className="member-grid">
-                {users.map((u) => (
-                  <button
-                    key={u.id}
-                    className={"member" + (task.members.includes(u.id) ? " member--on" : "")}
-                    onClick={() => toggleMember(u.id)}
-                  >
-                    <span className="avatar avatar--sm" style={{ background: "var(--color-green)" }}>{u.initials}</span>
-                    <span className="member__name">{u.name}</span>
-                  </button>
-                ))}
+
+              {/* buscador, igual al de "Agregar miembro" */}
+              <div className="member-search">
+                <IoSearch />
+                <input
+                  type="search"
+                  placeholder="Buscar por nombre o email"
+                  value={memberSearch}
+                  onChange={(e) => setMemberSearch(e.target.value)}
+                />
+              </div>
+
+              {/* lista de tarjetas, igual a "Agregar miembro" */}
+              <div className="member-list">
+                {filteredUsers.length === 0 ? (
+                  <p className="member-empty">No hay miembros disponibles.</p>
+                ) : (
+                  filteredUsers.map((u) => {
+                    const selected = task.members.includes(u.id);
+                    return (
+                      <button
+                        key={u.id}
+                        type="button"
+                        className={"member-option" + (selected ? " member-option--on" : "")}
+                        onClick={() => toggleMember(u.id)}
+                      >
+                        <span className="member-option__avatar">{u.initials}</span>
+                        <span className="member-option__info">
+                          <strong>{u.name || "Sin nombre"}</strong>
+                          {u.email && <small>{u.email}</small>}
+                        </span>
+                        {selected && (
+                          <span className="member-option__check">
+                            <IoCheckmark />
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })
+                )}
               </div>
             </div>
           )}

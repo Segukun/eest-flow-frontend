@@ -308,6 +308,65 @@
 }
 
 /* =========================================
+   ACCIONES
+========================================= */
+
+.botonMarcarLeidas {
+  padding: 11px 20px;
+
+  border: 1px solid var(--theme-border, var(--color-border));
+  border-radius: var(--radius-sm);
+
+  background: var(--theme-surface, var(--color-white));
+  color: var(--theme-green-text, var(--color-green));
+
+  font-size: 13px;
+  font-weight: 650;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.botonMarcarLeidas:hover:not(:disabled) {
+  background: var(--theme-green-fill, var(--color-green));
+  border-color: var(--theme-green-text, var(--color-green));
+  color: var(--color-white);
+}
+
+.botonMarcarLeidas:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.botonCargarMas {
+  align-self: center;
+  margin-top: 6px;
+  padding: 12px 26px;
+
+  border: 1px solid var(--theme-border, var(--color-border));
+  border-radius: 25px;
+
+  background: var(--theme-surface, var(--color-white));
+  color: var(--color-muted);
+
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.botonCargarMas:hover:not(:disabled) {
+  border-color: var(--theme-green-text, var(--color-green));
+  color: var(--theme-green-text, var(--color-green));
+}
+
+.botonCargarMas:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* =========================================
    SIN NOTIFICACIONES
 ========================================= */
 
@@ -458,4 +517,9 @@
     padding: 10px 14px;
     font-size: 12px;
   }
+}
+
+.notificacion.noLeida {
+  background: var(--theme-surface, var(--color-white));
+  border-color: var(--color-orange);
 }

@@ -1,4 +1,4 @@
-import { AVATAR_COLORS } from "./foroConstants.js";
+import { AVATAR_COLORS } from "./ForoConstants.js";
 
 export function getCurrentUser() {
   try { return JSON.parse(localStorage.getItem("user") || "null"); } catch { return null; }

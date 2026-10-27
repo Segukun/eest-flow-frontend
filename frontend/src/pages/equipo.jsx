@@ -12,6 +12,7 @@ import api from "../api.js";
 import "../styles/pages/equipo.css";
 import AgregarMiembro from "../components/AgregarMiembro.jsx";
 import ModificarMiembro from "../components/ModificarMiembro.jsx";
+import ConfirmacionEliminarMiembroModal from "../components/ConfirmacionEliminarMiembroModal.jsx";
 
 const MIEMBROS_POR_PAGINA = 6;
 
@@ -106,6 +107,7 @@ const obtenerNumerosDePagina = (
 const MemberCard = ({
   miembro,
   onModificar,
+  onEliminar,
 }) => {
   const [menuOpen, setMenuOpen] =
     useState(false);
@@ -223,6 +225,16 @@ const MemberCard = ({
               >
                 Editar miembro
               </button>
+              <button
+                type="button"
+                className="user-menu__item team-card-dropdown-delete"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onEliminar(miembro);
+                }}
+              >
+                Eliminar miembro
+              </button>
             </div>
           )}
         </div>
@@ -267,9 +279,6 @@ const Equipo = () => {
   const [busqueda, setBusqueda] =
     useState("");
 
-  const [vistaActiva, setVistaActiva] =
-    useState("todos");
-
   const [
     rolSeleccionado,
     setRolSeleccionado,
@@ -293,6 +302,11 @@ const Equipo = () => {
   const [
     modalModificarOpen,
     setModalModificarOpen,
+  ] = useState(false);
+
+  const [
+    modalEliminarOpen,
+    setModalEliminarOpen,
   ] = useState(false);
 
   const [
@@ -365,58 +379,8 @@ const Equipo = () => {
     [miembros]
   );
 
-  const vistasRapidas =
-    useMemo(() => {
-      return [
-        {
-          id: "todos",
-          etiqueta: "Todos",
-          cantidad: miembros.length,
-        },
-        {
-          id: "docentes",
-          etiqueta: "Docentes de Aula",
-          cantidad: 0,
-        },
-        {
-          id: "tecnicos",
-          etiqueta: "Maestros Técnicos",
-          cantidad: 0,
-        },
-        {
-          id: "preceptoria",
-          etiqueta: "Preceptoría",
-          cantidad: 0,
-        },
-        {
-          id: "administradores",
-          etiqueta: "Administradores",
-          cantidad:
-            miembros.filter(
-              (miembro) =>
-                miembro.cuenta ===
-                "Admin"
-            ).length,
-        },
-      ];
-    }, [miembros]);
-
-  const filtrosPorVista = {
-    todos: () => true,
-
-    docentes: () => false,
-
-    tecnicos: () => false,
-
-    preceptoria: () => false,
-
-    administradores: (miembro) =>
-      miembro.cuenta === "Admin",
-  };
-
   const hayFiltrosActivos =
     busqueda.trim() !== "" ||
-    vistaActiva !== "todos" ||
     rolSeleccionado !== "" ||
     sectorSeleccionado !== "";
 
@@ -427,11 +391,6 @@ const Equipo = () => {
 
       return miembros.filter(
         (miembro) => {
-          const pasaVista =
-            filtrosPorVista[
-              vistaActiva
-            ](miembro);
-
           const pasaRol =
             rolSeleccionado === "" ||
             miembro.rol ===
@@ -451,7 +410,6 @@ const Equipo = () => {
               .includes(termino);
 
           return (
-            pasaVista &&
             pasaRol &&
             pasaSector &&
             pasaBusqueda
@@ -461,7 +419,6 @@ const Equipo = () => {
     }, [
       miembros,
       busqueda,
-      vistaActiva,
       rolSeleccionado,
       sectorSeleccionado,
     ]);
@@ -497,7 +454,6 @@ const Equipo = () => {
 
   const limpiarFiltros = () => {
     setBusqueda("");
-    setVistaActiva("todos");
     setRolSeleccionado("");
     setSectorSeleccionado("");
     setPaginaActual(1);
@@ -514,6 +470,16 @@ const Equipo = () => {
 
   const cerrarModalModificar = () => {
     setModalModificarOpen(false);
+    setMiembroSeleccionado(null);
+  };
+
+  const abrirModalEliminar = (miembro) => {
+    setMiembroSeleccionado(miembro);
+    setModalEliminarOpen(true);
+  };
+
+  const cerrarModalEliminar = () => {
+    setModalEliminarOpen(false);
     setMiembroSeleccionado(null);
   };
 
@@ -646,36 +612,6 @@ const Equipo = () => {
             </button>
           </div>
 
-          <div className="team-quick-views">
-            <span className="team-quick-views-label">
-              Vistas rápidas:
-            </span>
-
-            {vistasRapidas.map(
-              (vista) => (
-                <button
-                  key={vista.id}
-                  type="button"
-                  className={
-                    vistaActiva ===
-                    vista.id
-                      ? "team-quick-view team-quick-view-active"
-                      : "team-quick-view"
-                  }
-                  onClick={() =>
-                    cambiarFiltro(
-                      () =>
-                        setVistaActiva(
-                          vista.id
-                        )
-                    )
-                  }
-                >
-                  {vista.etiqueta}
-                </button>
-              )
-            )}
-          </div>
         </section>
 
         {errorMiembros && (
@@ -699,6 +635,7 @@ const Equipo = () => {
                   onModificar={
                     abrirModalModificar
                   }
+                  onEliminar={abrirModalEliminar}
                 />
               )
             )
@@ -843,6 +780,17 @@ const Equipo = () => {
             }
           />
         )}
+
+      {modalEliminarOpen && miembroSeleccionado && (
+        <ConfirmacionEliminarMiembroModal
+          miembro={miembroSeleccionado}
+          onClose={cerrarModalEliminar}
+          onEliminado={async () => {
+            cerrarModalEliminar();
+            await cargarMiembros();
+          }}
+        />
+      )}
     </>
   );
 };

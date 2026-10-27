@@ -57,7 +57,7 @@ function normalizeUser(raw) {
     .join("")
     .slice(0, 2)
     .toUpperCase();
-  return { id: raw._id, name: raw.name, initials, accountType: raw.accountType };
+  return { id: raw._id, name: raw.name, email: raw.email, initials, accountType: raw.accountType };
 }
 
 export function AppProvider({ children }) {

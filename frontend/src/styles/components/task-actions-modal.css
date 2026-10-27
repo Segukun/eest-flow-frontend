@@ -337,3 +337,167 @@
   font-size: 12px;
   margin: 0;
 }
+
+
+/* =========================================================
+   ASIGNAR PERSONAL
+   Mismo estilo que el modal "Agregar miembro".
+   ========================================================= */
+
+/* ---- buscador ---- */
+
+.member-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--theme-border, #e6dcbf);
+  border-radius: 12px;
+  padding: 0 12px;
+  background: var(--theme-surface-soft, #fffcf7);
+  transition: 0.2s;
+}
+
+.member-search:focus-within {
+  background: var(--theme-surface, white);
+  border-color: var(--theme-green-text, #05903e);
+  box-shadow: 0 0 0 3px rgba(5, 144, 62, 0.12);
+}
+
+.member-search > svg {
+  flex-shrink: 0;
+  font-size: 16px;
+  color: var(--theme-secondary, rgba(31, 21, 28, 0.5));
+}
+
+.member-search input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 12px 0;
+  font-size: 14px;
+  font-family: Inter, system-ui, sans-serif;
+  color: var(--theme-text, #1f151c);
+}
+
+.member-search input::placeholder {
+  color: var(--theme-secondary, rgba(31, 21, 28, 0.4));
+}
+
+
+/* ---- lista ---- */
+
+.member-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding-right: 3px;
+}
+
+.member-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.member-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.member-list::-webkit-scrollbar-thumb {
+  background: var(--theme-border, #e6dcbf);
+  border-radius: 10px;
+}
+
+
+/* ---- tarjeta de miembro ---- */
+
+.member-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+  border: 1px solid var(--theme-border, #e6dcbf);
+  border-radius: 12px;
+  background: var(--theme-surface, white);
+  cursor: pointer;
+  text-align: left;
+  transition: 0.15s ease;
+}
+
+.member-option:hover {
+  border-color: var(--theme-green-text, #05903e);
+  background: var(--theme-surface-soft, #fffcf7);
+}
+
+.member-option--on {
+  border-color: var(--theme-green-text, #05903e);
+  background: rgba(5, 144, 62, 0.06);
+}
+
+.member-option__avatar {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(5, 144, 62, 0.12);
+  color: var(--theme-green-text, #05903e);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.member-option__info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.member-option__info strong {
+  color: var(--theme-text, #1f151c);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.member-option__info small {
+  color: var(--theme-secondary, rgba(31, 21, 28, 0.55));
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.member-option__check {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--theme-green-fill, #05903e);
+  color: white;
+  flex-shrink: 0;
+}
+
+
+/* ---- sin resultados ---- */
+
+.member-empty {
+  margin: 0;
+  padding: 20px;
+  text-align: center;
+  color: var(--theme-secondary, rgba(31, 21, 28, 0.55));
+  font-size: 14px;
+  border: 1px dashed var(--theme-border, #e6dcbf);
+  border-radius: 12px;
+  background: var(--theme-surface-soft, #fffcf7);
+}
