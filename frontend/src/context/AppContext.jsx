@@ -1,11 +1,5 @@
-import { createContext, useContext, useEffect, useMemo, useRef, useState, useCallback } from "react";
-import {
-  fetchTasks,
-  createTaskRequest,
-  updateTaskRequest,
-  moveTaskRequest,
-  deleteTaskRequest,
-} from "../api/tasks";
+import { createContext, useContext, useEffect, useMemo, useState, useCallback, useRef } from "react";
+import { fetchTasks, createTaskRequest, updateTaskRequest, deleteTaskRequest } from "../api/tasks";
 import { fetchCategories, createCategoryRequest, deleteCategoryRequest } from "../api/categories";
 import { fetchLabels, createLabelRequest, updateLabelRequest, deleteLabelRequest } from "../api/labels";
 import { fetchSectors } from "../api/sectors";
@@ -13,7 +7,7 @@ import { fetchUsers } from "../api/users";
 
 const AppContext = createContext(null);
 
-const POLL_INTERVAL_MS = 10000;
+const POLL_INTERVAL_MS = 10000; // cada 10 segundos
 
 export const COLUMNS = [
   { id: "pending", title: "Pendiente", dot: "var(--color-orange)" },
@@ -23,9 +17,9 @@ export const COLUMNS = [
 ];
 
 export const PRIORITIES = {
-  low: { id: "low", label: "Baja", color: "#2ECC71" },
-  medium: { id: "medium", label: "Media", color: "#FFA500" },
-  high: { id: "high", label: "Alta", color: "#FF4D4D" },
+  low: { id: "low", label: "Baja", color: "#9aa0a6" },
+  medium: { id: "medium", label: "Media", color: "var(--color-terracotta)" },
+  high: { id: "high", label: "Alta", color: "var(--color-orange)" },
 };
 
 function normalizeTask(raw) {
@@ -39,7 +33,8 @@ function normalizeTask(raw) {
     members: raw.assignedUser ?? [],
     labelIds: raw.labels ?? [],
     dueDate: raw.dueDate ? raw.dueDate.slice(0, 10) : "",
-    position: raw.position ?? 0,
+    // posición de la tarea dentro de su columna (las viejas sin order valen 0)
+    order: raw.order ?? 0,
   };
 }
 
@@ -62,7 +57,6 @@ function normalizeUser(raw) {
     .join("")
     .slice(0, 2)
     .toUpperCase();
-  // CORREGIDO: email (lo usa el panel "Asignar personal")
   return { id: raw._id, name: raw.name, email: raw.email, initials, accountType: raw.accountType };
 }
 
@@ -100,24 +94,10 @@ export function AppProvider({ children }) {
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState({ onlyMine: false, priorities: [], sector: "", due: "" });
 
-  // el polling ignora respuestas mientras haya escrituras en curso
-  const mutationsInFlight = useRef(0);
-  const tasksSignature = useRef("");
-
-  const track = async (fn) => {
-    mutationsInFlight.current += 1;
-    try {
-      return await fn();
-    } finally {
-      mutationsInFlight.current -= 1;
-    }
-  };
-
   const currentUser = sessionUser
     ? users.find((u) => u.id === sessionUser._id) ?? {
         id: sessionUser._id,
         name: sessionUser.name,
-        email: sessionUser.email, // CORREGIDO: email
         initials: (sessionUser.name || "")
           .split(" ")
           .map((w) => w[0])
@@ -127,8 +107,6 @@ export function AppProvider({ children }) {
         accountType: sessionUser.accountType,
       }
     : null;
-
-  const isAdmin = currentUser?.accountType === "admin";
 
   /* ---------- carga inicial ---------- */
 
@@ -149,7 +127,7 @@ export function AppProvider({ children }) {
 
   /* ---------- actualización en tiempo real ---------- */
   const mutationsInFlight = useRef(0);
-  const mutationVersion = useRef(0); // cuenta cuántas escrituras terminaron
+  const mutationVersion = useRef(0); // CORREGIDO: cuenta cuántas escrituras terminaron
   const tasksSignature = useRef("");
 
   // envuelve cualquier escritura para que el polling no la pise
@@ -159,25 +137,23 @@ export function AppProvider({ children }) {
       return await fn();
     } finally {
       mutationsInFlight.current -= 1;
-      mutationVersion.current += 1; // avisa que hubo un cambio
+      mutationVersion.current += 1; // CORREGIDO: avisa que hubo un cambio
     }
   };
 
-=======
->>>>>>> 56deea83324559127a859994ec8f8e80657276d4
   const loadTasks = useCallback(async ({ silent = false } = {}) => {
     if (!silent) {
       setTasksLoading(true);
       setTasksError(null);
     }
 
-    // guardamos en qué "versión" empezó este pedido
+    // CORREGIDO: guardamos en qué "versión" empezó este pedido
     const versionAtStart = mutationVersion.current;
 
     try {
       const raw = await fetchTasks();
 
-      // descartamos la respuesta si hay una escritura en curso
+      // CORREGIDO: descartamos la respuesta si hay una escritura en curso
       // O si hubo alguna escritura mientras este pedido viajaba (datos viejos)
       if (
         silent &&
@@ -193,6 +169,7 @@ export function AppProvider({ children }) {
 
       setTasks(raw.map(normalizeTask));
     } catch (err) {
+      // en el polling los errores no tumban el tablero
       if (!silent) {
         setTasksError(err?.response?.data?.message || "No se pudieron cargar las tareas.");
       }
@@ -212,15 +189,16 @@ export function AppProvider({ children }) {
       .catch(() => setUsers([]));
   }, [loadCategories, loadTasks]);
 
-  /* ---------- polling de tareas ---------- */
-
+  /* efecto de tiempo real */
   useEffect(() => {
     const refresh = () => {
-      if (document.visibilityState === "visible") loadTasks({ silent: true });
+      if (document.visibilityState === "visible") {
+        loadTasks({ silent: true });
+      }
     };
 
     const id = setInterval(refresh, POLL_INTERVAL_MS);
-    document.addEventListener("visibilitychange", refresh);
+    document.addEventListener("visibilitychange", refresh); // refresca al volver a la pestaña
 
     return () => {
       clearInterval(id);
@@ -259,31 +237,36 @@ export function AppProvider({ children }) {
     return n;
   }, [filters]);
 
-  // se conserva el orden del array: es el orden vertical de cada columna
+  const sectorIdOf = (s) => (s && typeof s === "object" ? s._id ?? s.id : s);
+
   const visibleTasks = useMemo(() => {
     const now = new Date();
     const diffDays = (d) => (new Date(d) - now) / 86400000;
 
-    return tasks.filter((t) => {
-      if (t.categoryId !== activeCategory) return false;
-      if (search && !t.title.toLowerCase().includes(search.toLowerCase())) return false;
-      if (filters.priorities.length && !filters.priorities.includes(t.priority)) return false;
-      if (filters.onlyMine && currentUser && !t.members.includes(currentUser.id)) return false;
+    return tasks
+      .filter((t) => {
+        if (t.categoryId !== activeCategory) return false;
+        if (search && !t.title.toLowerCase().includes(search.toLowerCase())) return false;
+        if (filters.priorities.length && !filters.priorities.includes(t.priority)) return false;
+        if (filters.onlyMine && currentUser && !t.members.includes(currentUser.id)) return false;
 
-      if (filters.sector) {
-        const category = categories.find((c) => c.id === t.categoryId);
-        const ids = (category?.sectors ?? []).map(sectorIdOf);
-        if (!ids.includes(filters.sector)) return false;
-      }
+        if (filters.sector) {
+          const category = categories.find((c) => c.id === t.categoryId);
+          const ids = (category?.sectors ?? []).map(sectorIdOf);
+          if (!ids.includes(filters.sector)) return false;
+        }
 
-      if (filters.due && t.dueDate) {
-        const d = diffDays(t.dueDate);
-        if (filters.due === "hoy" && !(d >= -1 && d < 1)) return false;
-        if (filters.due === "48" && !(d < 2)) return false;
-        if (filters.due === "7" && !(d < 7)) return false;
-      }
-      return true;
-    });
+        if (filters.due && t.dueDate) {
+          const d = diffDays(t.dueDate);
+          if (filters.due === "hoy" && !(d >= -1 && d < 1)) return false;
+          if (filters.due === "48" && !(d < 2)) return false;
+          if (filters.due === "7" && !(d < 7)) return false;
+        }
+        return true;
+      })
+      // ordena por posición. sort() es estable: las tareas con el mismo
+      // order (por ejemplo las viejas, todas en 0) conservan su orden actual.
+      .sort((a, b) => a.order - b.order);
   }, [tasks, categories, activeCategory, search, filters, currentUser]);
 
   /* ---------- acciones: tareas ---------- */
@@ -291,14 +274,23 @@ export function AppProvider({ children }) {
   const addTask = (columnId, title) =>
     track(async () => {
       if (!activeCategory) return;
+
+      // la tarea nueva va al final de su columna
+      const sameColumn = tasks.filter(
+        (t) => t.column === columnId && t.categoryId === activeCategory
+      );
+      const nextOrder = sameColumn.length
+        ? Math.max(...sameColumn.map((t) => t.order)) + 1
+        : 0;
+
       const created = await createTaskRequest({
         title,
         description: "Sin descripción",
         priority: "medium",
         state: columnId,
         category: activeCategory,
+        order: nextOrder,
       });
-      // el backend la deja al final de la columna; acá también
       setTasks((prev) => [...prev, normalizeTask(created)]);
     });
 
@@ -312,19 +304,10 @@ export function AppProvider({ children }) {
       if (patch.members !== undefined) payload.assignedUser = patch.members;
       if (patch.labelIds !== undefined) payload.labels = patch.labelIds;
       if (patch.dueDate !== undefined) payload.dueDate = patch.dueDate || null;
-      if (patch.order !== undefined) payload.order = patch.order;
+      if (patch.order !== undefined) payload.order = patch.order; // CORREGIDO
 
       const updated = await updateTaskRequest(id, payload);
-      const normalized = normalizeTask(updated);
-
-      setTasks((prev) => {
-        const current = prev.find((t) => t.id === id);
-        // si cambió de columna, el backend la dejó al final de la nueva
-        if (current && current.column !== normalized.column) {
-          return [...prev.filter((t) => t.id !== id), normalized];
-        }
-        return prev.map((t) => (t.id === id ? normalized : t));
-      });
+      setTasks((prev) => prev.map((t) => (t.id === id ? normalizeTask(updated) : t)));
     });
 
   const deleteTask = (id) =>
@@ -333,24 +316,52 @@ export function AppProvider({ children }) {
       setTasks((prev) => prev.filter((t) => t.id !== id));
     });
 
-  // beforeId = tarea ANTES de la cual se inserta (null = al final de la columna)
+  /* moveTask(id, columnId)            -> manda la tarea al FINAL de la columna
+     moveTask(id, columnId, beforeId)  -> la pone justo ANTES de la tarea beforeId
+     Sirve para mover entre columnas y también para reordenar dentro de la misma. */
   const moveTask = (id, columnId, beforeId = null) =>
     track(async () => {
       const previous = tasks;
-      const next = reorderTasks(previous, id, columnId, beforeId);
+      const moving = tasks.find((t) => t.id === id);
+      if (!moving || id === beforeId) return;
 
-      // si queda exactamente igual, no hace falta molestar al backend
-      const unchanged =
-        next.length === previous.length &&
-        next.every((t, i) => t.id === previous[i].id && t.column === previous[i].column);
-      if (unchanged) return;
+      // Tareas de la columna destino (de la misma categoría), ordenadas,
+      // sin la que estamos moviendo
+      const target = tasks
+        .filter(
+          (t) =>
+            t.column === columnId &&
+            t.categoryId === moving.categoryId &&
+            t.id !== id
+        )
+        .sort((a, b) => a.order - b.order);
 
-      setTasks(next);
+      // Insertar antes de beforeId (o al final si no hay)
+      const index = beforeId ? target.findIndex((t) => t.id === beforeId) : -1;
+      target.splice(index === -1 ? target.length : index, 0, {
+        ...moving,
+        column: columnId,
+      });
+
+      // Renumerar la columna: 0, 1, 2, ...
+      const renumbered = target.map((t, i) => ({ ...t, order: i }));
+
+      // Solo se mandan al backend las tareas que realmente cambiaron
+      const changed = renumbered.filter((t) => {
+        const old = tasks.find((o) => o.id === t.id);
+        return !old || old.order !== t.order || old.column !== t.column;
+      });
+
+      // Actualización optimista (se ve al instante)
+      const byId = new Map(renumbered.map((t) => [t.id, t]));
+      setTasks((prev) => prev.map((t) => byId.get(t.id) ?? t));
+
       try {
-        await moveTaskRequest(id, { state: columnId, beforeId });
+        await Promise.all(
+          changed.map((t) => updateTaskRequest(t.id, { state: t.column, order: t.order }))
+        );
       } catch (err) {
         setTasks(previous);
-        loadTasks({ silent: true });
         throw err;
       }
     });
@@ -395,16 +406,17 @@ export function AppProvider({ children }) {
   const deleteLabel = async (id) => {
     await deleteLabelRequest(id);
     setLabels((prev) => prev.filter((l) => l.id !== id));
+    // limpia la referencia en cualquier tarea que la tuviera asignada,
+    // para que la UI no siga mostrando una etiqueta borrada
     setTasks((prev) =>
       prev.map((t) =>
-        t.labelIds.includes(id) ? { ...t, labelIds: t.labelIds.filter((lid) => lid !== id) } : t,
-      ),
+        t.labelIds.includes(id) ? { ...t, labelIds: t.labelIds.filter((lid) => lid !== id) } : t
+      )
     );
   };
 
   const value = {
     currentUser,
-    isAdmin,
     categories, categoriesLoading, categoriesError,
     activeCategory, setActiveCategory, addCategory, deleteCategory,
     columns: COLUMNS, sectors, users,
