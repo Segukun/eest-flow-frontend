@@ -13,6 +13,7 @@ const NAV = [
 
 export default function Topbar({ onOpenConfiguracion, onOpenAddCategory, onRequestDeleteCategory }) {
   const { categories, categoriesLoading, activeCategory, setActiveCategory, currentUser, unreadCount } = useApp();
+  const isAdmin = currentUser?.accountType === "admin";
   const [open, setOpen] = useState(false);
   const [catsOpen, setCatsOpen] = useState(false);
 
@@ -79,7 +80,7 @@ export default function Topbar({ onOpenConfiguracion, onOpenAddCategory, onReque
                       <span className="cat-dot" style={{ background: c.color }} />
                       <span className="cat-name">{c.name}</span>
                     </button>
-                    {categories.length > 1 && (
+                    {isAdmin && categories.length > 1 && (
                       <button
                         className="cat-item__delete"
                         title="Eliminar categoría"
@@ -90,12 +91,14 @@ export default function Topbar({ onOpenConfiguracion, onOpenAddCategory, onReque
                     )}
                   </li>
                 ))}
-                <li>
-                  <button className="cat-item cat-item--add" onClick={() => { onOpenAddCategory(); setOpen(false); }}>
-                    <span className="cat-dot cat-dot--add">+</span>
-                    <span className="cat-name">Agregar categoría</span>
-                  </button>
-                </li>
+                {isAdmin && (
+                  <li>
+                    <button className="cat-item cat-item--add" onClick={() => { onOpenAddCategory(); setOpen(false); }}>
+                      <span className="cat-dot cat-dot--add">+</span>
+                      <span className="cat-name">Agregar categoría</span>
+                    </button>
+                  </li>
+                )}
               </ul>
             )
           )}

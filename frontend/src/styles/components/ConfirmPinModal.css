@@ -1,0 +1,189 @@
+.foro-pin-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+}
+
+.foro-pin-dialog {
+  position: relative;
+  width: min(100%, 420px);
+  padding: 28px;
+  border: 1px solid var(--border-color, #dedede);
+  border-radius: 18px;
+  background: var(--card-bg, #ffffff);
+  color: var(--text-color, #222222);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.22);
+  text-align: center;
+  animation: foro-pin-appear 160ms ease-out;
+}
+
+@keyframes foro-pin-appear {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.foro-pin-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.foro-pin-close:hover {
+  background: var(--hover-bg, #f0f0f0);
+}
+
+.foro-pin-close:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.foro-pin-icon {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  background: var(--hover-bg, #f0f0f0);
+  color: var(--primary-color, #315efb);
+  font-size: 25px;
+}
+
+.foro-pin-dialog h2 {
+  margin: 0 0 10px;
+  font-size: 20px;
+  font-weight: 650;
+}
+
+.foro-pin-dialog p {
+  margin: 0;
+  line-height: 1.6;
+  opacity: 0.8;
+}
+
+.foro-pin-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.foro-pin-actions button {
+  min-height: 40px;
+  padding: 10px 14px;
+  border: 1px solid var(--border-color, #dedede);
+  border-radius: 9px;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition:
+    background 150ms ease,
+    opacity 150ms ease;
+}
+
+.foro-pin-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.foro-pin-cancel {
+  background: transparent;
+  color: inherit;
+}
+
+.foro-pin-cancel:hover:not(:disabled) {
+  background: var(--hover-bg, #f0f0f0);
+}
+
+.foro-pin-confirm {
+  border-color: transparent !important;
+  background: var(--primary-color, #315efb);
+  color: #ffffff;
+}
+
+.foro-pin-confirm:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+/* Botón de pin de cada publicación. */
+
+.foro-pin-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 7px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition:
+    background 150ms ease,
+    color 150ms ease;
+}
+
+.foro-pin-button:hover,
+.foro-pin-button.is-pinned {
+  color: var(--primary-color, #315efb);
+  background: var(--hover-bg, #f0f0f0);
+}
+
+.foro-pin-button svg {
+  width: 17px;
+  height: 17px;
+}
+
+/* Indicador visible para todos los usuarios. */
+
+.foro-pinned-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary-color, #315efb);
+}
+
+.foro-pinned-label svg {
+  width: 13px;
+  height: 13px;
+}
+
+@media (max-width: 480px) {
+  .foro-pin-dialog {
+    padding: 24px 18px;
+  }
+
+  .foro-pin-actions {
+    flex-direction: column-reverse;
+  }
+
+  .foro-pin-actions button {
+    width: 100%;
+  }
+}

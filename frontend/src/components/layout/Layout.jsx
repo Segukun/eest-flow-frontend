@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
+import { useApp } from "../../context/AppContext";
 import MiPerfil from "../MiPerfil";
 import ConfiguracionModal from "../ConfiguracionModal";
 import AddCategoryModal from "../AddCategoryModal";
@@ -9,6 +10,8 @@ import Topbar from "./Topbar";
 import "../../styles/layout/layout.css";
 
 export default function Layout() {
+  const { currentUser } = useApp();
+  const isAdmin = currentUser?.accountType === "admin";
   const [perfilModalOpen, setPerfilModalOpen] = useState(false);
   const [configuracionModalOpen, setConfiguracionModalOpen] = useState(false);
   const [addCategoryOpen, setAddCategoryOpen] = useState(false);
@@ -19,14 +22,14 @@ export default function Layout() {
       <Sidebar
         onOpenPerfil={() => setPerfilModalOpen(true)}
         onOpenConfiguracion={() => setConfiguracionModalOpen(true)}
-        onOpenAddCategory={() => setAddCategoryOpen(true)}
-        onRequestDeleteCategory={(category) => setDeleteCategoryTarget(category)}
+        onOpenAddCategory={() => isAdmin && setAddCategoryOpen(true)}
+        onRequestDeleteCategory={(category) => isAdmin && setDeleteCategoryTarget(category)}
       />
 
       <Topbar
         onOpenConfiguracion={() => setConfiguracionModalOpen(true)}
-        onOpenAddCategory={() => setAddCategoryOpen(true)}
-        onRequestDeleteCategory={(category) => setDeleteCategoryTarget(category)}
+        onOpenAddCategory={() => isAdmin && setAddCategoryOpen(true)}
+        onRequestDeleteCategory={(category) => isAdmin && setDeleteCategoryTarget(category)}
       />
 
       <main className="app-main">
@@ -42,9 +45,9 @@ export default function Layout() {
 
       {perfilModalOpen && <MiPerfil onClose={() => setPerfilModalOpen(false)} />}
 
-      {addCategoryOpen && <AddCategoryModal onClose={() => setAddCategoryOpen(false)} />}
+      {isAdmin && addCategoryOpen && <AddCategoryModal onClose={() => setAddCategoryOpen(false)} />}
 
-      {deleteCategoryTarget && (
+      {isAdmin && deleteCategoryTarget && (
         <DeleteCategoryModal
           category={deleteCategoryTarget}
           onClose={() => setDeleteCategoryTarget(null)}

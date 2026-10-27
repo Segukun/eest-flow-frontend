@@ -201,3 +201,25 @@
   background: rgba(224, 52, 43, 0.1);
   color: var(--theme-danger-text, var(--color-danger));
 }
+
+.sidebar__nav .nav-item__badge {
+  margin-left: auto;
+  flex-shrink: 0;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  background-color: #ff880f;
+  color: #ffffff;
+
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+
+  border-radius: 999px;
+  box-sizing: border-box;
+}

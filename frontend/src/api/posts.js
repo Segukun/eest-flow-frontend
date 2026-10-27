@@ -93,3 +93,6 @@ export const deletePostRequest = async (
 
   return data;
 };
+
+export const pinPostRequest = (postId, pinned) =>
+  api.patch(`/api/posts/${postId}/pin`, { pinned });
