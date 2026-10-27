@@ -1,5 +1,6 @@
+
 import { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
 import "../../styles/layout/topbar.css";
 
@@ -11,36 +12,90 @@ const NAV = [
   { to: "/equipo", label: "Mi Equipo", icon: "/icons/team.svg" },
 ];
 
-export default function Topbar({ onOpenConfiguracion, onOpenAddCategory, onRequestDeleteCategory }) {
-  const { categories, categoriesLoading, activeCategory, setActiveCategory, currentUser, unreadCount } = useApp();
+export default function Topbar({
+  onOpenConfiguracion,
+  onOpenAddCategory,
+  onRequestDeleteCategory,
+}) {
+  const {
+    categories,
+    categoriesLoading,
+    activeCategory,
+    setActiveCategory,
+    currentUser,
+    unreadCount,
+  } = useApp();
+
+  const navigate = useNavigate();
   const isAdmin = currentUser?.accountType === "admin";
+
   const [open, setOpen] = useState(false);
   const [catsOpen, setCatsOpen] = useState(false);
+
+  const handleCategoryClick = (categoryId) => {
+    setActiveCategory(categoryId);
+    navigate("/");
+    setOpen(false);
+  };
 
   return (
     <>
       <header className="topbar">
         <div className="topbar__brand">
-          <img src="/eestn1logo.png" alt="EEST N°1" className="topbar__logo" />
-          <span className="brand-name">EEST<span className="brand-name--accent">Flow</span></span>
+          <img
+            src="/eestn1logo.png"
+            alt="EEST N°1"
+            className="topbar__logo"
+          />
+          <span className="brand-name">
+            EEST<span className="brand-name--accent">Flow</span>
+          </span>
         </div>
-        <button className="topbar__burger" onClick={() => setOpen(true)} aria-label="Abrir menú">
-          <span /><span /><span />
+
+        <button
+          className="topbar__burger"
+          onClick={() => setOpen(true)}
+          aria-label="Abrir menú"
+          type="button"
+        >
+          <span />
+          <span />
+          <span />
         </button>
       </header>
 
-      {open && <div className="drawer__backdrop" onClick={() => setOpen(false)} />}
+      {open && (
+        <div
+          className="drawer__backdrop"
+          onClick={() => setOpen(false)}
+        />
+      )}
 
       <aside className={"drawer" + (open ? " drawer--open" : "")}>
         <div className="drawer__head">
           <div className="topbar__brand">
-            <img src="/eestn1logo.png" alt="" className="topbar__logo" />
+            <img
+              src="/eestn1logo.png"
+              alt=""
+              className="topbar__logo"
+            />
+
             <div className="sidebar__brand-text">
-              <span className="brand-name">EEST<span className="brand-name--accent">Flow</span></span>
+              <span className="brand-name">
+                EEST<span className="brand-name--accent">Flow</span>
+              </span>
               <span className="brand-sub">Técnica Digital</span>
             </div>
           </div>
-          <button className="drawer__close" onClick={() => setOpen(false)}>✕</button>
+
+          <button
+            className="drawer__close"
+            onClick={() => setOpen(false)}
+            type="button"
+            aria-label="Cerrar menú"
+          >
+            ✕
+          </button>
         </div>
 
         <nav className="drawer__nav">
@@ -50,81 +105,141 @@ export default function Topbar({ onOpenConfiguracion, onOpenAddCategory, onReque
               to={i.to}
               end={i.end}
               onClick={() => setOpen(false)}
-              className={({ isActive }) => "nav-item" + (isActive ? " nav-item--active" : "")}
+              className={({ isActive }) =>
+                "nav-item" + (isActive ? " nav-item--active" : "")
+              }
             >
               <img src={i.icon} alt="" className="icon" />
               <span>{i.label}</span>
+
               {i.to === "/notificaciones" && unreadCount > 0 && (
-                <span className="nav-item__badge">{unreadCount > 99 ? "99+" : unreadCount}</span>
+                <span
+                  className="nav-item__badge"
+                  aria-label={`${unreadCount} notificaciones sin leer`}
+                >
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
               )}
             </NavLink>
           ))}
 
-          <button className="nav-item" onClick={() => setCatsOpen((v) => !v)}>
+          <button
+            className="nav-item"
+            onClick={() => setCatsOpen((v) => !v)}
+            type="button"
+          >
             <img src="/icons/list.svg" alt="" className="icon" />
             <span>Categorías</span>
-            <span className="nav-item__chevron">{catsOpen ? "⌃" : "⌄"}</span>
+            <span className="nav-item__chevron">
+              {catsOpen ? "⌃" : "⌄"}
+            </span>
           </button>
 
-          {catsOpen && (
-            categoriesLoading ? (
-              <p className="actions-modal__empty-hint">Cargando…</p>
+          {catsOpen &&
+            (categoriesLoading ? (
+              <p className="actions-modal__empty-hint">
+                Cargando…
+              </p>
             ) : (
               <ul className="cat-list cat-list--drawer">
                 {categories.map((c) => (
                   <li key={c.id} className="cat-item-row">
                     <button
-                      className={"cat-item" + (activeCategory === c.id ? " cat-item--active" : "")}
-                      onClick={() => { setActiveCategory(c.id); setOpen(false); }}
+                      className={
+                        "cat-item" +
+                        (activeCategory === c.id
+                          ? " cat-item--active"
+                          : "")
+                      }
+                      onClick={() => handleCategoryClick(c.id)}
+                      type="button"
                     >
-                      <span className="cat-dot" style={{ background: c.color }} />
+                      <span
+                        className="cat-dot"
+                        style={{ background: c.color }}
+                      />
                       <span className="cat-name">{c.name}</span>
                     </button>
+
                     {isAdmin && categories.length > 1 && (
                       <button
                         className="cat-item__delete"
                         title="Eliminar categoría"
-                        onClick={(e) => { e.stopPropagation(); onRequestDeleteCategory(c); setOpen(false); }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onRequestDeleteCategory(c);
+                          setOpen(false);
+                        }}
+                        type="button"
                       >
                         🗑
                       </button>
                     )}
                   </li>
                 ))}
+
                 {isAdmin && (
                   <li>
-                    <button className="cat-item cat-item--add" onClick={() => { onOpenAddCategory(); setOpen(false); }}>
+                    <button
+                      className="cat-item cat-item--add"
+                      onClick={() => {
+                        onOpenAddCategory();
+                        setOpen(false);
+                      }}
+                      type="button"
+                    >
                       <span className="cat-dot cat-dot--add">+</span>
-                      <span className="cat-name">Agregar categoría</span>
+                      <span className="cat-name">
+                        Agregar categoría
+                      </span>
                     </button>
                   </li>
                 )}
               </ul>
-            )
-          )}
+            ))}
         </nav>
 
         <div className="drawer__user">
-          <span className="avatar" style={{ background: "var(--color-green)" }}>
+          <span
+            className="avatar"
+            style={{ background: "var(--color-green)" }}
+          >
             {currentUser?.initials ?? "…"}
           </span>
+
           <div className="user-card__info">
             <strong>{currentUser?.name ?? "Cargando…"}</strong>
             <span className="role-chip">
-              {currentUser?.accountType === "admin" ? "Administrador" : "Colaborador"}
+              {currentUser?.accountType === "admin"
+                ? "Administrador"
+                : "Colaborador"}
             </span>
           </div>
         </div>
+
         <div className="drawer__actions">
-          <button className="user-menu__item" onClick={() => { onOpenConfiguracion(); setOpen(false); }}>
-            <span aria-hidden="true" className="icon-sm themed-icon themed-icon--settings" /> Configuración
+          <button
+            className="user-menu__item"
+            onClick={() => {
+              onOpenConfiguracion();
+              setOpen(false);
+            }}
+            type="button"
+          >
+            <span
+              aria-hidden="true"
+              className="icon-sm themed-icon themed-icon--settings"
+            />
+            Configuración
           </button>
+
           <button
             className="user-menu__item user-menu__item--danger"
             onClick={() => {
               localStorage.removeItem("user");
               window.location.href = "/login";
             }}
+            type="button"
           >
             Cerrar sesión
           </button>
