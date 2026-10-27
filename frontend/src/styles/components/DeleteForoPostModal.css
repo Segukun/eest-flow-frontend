@@ -1,0 +1,100 @@
+.delete-post-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(31, 21, 28, 0.45);
+  backdrop-filter: blur(4px);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  z-index: 1100;
+}
+
+.delete-post-modal {
+  width: min(360px, 100%);
+  background: var(--theme-surface, #fff);
+  color: var(--theme-text, #1f151c);
+  border-radius: var(--radius-lg, 16px);
+  box-shadow: var(--shadow-md, 0 20px 60px rgba(0, 0, 0, 0.2));
+  padding: 28px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.delete-post-modal__icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(224, 52, 43, 0.1);
+  color: var(--theme-danger-text, var(--color-danger, #e0342b));
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  margin-bottom: 6px;
+}
+
+.delete-post-modal h2 {
+  margin: 0;
+  font-size: 16px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.delete-post-modal p {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: var(--color-muted, rgba(31, 21, 28, 0.6));
+}
+
+.delete-post-modal p strong {
+  color: var(--theme-text, #1f151c);
+}
+
+.delete-post-modal .delete-post-modal__error {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: var(--theme-danger-text, var(--color-danger, #e0342b));
+}
+
+.delete-post-modal__actions {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+.delete-post-modal__btn {
+  flex: 1;
+  padding: 11px 16px;
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.delete-post-modal__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.delete-post-modal__btn--ghost {
+  background: transparent;
+  border-color: var(--theme-border, #e6dcbf);
+  color: var(--theme-text, #1f151c);
+}
+
+.delete-post-modal__btn--ghost:hover:not(:disabled) {
+  background: var(--theme-hover, rgba(31, 21, 28, 0.06));
+}
+
+.delete-post-modal__btn--danger {
+  background: var(--color-danger, #e0342b);
+  color: #fff;
+}
+
+.delete-post-modal__btn--danger:hover:not(:disabled) {
+  opacity: 0.9;
+}
