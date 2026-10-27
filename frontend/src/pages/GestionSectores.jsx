@@ -12,6 +12,7 @@ import {
 import AgregarSectorModal from "../components/AgregarSectorModal.jsx";
 import AgregarMiembroModal from "../components/AgregarMiembroModal.jsx";
 import api from "../api.js";
+import { useApp } from "../context/AppContext";
 import "../styles/pages/GestionSectores.css";
 
 const ICONOS = {
@@ -83,6 +84,8 @@ const convertirSector = (sector, miembros = []) => ({
 });
 
 export default function GestionSectores() {
+  const { currentUser } = useApp();
+  const isAdmin = currentUser?.accountType === "admin";
   const [sectores, setSectores] = useState([]);
   const [cargando, setCargando] = useState(true);
 
@@ -151,16 +154,19 @@ export default function GestionSectores() {
   };
 
   const openCreateSector = () => {
+    if (!isAdmin) return;
     setEditingSector(null);
     setIsSectorModalOpen(true);
   };
 
   const openEditSector = (sector) => {
+    if (!isAdmin) return;
     setEditingSector(sector);
     setIsSectorModalOpen(true);
   };
 
   const handleSaveSector = async (formData) => {
+    if (!isAdmin) return;
     try {
       const datos = {
         name: formData.nombre.trim(),
@@ -206,6 +212,7 @@ export default function GestionSectores() {
   };
 
   const handleDeleteSector = async (id) => {
+    if (!isAdmin) return;
     const sector = sectores.find(
       (item) => item.id === id
     );
@@ -288,16 +295,19 @@ export default function GestionSectores() {
   };
 
   const openCreateMember = () => {
+    if (!isAdmin) return;
     setEditingMember(null);
     setIsMemberModalOpen(true);
   };
 
   const openEditMember = (member) => {
+    if (!isAdmin) return;
     setEditingMember(member);
     setIsMemberModalOpen(true);
   };
 
   const handleSaveMember = async (usuario) => {
+    if (!isAdmin) return;
     if (!usuario?._id && !usuario?.id) {
       alert("No se seleccionó un usuario válido.");
       return;
@@ -418,6 +428,7 @@ export default function GestionSectores() {
   };
 
   const handleDeleteMember = async (member) => {
+    if (!isAdmin) return;
     if (!member?.id) {
       return;
     }
@@ -619,47 +630,53 @@ export default function GestionSectores() {
                         openAdminModal(sec.id)
                       }
                     >
-                      Administrar sector
+                      {isAdmin ? "Administrar sector" : "Ver sector"}
                     </button>
                   </div>
                 </div>
               );
             })}
 
-            <button
-              className="gs-add-sector"
-              onClick={openCreateSector}
-            >
-              <span className="gs-add-sector-icon">
-                <FiPlus />
-              </span>
+            {isAdmin && (
+              <button
+                className="gs-add-sector"
+                onClick={openCreateSector}
+              >
+                <span className="gs-add-sector-icon">
+                  <FiPlus />
+                </span>
 
-              Agregar nuevo sector
-            </button>
+                Agregar nuevo sector
+              </button>
+            )}
           </div>
         )}
       </div>
 
-      <AgregarSectorModal
-        isOpen={isSectorModalOpen}
-        onClose={() => {
-          setIsSectorModalOpen(false);
-          setEditingSector(null);
-        }}
-        onSave={handleSaveSector}
-        initialData={editingSector}
-      />
+      {isAdmin && (
+        <AgregarSectorModal
+          isOpen={isSectorModalOpen}
+          onClose={() => {
+            setIsSectorModalOpen(false);
+            setEditingSector(null);
+          }}
+          onSave={handleSaveSector}
+          initialData={editingSector}
+        />
+      )}
 
-      <AgregarMiembroModal
-        isOpen={isMemberModalOpen}
-        onClose={() => {
-          setIsMemberModalOpen(false);
-          setEditingMember(null);
-        }}
-        onSave={handleSaveMember}
-        initialData={editingMember}
-        sectorId={adminSectorId}
-      />
+      {isAdmin && (
+        <AgregarMiembroModal
+          isOpen={isMemberModalOpen}
+          onClose={() => {
+            setIsMemberModalOpen(false);
+            setEditingMember(null);
+          }}
+          onSave={handleSaveMember}
+          initialData={editingMember}
+          sectorId={adminSectorId}
+        />
+      )}
 
       {isAdminModalOpen && adminSector && (
         <div
@@ -707,13 +724,15 @@ export default function GestionSectores() {
                 {adminSector.miembros.length})
               </h4>
 
-              <button
-                className="gs-chip"
-                onClick={openCreateMember}
-              >
-                <FiUserPlus />
-                Agregar miembro
-              </button>
+              {isAdmin && (
+                <button
+                  className="gs-chip"
+                  onClick={openCreateMember}
+                >
+                  <FiUserPlus />
+                  Agregar miembro
+                </button>
+              )}
             </div>
 
             <div className="gs-detail-members gsd-members-list">
@@ -748,53 +767,57 @@ export default function GestionSectores() {
                       </div>
                     </div>
 
-                    <div className="gs-dm-actions">
-                      <button
-                        onClick={() =>
-                          openEditMember(member)
-                        }
-                        title="Cambiar sector"
-                      >
-                        <FiEdit2 />
-                      </button>
+                    {isAdmin && (
+                      <div className="gs-dm-actions">
+                        <button
+                          onClick={() =>
+                            openEditMember(member)
+                          }
+                          title="Cambiar sector"
+                        >
+                          <FiEdit2 />
+                        </button>
 
-                      <button
-                        onClick={() =>
-                          handleDeleteMember(member)
-                        }
-                        title="Quitar del sector"
-                      >
-                        <FiTrash2 />
-                      </button>
-                    </div>
+                        <button
+                          onClick={() =>
+                            handleDeleteMember(member)
+                          }
+                          title="Quitar del sector"
+                        >
+                          <FiTrash2 />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))
               )}
             </div>
 
-            <div className="gs-detail-foot">
-              <button
-                onClick={() => {
-                  closeAdminModal();
-                  openEditSector(adminSector);
-                }}
-              >
-                <FiEdit2 />
-                Editar sector
-              </button>
+            {isAdmin && (
+              <div className="gs-detail-foot">
+                <button
+                  onClick={() => {
+                    closeAdminModal();
+                    openEditSector(adminSector);
+                  }}
+                >
+                  <FiEdit2 />
+                  Editar sector
+                </button>
 
-              <button
-                className="gs-danger"
-                onClick={() =>
-                  handleDeleteSector(
-                    adminSector.id
-                  )
-                }
-              >
-                <FiTrash2 />
-                Eliminar sector
-              </button>
-            </div>
+                <button
+                  className="gs-danger"
+                  onClick={() =>
+                    handleDeleteSector(
+                      adminSector.id
+                    )
+                  }
+                >
+                  <FiTrash2 />
+                  Eliminar sector
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

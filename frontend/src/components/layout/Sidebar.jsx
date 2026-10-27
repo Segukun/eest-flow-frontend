@@ -12,6 +12,7 @@ const NAV = [
 
 export default function Sidebar({ onOpenPerfil, onOpenConfiguracion, onOpenAddCategory, onRequestDeleteCategory }) {
   const { categories, categoriesLoading, activeCategory, setActiveCategory, currentUser, unreadCount } = useApp();
+  const isAdmin = currentUser?.accountType === "admin";
   const [menuOpen, setMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const ref = useRef(null);
@@ -64,9 +65,11 @@ export default function Sidebar({ onOpenPerfil, onOpenConfiguracion, onOpenAddCa
         <div className="sidebar__section">
           <div className="sidebar__section-head">
             <span>Categorías</span>
-            <button className="sidebar__add" title="Agregar categoría" onClick={onOpenAddCategory}>
-              +
-            </button>
+            {isAdmin && (
+              <button className="sidebar__add" title="Agregar categoría" onClick={onOpenAddCategory}>
+                +
+              </button>
+            )}
           </div>
 
           {categoriesLoading ? (
@@ -82,7 +85,7 @@ export default function Sidebar({ onOpenPerfil, onOpenConfiguracion, onOpenAddCa
                     <span className="cat-dot" style={{ background: c.color }} />
                     <span className="cat-name">{c.name}</span>
                   </button>
-                  {categories.length > 1 && (
+                  {isAdmin && categories.length > 1 && (
                     <button
                       className="cat-item__delete"
                       title="Eliminar categoría"

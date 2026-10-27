@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../api.js";
+import { useApp } from "../context/AppContext";
 import "../styles/components/ModificarMiembro.css";
 
 const obtenerIdsSectores = (sectores) => {
@@ -22,16 +23,8 @@ const obtenerTipoCuenta = (miembro) => {
   return miembro.cuenta?.toLowerCase() === "admin" ? "admin" : "collaborator";
 };
 
-const obtenerUsuarioActual = () => {
-  try {
-    return JSON.parse(localStorage.getItem("user") || "null");
-  } catch {
-    return null;
-  }
-};
-
 const ModificarMiembro = ({ miembro, onClose, onActualizado }) => {
-  const usuarioActual = obtenerUsuarioActual();
+  const { currentUser: usuarioActual } = useApp();
   const esAdminActual = usuarioActual?.accountType === "admin";
   const idUsuarioActual = usuarioActual?._id || usuarioActual?.id;
   const esMismoUsuario = String(idUsuarioActual || "") === String(miembro.id || miembro._id || "");

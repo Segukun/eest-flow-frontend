@@ -21,7 +21,8 @@ const LABEL_COLOR_PRESETS = [
 ];
 
 export default function TaskActionsModal({ taskId, onClose, onView }) {
-  const { tasks, users, labels, columns, updateTask, deleteTask, addLabel, updateLabel, deleteLabel } = useApp();
+  const { currentUser, tasks, users, labels, columns, updateTask, deleteTask, addLabel, updateLabel, deleteLabel } = useApp();
+  const isAdmin = currentUser?.accountType === "admin";
   const [panel, setPanel] = useState(null);
 
   // ---- búsqueda de personal ----
@@ -73,7 +74,7 @@ export default function TaskActionsModal({ taskId, onClose, onView }) {
   const canCreateLabel = newLabelTitle.trim().length > 0 && newLabelColor !== null;
 
   const handleCreateLabel = async () => {
-    if (!canCreateLabel) return;
+    if (!isAdmin || !canCreateLabel) return;
     setLabelError(null);
     setCreatingLabel(true);
     try {
@@ -91,6 +92,7 @@ export default function TaskActionsModal({ taskId, onClose, onView }) {
   };
 
   const startEditLabel = (label) => {
+    if (!isAdmin) return;
     setEditingLabelId(label.id);
     setEditTitle(label.title || "");
     setEditColor(label.color);
@@ -106,7 +108,7 @@ export default function TaskActionsModal({ taskId, onClose, onView }) {
   const canSaveEdit = editTitle.trim().length > 0 && editColor !== null;
 
   const saveEditLabel = async () => {
-    if (!canSaveEdit) return;
+    if (!isAdmin || !canSaveEdit) return;
     setSavingEdit(true);
     setLabelError(null);
     try {
@@ -123,6 +125,7 @@ export default function TaskActionsModal({ taskId, onClose, onView }) {
   };
 
   const handleDeleteLabel = async (labelId) => {
+    if (!isAdmin) return;
     setLabelError(null);
     try {
       await deleteLabel(labelId);
@@ -137,7 +140,9 @@ export default function TaskActionsModal({ taskId, onClose, onView }) {
 
   const handleOptionClick = (id) => {
     if (id === "open") return onView(task.id);
-    if (id === "delete") { deleteTask(task.id); onClose(); return; }
+    if (id === "delete") {
+      deleteTask(task.id); onClose(); return;
+    }
     setPanel(id);
     if (id === "labels") { cancelEditLabel(); setLabelError(null); }
     if (id === "members") setMemberSearch("");
@@ -230,7 +235,7 @@ export default function TaskActionsModal({ taskId, onClose, onView }) {
                   const isEditing = editingLabelId === l.id;
                   const isOnTask = task.labelIds.includes(l.id);
 
-                  if (isEditing) {
+                  if (isAdmin && isEditing) {
                     return (
                       <div key={l.id} className="label-manager__row label-manager__row--editing">
                         <input
@@ -289,20 +294,22 @@ export default function TaskActionsModal({ taskId, onClose, onView }) {
                       >
                         {l.title}
                       </button>
-                      <button
-                        className="label-manager__edit-btn"
-                        title="Editar etiqueta"
-                        onClick={() => startEditLabel(l)}
-                      >
-                        <IoPencil />
-                      </button>
+                      {isAdmin && (
+                        <button
+                          className="label-manager__edit-btn"
+                          title="Editar etiqueta"
+                          onClick={() => startEditLabel(l)}
+                        >
+                          <IoPencil />
+                        </button>
+                      )}
                     </div>
                   );
                 })}
               </div>
 
               {/* crear nueva etiqueta, siempre al final de la columna */}
-              {editingLabelId === null && (
+              {isAdmin && editingLabelId === null && (
                 <div className="label-creator">
                   <span className="field__label">Crear etiqueta</span>
                   <input

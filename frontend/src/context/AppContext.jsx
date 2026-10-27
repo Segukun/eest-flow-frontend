@@ -104,11 +104,18 @@ export function AppProvider({ children }) {
           .join("")
           .slice(0, 2)
           .toUpperCase() || "?",
-        accountType: sessionUser.accountType,
+        // El rol guardado puede estar obsoleto; esperar la consulta actual.
+        accountType: undefined,
       }
     : null;
 
   /* ---------- carga inicial ---------- */
+
+  const reloadUsers = useCallback(async () => {
+    const raw = await fetchUsers();
+    setUsers(raw.map(normalizeUser));
+    return raw;
+  }, []);
 
   const loadCategories = useCallback(async () => {
     setCategoriesLoading(true);
@@ -184,10 +191,9 @@ export function AppProvider({ children }) {
     fetchSectors()
       .then((raw) => setSectors(raw.map(normalizeSector)))
       .catch(() => setSectors([]));
-    fetchUsers()
-      .then((raw) => setUsers(raw.map(normalizeUser)))
+    reloadUsers()
       .catch(() => setUsers([]));
-  }, [loadCategories, loadTasks]);
+  }, [loadCategories, loadTasks, reloadUsers]);
 
   /* efecto de tiempo real */
   useEffect(() => {
@@ -416,7 +422,7 @@ export function AppProvider({ children }) {
   };
 
   const value = {
-    currentUser,
+    currentUser, reloadUsers,
     categories, categoriesLoading, categoriesError,
     activeCategory, setActiveCategory, addCategory, deleteCategory,
     columns: COLUMNS, sectors, users,
