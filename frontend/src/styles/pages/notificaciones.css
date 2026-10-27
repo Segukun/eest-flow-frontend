@@ -518,3 +518,8 @@
     font-size: 12px;
   }
 }
+
+.notificacion.noLeida {
+  background: var(--theme-surface, var(--color-white));
+  border-color: var(--color-orange);
+}
