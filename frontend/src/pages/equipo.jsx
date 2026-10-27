@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   FiSearch,
   FiChevronDown,
@@ -8,10 +8,11 @@ import {
   FiPlus,
 } from "react-icons/fi";
 
-import { useApp } from "../context/AppContext";
+import api from "../api.js";
 import "../styles/pages/equipo.css";
 import AgregarMiembro from "../components/AgregarMiembro.jsx";
 import ModificarMiembro from "../components/ModificarMiembro.jsx";
+import ConfirmacionEliminarMiembroModal from "../components/ConfirmacionEliminarMiembroModal.jsx";
 
 const MIEMBROS_POR_PAGINA = 6;
 
@@ -105,9 +106,8 @@ const obtenerNumerosDePagina = (
 
 const MemberCard = ({
   miembro,
-  isAdmin,
   onModificar,
-  esCuentaActual = false,
+  onEliminar,
 }) => {
   const [menuOpen, setMenuOpen] =
     useState(false);
@@ -143,8 +143,7 @@ const MemberCard = ({
   }, [menuOpen]);
 
   return (
-    <article className={`team-card${esCuentaActual ? " team-card--current-user" : ""}`}>
-
+    <article className="team-card">
       <div className="team-card-top">
         <div
           className={`team-avatar ${
@@ -157,14 +156,9 @@ const MemberCard = ({
         </div>
 
         <div className="team-card-identity">
-          <div className="team-card-name-row">
-            <h3 className="team-card-name">
-              {miembro.nombre}
-            </h3>
-            {esCuentaActual && (
-              <span className="team-current-user-badge">Tu cuenta</span>
-            )}
-          </div>
+          <h3 className="team-card-name">
+            {miembro.nombre}
+          </h3>
 
           <p className="team-card-roles">
             <span
@@ -180,72 +174,70 @@ const MemberCard = ({
           </p>
         </div>
 
-        {isAdmin && (
-          <div
-            className="team-card-menu-wrapper"
-            ref={menuRef}
-            onBlur={(e) => {
-              if (
-                !e.currentTarget.contains(
-                  e.relatedTarget
-                )
-              ) {
-                setMenuOpen(false);
-              }
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Escape") {
-                setMenuOpen(false);
-                menuButtonRef.current?.focus();
-              }
+        <div
+          className="team-card-menu-wrapper"
+          ref={menuRef}
+          onBlur={(e) => {
+            if (
+              !e.currentTarget.contains(
+                e.relatedTarget
+              )
+            ) {
+              setMenuOpen(false);
+            }
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              setMenuOpen(false);
+              menuButtonRef.current?.focus();
+            }
+          }}
+        >
+          <button
+            type="button"
+            className="team-card-menu"
+            ref={menuButtonRef}
+            aria-label={`Opciones de ${miembro.nombre}`}
+            aria-expanded={menuOpen}
+            aria-controls={`miembro-opciones-${miembro.id}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              setMenuOpen(
+                (open) => !open
+              );
             }}
           >
-            <button
-              type="button"
-              className="team-card-menu"
-              ref={menuButtonRef}
-              aria-label={`Opciones de ${miembro.nombre}`}
-              aria-expanded={menuOpen}
-              aria-controls={`miembro-opciones-${miembro.id}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                setMenuOpen(
-                  (open) => !open
-                );
-              }}
-            >
-              <FiMoreVertical aria-hidden="true" />
-            </button>
+            <FiMoreVertical aria-hidden="true" />
+          </button>
 
-            {menuOpen && (
-              <div
-                className="user-menu team-card-dropdown"
-                id={`miembro-opciones-${miembro.id}`}
+          {menuOpen && (
+            <div
+              className="user-menu team-card-dropdown"
+              id={`miembro-opciones-${miembro.id}`}
+            >
+              <button
+                type="button"
+                className="user-menu__item"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onModificar(miembro);
+                }}
               >
-                <button
-                  type="button"
-                  className="user-menu__item"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    onModificar(miembro);
-                  }}
-                >
-                  Editar miembro
-                </button>
-                <button
-                  type="button"
-                  className="user-menu__item team-card-dropdown-delete"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    onEliminar(miembro);
-                  }}
-                >
-                  Eliminar miembro
-                </button>
-              </div>
-            )}
-          </div>
-        )}
+                Editar miembro
+              </button>
+              <button
+                type="button"
+                className="user-menu__item team-card-dropdown-delete"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onEliminar(miembro);
+                }}
+              >
+                Eliminar miembro
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       <ul className="team-card-details">
@@ -271,8 +263,6 @@ const MemberCard = ({
 };
 
 const Equipo = () => {
-  const { currentUser, reloadUsers } = useApp();
-  const isAdmin = currentUser?.accountType === "admin";
   const [miembros, setMiembros] =
     useState([]);
 
@@ -315,16 +305,28 @@ const Equipo = () => {
   ] = useState(false);
 
   const [
+    modalEliminarOpen,
+    setModalEliminarOpen,
+  ] = useState(false);
+
+  const [
     miembroSeleccionado,
     setMiembroSeleccionado,
   ] = useState(null);
 
-  const cargarMiembros = useCallback(async () => {
+  const cargarMiembros = async () => {
     try {
       setCargandoMiembros(true);
       setErrorMiembros("");
 
-      const usuarios = await reloadUsers();
+      const response =
+        await api.get("/api/users");
+
+      const usuarios = Array.isArray(
+        response.data
+      )
+        ? response.data
+        : [];
 
       const miembrosConvertidos =
         usuarios.map(convertirMiembro);
@@ -351,11 +353,11 @@ const Equipo = () => {
     } finally {
       setCargandoMiembros(false);
     }
-  }, [reloadUsers]);
+  };
 
   useEffect(() => {
     cargarMiembros();
-  }, [cargarMiembros]);
+  }, []);
 
   const roles = useMemo(
     () =>
@@ -460,7 +462,6 @@ const Equipo = () => {
   const abrirModalModificar = (
     miembro
   ) => {
-    if (!isAdmin) return;
     setMiembroSeleccionado(
       miembro
     );
@@ -473,7 +474,6 @@ const Equipo = () => {
   };
 
   const abrirModalEliminar = (miembro) => {
-    if (!isAdmin) return;
     setMiembroSeleccionado(miembro);
     setModalEliminarOpen(true);
   };
@@ -500,20 +500,18 @@ const Equipo = () => {
             </p>
           </div>
 
-          {isAdmin && (
-            <button
-              type="button"
-              className="team-add-button"
-              onClick={() =>
-                isAdmin && setModalAgregarOpen(
-                  true
-                )
-              }
-            >
-              <FiPlus />
-              Agregar miembro
-            </button>
-          )}
+          <button
+            type="button"
+            className="team-add-button"
+            onClick={() =>
+              setModalAgregarOpen(
+                true
+              )
+            }
+          >
+            <FiPlus />
+            Agregar miembro
+          </button>
         </header>
 
         <section className="team-filters-panel">
@@ -634,10 +632,10 @@ const Equipo = () => {
                 <MemberCard
                   key={miembro.id}
                   miembro={miembro}
-                  isAdmin={isAdmin}
                   onModificar={
                     abrirModalModificar
                   }
+                  onEliminar={abrirModalEliminar}
                 />
               )
             )
@@ -755,7 +753,7 @@ const Equipo = () => {
         </footer>
       </main>
 
-      {isAdmin && modalAgregarOpen && (
+      {modalAgregarOpen && (
         <AgregarMiembro
           onClose={() =>
             setModalAgregarOpen(
@@ -768,7 +766,7 @@ const Equipo = () => {
         />
       )}
 
-      {isAdmin && modalModificarOpen &&
+      {modalModificarOpen &&
         miembroSeleccionado && (
           <ModificarMiembro
             miembro={
@@ -783,7 +781,7 @@ const Equipo = () => {
           />
         )}
 
-      {isAdmin && modalEliminarOpen && miembroSeleccionado && (
+      {modalEliminarOpen && miembroSeleccionado && (
         <ConfirmacionEliminarMiembroModal
           miembro={miembroSeleccionado}
           onClose={cerrarModalEliminar}
