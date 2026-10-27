@@ -459,3 +459,37 @@
     align-items: flex-start;
   }
 }
+
+
+/* Identifica visualmente la cuenta con la que inició sesión el usuario. */
+.team-card--current-user {
+  border-color: var(--theme-green-text, #15803d);
+  box-shadow: 0 0 0 1px var(--theme-green-text, #15803d);
+}
+
+.team-card-name-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+.team-card-name-row .team-card-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.team-current-user-badge {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--theme-green-text, #15803d);
+  border-radius: 999px;
+  padding: 3px 8px;
+  background: var(--theme-green-soft, rgba(21, 128, 61, 0.12));
+  color: var(--theme-green-text, #15803d);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+}

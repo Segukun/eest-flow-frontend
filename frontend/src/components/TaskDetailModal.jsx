@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useApp, PRIORITIES } from "../context/AppContext";
-import { IoPencil, IoCheckmark, IoClose } from "react-icons/io5";
+import { IoPencil } from "react-icons/io5";
 import "../styles/components/task-detail-modal.css";
 
 export default function TaskDetailModal({ taskId, onClose, onEdit }) {
@@ -96,13 +96,21 @@ export default function TaskDetailModal({ taskId, onClose, onEdit }) {
                 }}
               />
               <div className="task-detail__editable-actions">
-                <button className="icon-btn" onClick={() => setEditingTitle(false)}><IoClose /></button>
                 <button
-                  className="icon-btn icon-btn--primary"
+                  type="button"
+                  className="btn btn--ghost btn--sm"
+                  onClick={() => setEditingTitle(false)}
+                  disabled={savingTitle}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  className="btn btn--primary btn--sm"
                   onClick={saveTitle}
                   disabled={!titleDraft.trim() || savingTitle}
                 >
-                  <IoCheckmark />
+                  {savingTitle ? "Guardando…" : "Guardar cambios"}
                 </button>
               </div>
             </div>
@@ -187,10 +195,6 @@ export default function TaskDetailModal({ taskId, onClose, onEdit }) {
           </div>
         </div>
 
-        <footer className="modal__foot">
-          <button className="btn btn--ghost" onClick={onClose}>Cerrar</button>
-          <button className="btn btn--primary" onClick={() => onEdit(task.id)}>Editar</button>
-        </footer>
       </div>
     </div>
   );

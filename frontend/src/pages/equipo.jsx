@@ -9,10 +9,10 @@ import {
 } from "react-icons/fi";
 
 import api from "../api.js";
+import { useApp } from "../context/AppContext";
 import "../styles/pages/equipo.css";
 import AgregarMiembro from "../components/AgregarMiembro.jsx";
 import ModificarMiembro from "../components/ModificarMiembro.jsx";
-import ConfirmacionEliminarMiembroModal from "../components/ConfirmacionEliminarMiembroModal.jsx";
 
 const MIEMBROS_POR_PAGINA = 6;
 
@@ -107,7 +107,7 @@ const obtenerNumerosDePagina = (
 const MemberCard = ({
   miembro,
   onModificar,
-  onEliminar,
+  esCuentaActual = false,
 }) => {
   const [menuOpen, setMenuOpen] =
     useState(false);
@@ -143,7 +143,8 @@ const MemberCard = ({
   }, [menuOpen]);
 
   return (
-    <article className="team-card">
+    <article className={`team-card${esCuentaActual ? " team-card--current-user" : ""}`}>
+
       <div className="team-card-top">
         <div
           className={`team-avatar ${
@@ -156,9 +157,14 @@ const MemberCard = ({
         </div>
 
         <div className="team-card-identity">
-          <h3 className="team-card-name">
-            {miembro.nombre}
-          </h3>
+          <div className="team-card-name-row">
+            <h3 className="team-card-name">
+              {miembro.nombre}
+            </h3>
+            {esCuentaActual && (
+              <span className="team-current-user-badge">Tu cuenta</span>
+            )}
+          </div>
 
           <p className="team-card-roles">
             <span
@@ -225,16 +231,6 @@ const MemberCard = ({
               >
                 Editar miembro
               </button>
-              <button
-                type="button"
-                className="user-menu__item team-card-dropdown-delete"
-                onClick={() => {
-                  setMenuOpen(false);
-                  onEliminar(miembro);
-                }}
-              >
-                Eliminar miembro
-              </button>
             </div>
           )}
         </div>
@@ -263,6 +259,9 @@ const MemberCard = ({
 };
 
 const Equipo = () => {
+  const { currentUser } = useApp();
+  const currentUserId = currentUser?.id ? String(currentUser.id) : "";
+
   const [miembros, setMiembros] =
     useState([]);
 
@@ -302,11 +301,6 @@ const Equipo = () => {
   const [
     modalModificarOpen,
     setModalModificarOpen,
-  ] = useState(false);
-
-  const [
-    modalEliminarOpen,
-    setModalEliminarOpen,
   ] = useState(false);
 
   const [
@@ -473,16 +467,6 @@ const Equipo = () => {
     setMiembroSeleccionado(null);
   };
 
-  const abrirModalEliminar = (miembro) => {
-    setMiembroSeleccionado(miembro);
-    setModalEliminarOpen(true);
-  };
-
-  const cerrarModalEliminar = () => {
-    setModalEliminarOpen(false);
-    setMiembroSeleccionado(null);
-  };
-
   return (
     <>
       <main className="team-page">
@@ -632,10 +616,10 @@ const Equipo = () => {
                 <MemberCard
                   key={miembro.id}
                   miembro={miembro}
+                  esCuentaActual={Boolean(currentUserId) && String(miembro.id) === currentUserId}
                   onModificar={
                     abrirModalModificar
                   }
-                  onEliminar={abrirModalEliminar}
                 />
               )
             )
@@ -780,17 +764,6 @@ const Equipo = () => {
             }
           />
         )}
-
-      {modalEliminarOpen && miembroSeleccionado && (
-        <ConfirmacionEliminarMiembroModal
-          miembro={miembroSeleccionado}
-          onClose={cerrarModalEliminar}
-          onEliminado={async () => {
-            cerrarModalEliminar();
-            await cargarMiembros();
-          }}
-        />
-      )}
     </>
   );
 };
