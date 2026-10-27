@@ -58,7 +58,8 @@ function normalizeUser(raw) {
     .join("")
     .slice(0, 2)
     .toUpperCase();
-  return { id: raw._id, name: raw.name, initials, accountType: raw.accountType };
+  // CORREGIDO: email (lo usa el panel "Asignar personal")
+  return { id: raw._id, name: raw.name, email: raw.email, initials, accountType: raw.accountType };
 }
 
 export function AppProvider({ children }) {
@@ -102,6 +103,7 @@ export function AppProvider({ children }) {
     ? users.find((u) => u.id === sessionUser._id) ?? {
         id: sessionUser._id,
         name: sessionUser.name,
+        email: sessionUser.email, // CORREGIDO: email
         initials: (sessionUser.name || "")
           .split(" ")
           .map((w) => w[0])
@@ -131,7 +133,7 @@ export function AppProvider({ children }) {
 
   /* ---------- actualización en tiempo real ---------- */
   const mutationsInFlight = useRef(0);
-  const mutationVersion = useRef(0); // CORREGIDO: cuenta cuántas escrituras terminaron
+  const mutationVersion = useRef(0); // cuenta cuántas escrituras terminaron
   const tasksSignature = useRef("");
 
   // envuelve cualquier escritura para que el polling no la pise
@@ -141,7 +143,7 @@ export function AppProvider({ children }) {
       return await fn();
     } finally {
       mutationsInFlight.current -= 1;
-      mutationVersion.current += 1; // CORREGIDO: avisa que hubo un cambio
+      mutationVersion.current += 1; // avisa que hubo un cambio
     }
   };
 
@@ -151,13 +153,13 @@ export function AppProvider({ children }) {
       setTasksError(null);
     }
 
-    // CORREGIDO: guardamos en qué "versión" empezó este pedido
+    // guardamos en qué "versión" empezó este pedido
     const versionAtStart = mutationVersion.current;
 
     try {
       const raw = await fetchTasks();
 
-      // CORREGIDO: descartamos la respuesta si hay una escritura en curso
+      // descartamos la respuesta si hay una escritura en curso
       // O si hubo alguna escritura mientras este pedido viajaba (datos viejos)
       if (
         silent &&
@@ -336,7 +338,7 @@ export function AppProvider({ children }) {
       if (patch.members !== undefined) payload.assignedUser = patch.members;
       if (patch.labelIds !== undefined) payload.labels = patch.labelIds;
       if (patch.dueDate !== undefined) payload.dueDate = patch.dueDate || null;
-      if (patch.order !== undefined) payload.order = patch.order; // CORREGIDO
+      if (patch.order !== undefined) payload.order = patch.order;
 
       const updated = await updateTaskRequest(id, payload);
       setTasks((prev) => prev.map((t) => (t.id === id ? normalizeTask(updated) : t)));
