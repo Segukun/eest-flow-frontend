@@ -1182,9 +1182,6 @@
   padding-bottom: 4px;
 }
 
-
-
-
 /* PAGINACIÓN FORO */
 .foro-pagination {
   display: flex;
@@ -1223,12 +1220,12 @@
 
 .foro-pagination-btn:hover:not(:disabled) {
   background: var(--hover, #ffffff);
-  color:#1f151c;
-  border-color: var(--primary, #05903E);
+  color: #1f151c;
+  border-color: var(--primary, #05903e);
 }
 
 .foro-pagination-btn.active {
-  background: var(--primary, #05903E);
+  background: var(--primary, #05903e);
   color: white;
   border-color: var(--theme-secondary, #fff7ed);
 }
@@ -1241,4 +1238,77 @@
 .foro-pagination-dots {
   padding: 0 4px;
   color: var(--text-secondary, #9ca3af);
+}
+
+/* Publicación pineada: contorno destacado. */
+.foro-post.foro-post--pinned {
+  border: 1px solid var(--foro-pinned-border, #818cf8);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.09);
+}
+
+/* Franja superior que indica que está anclada. */
+.foro-pinned-bar {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 14px;
+  color: var(--foro-pinned-color, #6366f1);
+  background: var(--foro-pinned-bg, #f5f5ff);
+  border-bottom: 1px solid var(--foro-pinned-border, #c7d2fe);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.foro-pinned-bar svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+/* Acción de pin en el footer. */
+.foro-post-foot .foro-post-pin {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  padding: 7px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition:
+    color 150ms ease,
+    background 150ms ease;
+}
+
+.foro-post-foot .foro-post-pin svg {
+  width: 17px;
+  height: 17px;
+}
+
+.foro-post-foot .foro-post-pin:hover,
+.foro-post-foot .foro-post-pin.is-pinned {
+  color: var(--foro-pinned-color, #6366f1);
+  background: var(--foro-pinned-bg, #f5f5ff);
+}
+
+.foro-post-foot .foro-post-pin:focus-visible {
+  outline: 2px solid var(--foro-pinned-color, #6366f1);
+  outline-offset: 2px;
+}
+
+/* Adaptación básica para temas oscuros. */
+[data-theme="dark"] .foro-pinned-bar,
+[data-theme="dark"] .foro-post-foot .foro-post-pin.is-pinned {
+  color: #a5b4fc;
+  background: rgba(99, 102, 241, 0.12);
+}
+
+[data-theme="dark"] .foro-post.foro-post--pinned {
+  border-color: #6366f1;
+}
+
+[data-theme="dark"] .foro-pinned-bar {
+  border-bottom-color: rgba(129, 140, 248, 0.35);
 }
