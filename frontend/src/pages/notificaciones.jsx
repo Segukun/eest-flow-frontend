@@ -1,12 +1,15 @@
+
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { useApp } from "../context/AppContext";
+
 import {
   fetchNotifications,
   markAllNotificationsRead,
   markNotificationRead,
 } from "../api/notifications";
+
 import { formatRelativeDate } from "../components/ForoHelpers.js";
 import "../styles/pages/notificaciones.css";
 
@@ -31,7 +34,10 @@ const mapNotification = (notification) => ({
     TYPE_LABELS[notification.type] ??
     (notification.category === "forum" ? "Foro" : "Sistema"),
   titulo: notification.title,
-  descripcion: [notification.actor?.name, notification.description]
+  descripcion: [
+    notification.actor?.name,
+    notification.description,
+  ]
     .filter(Boolean)
     .join(" · "),
   tiempo: formatRelativeDate(notification.createdAt),
@@ -47,43 +53,76 @@ const Notificaciones = () => {
   const [filtroActivo, setFiltroActivo] = useState("all");
   const [notificaciones, setNotificaciones] = useState([]);
   const [noLeidas, setNoLeidas] = useState(0);
-  const [pagination, setPagination] = useState({ page: 1, totalPages: 1 });
+
+  const [pagination, setPagination] = useState({
+    page: 1,
+    totalPages: 1,
+  });
+
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [marking, setMarking] = useState(false);
   const [error, setError] = useState("");
 
-  const applyResponse = useCallback((payload, { append }) => {
-    const items = (payload.notifications ?? []).map(mapNotification);
+  const applyResponse = useCallback(
+    (payload, { append }) => {
+      const items = (payload.notifications ?? []).map(
+        mapNotification
+      );
 
-    setNotificaciones((prev) => (append ? [...prev, ...items] : items));
-    setNoLeidas(payload.unreadCount ?? 0);
-    setPagination(payload.pagination ?? { page: 1, totalPages: 1 });
-    setError("");
-  }, []);
+      setNotificaciones((prev) =>
+        append ? [...prev, ...items] : items
+      );
+
+      setNoLeidas(payload.unreadCount ?? 0);
+
+      setPagination(
+        payload.pagination ?? { page: 1, totalPages: 1 }
+      );
+
+      setError("");
+
+      // Sincroniza el globito del sidebar.
+      reloadUnreadCount();
+    },
+    [reloadUnreadCount]
+  );
 
   useEffect(() => {
     let cancelled = false;
 
     const run = async () => {
+      setLoading(true);
+      setError("");
+
       try {
         const response = await fetchNotifications({
           filter: filtroActivo,
           page: 1,
           limit: PAGE_SIZE,
         });
+
         if (cancelled) return;
-        applyResponse(response?.data ?? {}, { append: false });
+
+        applyResponse(response?.data ?? {}, {
+          append: false,
+        });
       } catch (err) {
         if (!cancelled) {
-          setError(err.response?.data?.message || "No se pudieron cargar las notificaciones.");
+          setError(
+            err.response?.data?.message ||
+              "No se pudieron cargar las notificaciones."
+          );
         }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
 
     run();
+
     return () => {
       cancelled = true;
     };
@@ -91,21 +130,38 @@ const Notificaciones = () => {
 
   const handleFiltro = (id) => {
     if (id === filtroActivo) return;
+
+    setError("");
     setLoading(true);
     setFiltroActivo(id);
   };
 
   const handleCargarMas = async () => {
+    if (
+      loadingMore ||
+      pagination.page >= pagination.totalPages
+    ) {
+      return;
+    }
+
     setLoadingMore(true);
+    setError("");
+
     try {
       const response = await fetchNotifications({
         filter: filtroActivo,
         page: pagination.page + 1,
         limit: PAGE_SIZE,
       });
-      applyResponse(response?.data ?? {}, { append: true });
+
+      applyResponse(response?.data ?? {}, {
+        append: true,
+      });
     } catch (err) {
-      setError(err.response?.data?.message || "No se pudieron cargar las notificaciones.");
+      setError(
+        err.response?.data?.message ||
+          "No se pudieron cargar las notificaciones."
+      );
     } finally {
       setLoadingMore(false);
     }
@@ -115,29 +171,49 @@ const Notificaciones = () => {
     if (!notificacion.leida) {
       try {
         await markNotificationRead(notificacion.id);
+
         setNotificaciones((prev) =>
-          prev.map((n) => (n.id === notificacion.id ? { ...n, leida: true } : n)),
+          prev.map((n) =>
+            n.id === notificacion.id
+              ? { ...n, leida: true }
+              : n
+          )
         );
+
         setNoLeidas((count) => Math.max(0, count - 1));
-        reloadUnreadCount();
+
+        await reloadUnreadCount();
       } catch {
-        // si no se puede marcar, igual dejamos navegar
+        // Si falla el marcado, igualmente permitimos navegar.
       }
     }
 
-    if (notificacion.link) navigate(notificacion.link);
+    if (notificacion.link) {
+      navigate(notificacion.link);
+    }
   };
 
   const handleMarcarTodas = async () => {
+    if (marking) return;
+
     setMarking(true);
     setError("");
+
     try {
       await markAllNotificationsRead();
-      setNotificaciones((prev) => prev.map((n) => ({ ...n, leida: true })));
+
+      setNotificaciones((prev) =>
+        prev.map((n) => ({ ...n, leida: true }))
+      );
+
       setNoLeidas(0);
-      reloadUnreadCount();
+
+      await reloadUnreadCount();
     } catch (err) {
-      setError(err.response?.data?.message || "No se pudieron marcar como leídas.");
+      setError(
+        err.response?.data?.message ||
+          "No se pudieron marcar como leídas."
+      );
     } finally {
       setMarking(false);
     }
@@ -159,7 +235,9 @@ const Notificaciones = () => {
               disabled={marking}
               type="button"
             >
-              {marking ? "Marcando…" : "Marcar todas como leídas"}
+              {marking
+                ? "Marcando…"
+                : "Marcar todas como leídas"}
             </button>
           )}
         </div>
@@ -168,15 +246,20 @@ const Notificaciones = () => {
           {FILTROS.map((filtro) => (
             <button
               key={filtro.id}
-              className={`filtroNotificacion ${
-                filtroActivo === filtro.id ? "activo" : ""
-              }`}
+              className={
+                `filtroNotificacion ${
+                  filtroActivo === filtro.id ? "activo" : ""
+                }`
+              }
               onClick={() => handleFiltro(filtro.id)}
               type="button"
             >
               {filtro.label}
+
               {filtro.id === "unread" && noLeidas > 0 && (
-                <span className="contadorNoLeidas">{noLeidas}</span>
+                <span className="contadorNoLeidas">
+                  {noLeidas}
+                </span>
               )}
             </button>
           ))}
@@ -196,14 +279,22 @@ const Notificaciones = () => {
             <>
               {notificaciones.map((notificacion) => (
                 <article
-                  className={`notificacion ${!notificacion.leida ? "noLeida" : ""}`}
+                  className={
+                    `notificacion ${
+                      !notificacion.leida ? "noLeida" : ""
+                    }`
+                  }
                   key={notificacion.id}
                 >
                   <div className="contenidoNotificacion">
                     <div className="cabeceraNotificacion">
-                      <span className="tipoNotificacion">{notificacion.tipo}</span>
+                      <span className="tipoNotificacion">
+                        {notificacion.tipo}
+                      </span>
 
-                      <span className="tiempoNotificacion">{notificacion.tiempo}</span>
+                      <span className="tiempoNotificacion">
+                        {notificacion.tiempo}
+                      </span>
                     </div>
 
                     <h2>{notificacion.titulo}</h2>
@@ -239,7 +330,9 @@ const Notificaciones = () => {
           ) : (
             <div className="sinNotificaciones">
               <h2>No hay notificaciones</h2>
-              <p>No se encontraron notificaciones en esta categoría.</p>
+              <p>
+                No se encontraron notificaciones en esta categoría.
+              </p>
             </div>
           )}
         </section>
