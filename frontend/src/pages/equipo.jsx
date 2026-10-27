@@ -12,7 +12,6 @@ import { useApp } from "../context/AppContext";
 import "../styles/pages/equipo.css";
 import AgregarMiembro from "../components/AgregarMiembro.jsx";
 import ModificarMiembro from "../components/ModificarMiembro.jsx";
-import ConfirmacionEliminarMiembroModal from "../components/ConfirmacionEliminarMiembroModal.jsx";
 
 const MIEMBROS_POR_PAGINA = 6;
 
@@ -108,7 +107,7 @@ const MemberCard = ({
   miembro,
   isAdmin,
   onModificar,
-  onEliminar,
+  esCuentaActual = false,
 }) => {
   const [menuOpen, setMenuOpen] =
     useState(false);
@@ -144,7 +143,8 @@ const MemberCard = ({
   }, [menuOpen]);
 
   return (
-    <article className="team-card">
+    <article className={`team-card${esCuentaActual ? " team-card--current-user" : ""}`}>
+
       <div className="team-card-top">
         <div
           className={`team-avatar ${
@@ -157,9 +157,14 @@ const MemberCard = ({
         </div>
 
         <div className="team-card-identity">
-          <h3 className="team-card-name">
-            {miembro.nombre}
-          </h3>
+          <div className="team-card-name-row">
+            <h3 className="team-card-name">
+              {miembro.nombre}
+            </h3>
+            {esCuentaActual && (
+              <span className="team-current-user-badge">Tu cuenta</span>
+            )}
+          </div>
 
           <p className="team-card-roles">
             <span
@@ -307,11 +312,6 @@ const Equipo = () => {
   const [
     modalModificarOpen,
     setModalModificarOpen,
-  ] = useState(false);
-
-  const [
-    modalEliminarOpen,
-    setModalEliminarOpen,
   ] = useState(false);
 
   const [
@@ -638,7 +638,6 @@ const Equipo = () => {
                   onModificar={
                     abrirModalModificar
                   }
-                  onEliminar={abrirModalEliminar}
                 />
               )
             )
