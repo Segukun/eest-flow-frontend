@@ -1,112 +1,19 @@
 import { useEffect, useRef, useState } from "react"
 import { Link } from "react-router-dom"
+import {
+  LONGITUD_CODIGO,
+  MAX_CONTRASENIA,
+  MIN_CONTRASENIA,
+  esTokenInvalido,
+  guardarNuevaContrasenia,
+  mensajeErrorRecuperacion,
+  reenviarCodigo,
+  solicitarCodigoPorEmail,
+  validarContrasenia,
+  validarEmail,
+  verificarCodigoEnviado,
+} from "../services/passwordRecovery.js"
 import "../styles/pages/OlvidarContrasenia.css"
-
-const LONGITUD_CODIGO = 6
-const MIN_CONTRASENIA = 6
-const REGEX_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
-const MSG_SERVIDOR = "No pudimos conectar con el servidor. Intente nuevamente."
-
-/* DATO FALSO BORRAR LO SIGUIENTE SI VAS A CONECTAR A BACKEND */
-// "Base de datos" falsa: estos son los únicos emails que "existen".
-const EMAILS_FALSOS_EN_BD = [
-  "admin@escuela.com",
-  "preceptor@escuela.com",
-  "profesor@escuela.com",
-  "alumno@escuela.com",
-]
-// Token falso que el backend devolvería al verificar el código
-const TOKEN_RESET_FALSO = "token-de-prueba"
-// Código falso vigente. En la vida real lo genera y guarda el backend.
-// Arranca en 123456; cada vez que se aprieta "Reenviar código" cambia
-// a uno nuevo y se muestra en la consola del navegador (F12).
-let codigoFalsoVigente = "123456"
-const generarCodigoFalso = () =>
-  String(Math.floor(100000 + Math.random() * 900000))
-// Simula el tiempo de espera de una llamada al servidor
-const esperar = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
-/* FIN DE LOS DATOS FALSOS (lo de arriba se borra al conectar el backend) */
-
-/* =====================================================================
-   ZONA BACKEND
-   Las 4 funciones de abajo usan DATOS FALSOS (ver el bloque de arriba).
-   Las líneas falsas dentro de cada función están marcadas con el comentario
-   "DATO FALSO BORRAR LO SIGUIENTE SI VAS A CONECTAR A BACKEND".
-   Para conectar el backend: borrar esas líneas, poner la llamada real
-   (fetch / axios) y respetar lo que devuelve cada función. El resto del
-   componente no necesita cambios.
-   Si la llamada falla (error de red / 500), la función debe lanzar un
-   error (throw): el componente muestra MSG_SERVIDOR.
-   ===================================================================== */
-
-/**
- * PASO 1 - Verificar que el email exista y enviarle el código.
- * TODO BACKEND: ej. POST /api/auth/olvide-contrasenia  { email }
- *   1) Buscar el email en la base de datos.
- *   2) Si NO existe -> devolver { existe: false }
- *      (el componente muestra "Este email no es válido para cambiar contraseña").
- *   3) Si existe -> generar el código de 6 dígitos, guardarlo con fecha de
- *      vencimiento, enviarlo por email y devolver { existe: true }.
- */
-async function solicitarCodigoPorEmail(email) {
-  /* DATO FALSO BORRAR LO SIGUIENTE SI VAS A CONECTAR A BACKEND */
-  await esperar(800)
-  const existe = EMAILS_FALSOS_EN_BD.includes(email)
-  if (existe) {
-    codigoFalsoVigente = "123456"
-    console.log(`[DATO FALSO] Código enviado a ${email}: ${codigoFalsoVigente}`)
-  }
-  return { existe }
-}
-
-/**
- * PASO 2 (botón "Reenviar código") - Generar y enviar un código nuevo.
- * TODO BACKEND: ej. POST /api/auth/reenviar-codigo  { email }
- *   Invalidar el código anterior y enviar uno nuevo.
- *   Recomendado: limitar la cantidad de reenvíos por tiempo (rate limit).
- */
-async function reenviarCodigo(email) {
-  /* DATO FALSO BORRAR LO SIGUIENTE SI VAS A CONECTAR A BACKEND */
-  await esperar(800)
-  codigoFalsoVigente = generarCodigoFalso()
-  console.log(
-    `[DATO FALSO] Nuevo código enviado a ${email}: ${codigoFalsoVigente}`
-  )
-  return { ok: true }
-}
-
-/**
- * PASO 2 (botón "Verificar código") - Validar el código ingresado.
- * TODO BACKEND: ej. POST /api/auth/verificar-codigo  { email, codigo }
- *   Comparar el código con el guardado para ese email y revisar que no esté
- *   vencido. Devolver { valido: true, tokenReset: "..." } o { valido: false }.
- *   tokenReset es un token temporal que se usa en el paso 3 para autorizar el
- *   cambio de contraseña (así nadie puede saltarse la verificación).
- */
-async function verificarCodigoEnviado(email, codigo) {
-  /* DATO FALSO BORRAR LO SIGUIENTE SI VAS A CONECTAR A BACKEND */
-  await esperar(800)
-  return codigo === codigoFalsoVigente
-    ? { valido: true, tokenReset: TOKEN_RESET_FALSO }
-    : { valido: false }
-}
-
-/**
- * PASO 3 - Guardar la nueva contraseña.
- * TODO BACKEND: ej. POST /api/auth/cambiar-contrasenia  { email, tokenReset, nuevaContrasenia }
- *   Validar el tokenReset, hashear la contraseña (bcrypt o similar) y
- *   actualizarla en la base de datos. Invalidar el token y el código usados.
- *   Devolver { ok: true }.
- */
-async function guardarNuevaContrasenia(email, tokenReset, nuevaContrasenia) {
-  /* DATO FALSO BORRAR LO SIGUIENTE SI VAS A CONECTAR A BACKEND */
-  await esperar(800)
-  if (tokenReset !== TOKEN_RESET_FALSO) throw new Error("Token inválido")
-  console.log(`[DATO FALSO] Contraseña de ${email} cambiada a: ${nuevaContrasenia}`)
-  return { ok: true }
-}
-
-/* ===================================================================== */
 
 /* Input de contraseña con el "ojito" adentro para mostrar / ocultar.
    Cada instancia guarda su propio estado, así que cada input se
@@ -121,6 +28,9 @@ const InputContrasenia = ({ value, onChange, disabled }) => {
         className="olvidar-field__input olvidar-password__input"
         type={visible ? "text" : "password"}
         autoComplete="new-password"
+        minLength={MIN_CONTRASENIA}
+        maxLength={MAX_CONTRASENIA}
+        required
         value={value}
         disabled={disabled}
         onChange={onChange}
@@ -180,34 +90,78 @@ const OlvidarContrasenia = () => {
   const [cambiada, setCambiada] = useState(false)
 
   const inputsRef = useRef([])
+  const solicitudRef = useRef(null)
+
+  useEffect(() => () => solicitudRef.current?.abort(), [])
 
   // Al llegar al paso del código, enfoca el primer cuadro
   useEffect(() => {
-    if (paso === "codigo") inputsRef.current[0]?.focus()
-  }, [paso])
+    if (paso === "codigo" && !cargando && !reenviando) {
+      inputsRef.current[0]?.focus()
+    }
+  }, [paso, cargando, reenviando])
+
+  const limpiarRecuperacion = () => {
+    setEmail("")
+    setDigitos(Array(LONGITUD_CODIGO).fill(""))
+    setTokenReset("")
+    setNueva("")
+    setRepetir("")
+    setError("")
+    setAviso("")
+  }
+
+  const reiniciarRecuperacion = () => {
+    if (solicitudRef.current) return
+    limpiarRecuperacion()
+    setCambiada(false)
+    setPaso("email")
+  }
+
+  // El ref bloquea también dos eventos disparados antes del próximo render.
+  const ejecutarSolicitud = async (accion, esReenvio = false) => {
+    if (solicitudRef.current) return
+    const controller = new AbortController()
+    solicitudRef.current = controller
+    setError("")
+    setAviso("")
+    if (esReenvio) setReenviando(true)
+    else setCargando(true)
+
+    try {
+      await accion(controller.signal)
+    } catch (errorSolicitud) {
+      if (controller.signal.aborted) return
+      if (esTokenInvalido(errorSolicitud)) {
+        limpiarRecuperacion()
+        setPaso("email")
+      }
+      setError(mensajeErrorRecuperacion(errorSolicitud))
+    } finally {
+      solicitudRef.current = null
+      if (!controller.signal.aborted) {
+        setCargando(false)
+        setReenviando(false)
+      }
+    }
+  }
 
   /* ---------------- PASO 1: email ---------------- */
 
   const handleEmailSubmit = async (e) => {
     e.preventDefault()
-    if (cargando) return
+    if (solicitudRef.current) return
 
     const emailLimpio = email.trim().toLowerCase()
 
-    if (!emailLimpio) {
-      setError("Rellene el formulario para enviar el código")
-      return
-    }
-    if (!REGEX_EMAIL.test(emailLimpio)) {
-      setError("Ingrese un email con formato válido, por ejemplo nombre@correo.com")
+    const errorEmail = validarEmail(emailLimpio)
+    if (errorEmail) {
+      setError(errorEmail)
       return
     }
 
-    setError("")
-    setCargando(true)
-    try {
-      // BACKEND: verifica que el email exista y envía el código
-      const { existe } = await solicitarCodigoPorEmail(emailLimpio)
+    await ejecutarSolicitud(async (signal) => {
+      const { existe } = await solicitarCodigoPorEmail(emailLimpio, signal)
 
       if (!existe) {
         setError("Este email no es válido para cambiar contraseña")
@@ -216,11 +170,7 @@ const OlvidarContrasenia = () => {
 
       setEmail(emailLimpio)
       setPaso("codigo")
-    } catch {
-      setError(MSG_SERVIDOR)
-    } finally {
-      setCargando(false)
-    }
+    })
   }
 
   /* ---------------- PASO 2: código ---------------- */
@@ -269,28 +219,23 @@ const OlvidarContrasenia = () => {
   }
 
   const handleReenviar = async () => {
-    if (reenviando || cargando) return
+    if (solicitudRef.current) return
 
-    setError("")
-    setAviso("")
-    setReenviando(true)
-    try {
-      // BACKEND: genera y envía un código nuevo al email
-      await reenviarCodigo(email)
+    await ejecutarSolicitud(async (signal) => {
+      const { ok } = await reenviarCodigo(email, signal)
+      if (!ok) {
+        setError("Este email no es válido para cambiar contraseña")
+        return
+      }
 
       setDigitos(Array(LONGITUD_CODIGO).fill(""))
       setAviso("Te enviamos un nuevo código.")
-      inputsRef.current[0]?.focus()
-    } catch {
-      setError(MSG_SERVIDOR)
-    } finally {
-      setReenviando(false)
-    }
+    }, true)
   }
 
   const handleCodigoSubmit = async (e) => {
     e.preventDefault()
-    if (cargando) return
+    if (solicitudRef.current) return
 
     const codigo = digitos.join("")
 
@@ -299,61 +244,42 @@ const OlvidarContrasenia = () => {
       return
     }
 
-    setError("")
-    setAviso("")
-    setCargando(true)
-    try {
-      // BACKEND: valida el código ingresado para este email
-      const { valido, tokenReset: token } = await verificarCodigoEnviado(
+    await ejecutarSolicitud(async (signal) => {
+      const { valido, resetToken: token } = await verificarCodigoEnviado(
         email,
-        codigo
+        codigo,
+        signal
       )
 
       if (!valido) {
-        setError("El código ingresado no es válido")
+        setError("El código ingresado no es válido o venció. Puede solicitar uno nuevo.")
         return
       }
 
       setTokenReset(token)
+      setDigitos(Array(LONGITUD_CODIGO).fill(""))
       setPaso("contrasenia")
-    } catch {
-      setError(MSG_SERVIDOR)
-    } finally {
-      setCargando(false)
-    }
+    })
   }
 
   /* ---------------- PASO 3: nueva contraseña ---------------- */
 
   const handleContraseniaSubmit = async (e) => {
     e.preventDefault()
-    if (cargando) return
+    if (solicitudRef.current) return
 
-    if (!nueva || !repetir) {
-      setError("Rellene ambos formularios")
-      return
-    }
-    if (nueva.length < MIN_CONTRASENIA) {
-      setError("La contraseña debe tener un mínimo de 6 dígitos")
-      return
-    }
-    if (nueva !== repetir) {
-      setError("Ambas contraseñas no coinciden")
+    const errorContrasenia = validarContrasenia(nueva, repetir)
+    if (errorContrasenia) {
+      setError(errorContrasenia)
       return
     }
 
-    setError("")
-    setCargando(true)
-    try {
-      // BACKEND: guarda la nueva contraseña (usa el token del paso 2)
-      await guardarNuevaContrasenia(email, tokenReset, nueva)
+    await ejecutarSolicitud(async (signal) => {
+      await guardarNuevaContrasenia(email, tokenReset, nueva, signal)
 
+      limpiarRecuperacion()
       setCambiada(true)
-    } catch {
-      setError(MSG_SERVIDOR)
-    } finally {
-      setCargando(false)
-    }
+    })
   }
 
   /* ---------------- Render ---------------- */
@@ -364,66 +290,68 @@ const OlvidarContrasenia = () => {
       <div className="admin-login-content">
         <div className="admin-card olvidar-card">
           {/* ===== PASO 1: pedir el email ===== */}
-{paso === "email" && (
-  <form
-    className="olvidar-step"
-    onSubmit={handleEmailSubmit}
-    noValidate
-  >
-    <div className="olvidar-head">
-      <h1 className="olvidar-title">Recuperar contraseña</h1>
-      <p className="olvidar-subtitle">
-        Ingrese el email asociado a su cuenta
-      </p>
-    </div>
+          {paso === "email" && (
+            <form
+              className="olvidar-step"
+              onSubmit={handleEmailSubmit}
+              aria-busy={cargando}
+              noValidate
+            >
+              <div className="olvidar-head">
+                <h1 className="olvidar-title">Recuperar contraseña</h1>
+                <p className="olvidar-subtitle">
+                  Ingrese el email asociado a su cuenta
+                </p>
+              </div>
 
-    <label className="olvidar-field">
-      <span className="olvidar-field__label">Email</span>
-      <input
-        className="olvidar-field__input"
-        type="email"
-        placeholder="nombre@correo.com"
-        autoComplete="email"
-        value={email}
-        disabled={cargando}
-        onChange={(e) => {
-          setEmail(e.target.value)
-          setError("")
-        }}
-      />
-    </label>
+              <label className="olvidar-field">
+                <span className="olvidar-field__label">Email</span>
+                <input
+                  className="olvidar-field__input"
+                  type="email"
+                  placeholder="nombre@correo.com"
+                  autoComplete="email"
+                  value={email}
+                  disabled={cargando}
+                  onChange={(e) => {
+                    setEmail(e.target.value)
+                    setError("")
+                  }}
+                />
+              </label>
 
-    {error && (
-      <p className="olvidar-error" role="alert">
-        {error}
-      </p>
-    )}
+              {error && (
+                <p className="olvidar-error" role="alert">{error}</p>
+              )}
 
-    <button
-      className="olvidar-submit"
-      type="submit"
-      disabled={cargando}
-    >
-      {cargando ? "Enviando..." : "Enviar código"}
-    </button>
+              <button
+                className="olvidar-submit"
+                type="submit"
+                disabled={cargando}
+              >
+                {cargando ? "Enviando..." : "Enviar código"}
+              </button>
 
-    {/* Ruta "/" = pantalla de Log In */}
-    <Link className="olvidar-back" to="/">
-      Volver al inicio de sesión
-    </Link>
-  </form>
-)}
+              <Link className="olvidar-back" to="/login">
+                Volver al inicio de sesión
+              </Link>
+            </form>
+          )}
 
           {/* ===== PASO 2: ingresar el código ===== */}
           {paso === "codigo" && (
             <form
               className="olvidar-step"
               onSubmit={handleCodigoSubmit}
+              aria-busy={cargando || reenviando}
               noValidate
             >
               <h1 className="olvidar-title">
                 Te hemos enviado un código al siguiente email: {email}
               </h1>
+              <p className="olvidar-subtitle">
+                Ingrese los 6 dígitos recibidos. El código vence en 10 minutos.
+              </p>
 
               <div className="olvidar-code" onPaste={handlePaste}>
                 {digitos.map((digito, i) => (
@@ -438,7 +366,7 @@ const OlvidarContrasenia = () => {
                     autoComplete="one-time-code"
                     maxLength={1}
                     value={digito}
-                    disabled={cargando}
+                    disabled={cargando || reenviando}
                     aria-label={`Dígito ${i + 1} del código`}
                     onChange={(e) => handleDigitoChange(i, e.target.value)}
                     onKeyDown={(e) => handleDigitoKeyDown(i, e)}
@@ -452,7 +380,7 @@ const OlvidarContrasenia = () => {
                   {error}
                 </p>
               )}
-              {aviso && <p className="olvidar-info">{aviso}</p>}
+              {aviso && <p className="olvidar-info" role="status">{aviso}</p>}
 
               <button
                 className="olvidar-resend"
@@ -470,6 +398,17 @@ const OlvidarContrasenia = () => {
               >
                 {cargando ? "Verificando..." : "Verificar código"}
               </button>
+              <button
+                className="olvidar-back"
+                type="button"
+                disabled={cargando || reenviando}
+                onClick={reiniciarRecuperacion}
+              >
+                Usar otro email
+              </button>
+              <Link className="olvidar-back" to="/login">
+                Volver al inicio de sesión
+              </Link>
             </form>
           )}
 
@@ -478,6 +417,7 @@ const OlvidarContrasenia = () => {
             <form
               className="olvidar-step"
               onSubmit={handleContraseniaSubmit}
+              aria-busy={cargando}
               noValidate
             >
               <h1 className="olvidar-title">
@@ -488,16 +428,18 @@ const OlvidarContrasenia = () => {
 
               {cambiada ? (
                 <>
-                  <p className="olvidar-success">
+                  <p className="olvidar-success" role="status">
                     Se ha cambiado la contraseña correctamente
                   </p>
-                  {/* Ruta "/" = pantalla de Log In */}
-                  <Link className="olvidar-submit olvidar-submit--link" to="/">
+                  <Link className="olvidar-submit olvidar-submit--link" to="/login">
                     Volver al Log In
                   </Link>
                 </>
               ) : (
                 <>
+                  <p className="olvidar-subtitle">
+                    La contraseña debe tener entre 6 y 64 caracteres.
+                  </p>
                   <label className="olvidar-field">
                     <span className="olvidar-field__label">
                       Nueva contraseña
@@ -539,6 +481,17 @@ const OlvidarContrasenia = () => {
                   >
                     {cargando ? "Cambiando..." : "Cambiar contraseña"}
                   </button>
+                  <button
+                    className="olvidar-back"
+                    type="button"
+                    disabled={cargando}
+                    onClick={reiniciarRecuperacion}
+                  >
+                    Solicitar un nuevo código
+                  </button>
+                  <Link className="olvidar-back" to="/login">
+                    Volver al inicio de sesión
+                  </Link>
                 </>
               )}
             </form>

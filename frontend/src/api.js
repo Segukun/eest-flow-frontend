@@ -10,7 +10,8 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem("user");
-      if (window.location.pathname !== "/login" && window.location.pathname !== "/OlvidarContrasenia") {
+      const path = window.location.pathname.toLowerCase().replace(/\/$/, "");
+      if (path !== "/login" && path !== "/olvidarcontrasenia") {
         window.location.href = "/login";
       }
     }
