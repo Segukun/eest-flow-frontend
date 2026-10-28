@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useApp, PRIORITIES } from "../context/AppContext";
+import useTaskFromUrl from "../hooks/useTaskFromUrl";
 import TaskDetailModal from "./TaskDetailModal";
 import TaskActionsModal from "./taskmodal/TaskActionsModal.jsx";
 import "../styles/components/list-view.css";
@@ -8,6 +9,14 @@ export default function ListView() {
   const { visibleTasks, columns, users, labels, tasksLoading, categoriesLoading } = useApp();
   const [viewingId, setViewingId] = useState(null);
   const [editingId, setEditingId] = useState(null);
+
+  // abre la tarjeta si la URL trae ?task=<id>; el hook va antes del return anticipado
+  const clearTaskParam = useTaskFromUrl(setViewingId);
+
+  const closeViewing = () => {
+    setViewingId(null);
+    clearTaskParam();
+  };
 
   if (tasksLoading || categoriesLoading) {
     return <div className="list-view list-view--loading" />;
@@ -56,8 +65,8 @@ export default function ListView() {
       {viewingId && (
         <TaskDetailModal
           taskId={viewingId}
-          onClose={() => setViewingId(null)}
-          onEdit={(id) => { setViewingId(null); setEditingId(id); }}
+          onClose={closeViewing}
+          onEdit={(id) => { closeViewing(); setEditingId(id); }}
         />
       )}
       {editingId && (

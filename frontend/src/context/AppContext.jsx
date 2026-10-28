@@ -38,16 +38,16 @@ const AppContext = createContext(null);
 const POLL_INTERVAL_MS = 10000;
 
 export const COLUMNS = [
-  { id: "pending", title: "Pendiente", dot: "var(--color-orange)" },
-  { id: "in_progress", title: "En curso", dot: "var(--color-green)" },
-  { id: "review", title: "En revisión", dot: "var(--color-terracotta)" },
-  { id: "completed", title: "Terminado", dot: "#9aa0a6" },
+  { id: "pending", title: "Pendiente", dot: "#E2E8F0" },
+  { id: "in_progress", title: "En curso", dot: "#BAE6FD" },
+  { id: "review", title: "En revisión", dot: "#FEF08A" },
+  { id: "completed", title: "Terminado", dot: "#BBF7D0" },
 ];
 
 export const PRIORITIES = {
-  low: { id: "low", label: "Baja", color: "#9aa0a6" },
-  medium: { id: "medium", label: "Media", color: "var(--color-terracotta)" },
-  high: { id: "high", label: "Alta", color: "var(--color-orange)" },
+  low: { id: "low", label: "Baja", color: "#15803D" },
+  medium: { id: "medium", label: "Media", color: "#FEF08A" },
+  high: { id: "high", label: "Alta", color: "#DC2626" },
 };
 
 function normalizeTask(raw) {
