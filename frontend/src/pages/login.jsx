@@ -238,7 +238,7 @@ const Login = () => {
             type="button"
             className="admin-link-button"
             onClick={() => {
-              navigate("/OlvidarContrasenia")
+              navigate("/olvidarContrasenia")
             }}
           >
             ¿Olvidaste tu contraseña?

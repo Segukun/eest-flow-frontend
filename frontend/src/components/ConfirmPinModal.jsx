@@ -12,7 +12,7 @@ export default function ConfirmPinModal({
   if (!open) return null;
 
   const title = pinned
-    ? "¿Anlcar esta publicación?"
+    ? "¿Anclar esta publicación?"
     : "¿Desanclar esta publicación?";
 
   const description = pinned
@@ -51,7 +51,9 @@ export default function ConfirmPinModal({
           <CiMapPin />
         </div>
 
-        <h2 id="foro-pin-title">{title}</h2>
+        <h2 id="foro-pin-title">
+          {title}
+        </h2>
 
         <p>{description}</p>
 

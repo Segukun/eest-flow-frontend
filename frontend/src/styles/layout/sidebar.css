@@ -223,3 +223,65 @@
   border-radius: 999px;
   box-sizing: border-box;
 }
+
+.cat-item-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.cat-item-row .cat-item {
+  flex: 1;
+  padding-right: 34px;
+}
+
+.cat-item-row--admin .cat-item {
+  padding-right: 64px;
+}
+
+.cat-item__edit,
+.cat-item__delete {
+  position: absolute;
+  right: 6px;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  color: var(--color-muted);
+  transition:
+    opacity 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.cat-item__edit {
+  right: 34px;
+  opacity: 0.75;
+}
+
+.cat-item__edit--only {
+  right: 6px;
+}
+
+.cat-item__delete {
+  opacity: 0;
+}
+
+.cat-item-row:hover .cat-item__edit,
+.cat-item-row:hover .cat-item__delete,
+.cat-item__edit:focus-visible,
+.cat-item__delete:focus-visible {
+  opacity: 1;
+}
+
+.cat-item__edit:hover {
+  background: var(--theme-hover, rgba(31, 21, 28, 0.06));
+  color: var(--theme-green-text, var(--color-green));
+}
+
+.cat-item__delete:hover {
+  background: rgba(224, 52, 43, 0.1);
+  color: var(--theme-danger-text, var(--color-danger));
+}

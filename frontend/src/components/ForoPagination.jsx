@@ -1,58 +1,129 @@
-import React from "react";
+import "../styles/pages/equipo.css";
 
-export default function ForoPagination({ currentPage, totalPages, totalPosts, onPageChange }) {
+const obtenerNumerosDePagina = (
+  paginaActual,
+  totalPaginas
+) => {
+  if (totalPaginas <= 5) {
+    return Array.from(
+      { length: totalPaginas },
+      (_, i) => i + 1
+    );
+  }
+
+  const paginas = [1];
+
+  if (paginaActual > 3) {
+    paginas.push("…");
+  }
+
+  const inicio = Math.max(
+    2,
+    paginaActual - 1
+  );
+
+  const fin = Math.min(
+    totalPaginas - 1,
+    paginaActual + 1
+  );
+
+  for (
+    let pagina = inicio;
+    pagina <= fin;
+    pagina += 1
+  ) {
+    paginas.push(pagina);
+  }
+
+  if (paginaActual < totalPaginas - 2) {
+    paginas.push("…");
+  }
+
+  paginas.push(totalPaginas);
+
+  return paginas;
+};
+
+export default function ForoPagination({
+  currentPage,
+  totalPages,
+  totalPosts,
+  visiblePosts,
+  onPageChange,
+}) {
   if (totalPages <= 1) return null;
 
-  const getPages = () => {
-    const pages = [];
-    const delta = 1; // cuantas páginas alrededor de la actual
-
-    for (let i = 1; i <= totalPages; i++) {
-      if (i === 1 || i === totalPages || (i >= currentPage - delta && i <= currentPage + delta)) {
-        pages.push(i);
-      } else if (pages[pages.length - 1] !== "...") {
-        pages.push("...");
-      }
-    }
-    return pages;
-  };
-
   return (
-    <div className="foro-pagination">
-      <div className="foro-pagination-controls">
+    <footer className="team-pagination">
+      <p className="team-pagination-count">
+        Mostrando {visiblePosts} de {totalPosts} publicaciones
+      </p>
+
+      <nav
+        className="team-pages"
+        aria-label="Paginación del foro"
+      >
         <button
-          className="foro-pagination-btn"
-          disabled={currentPage === 1}
-          onClick={() => onPageChange(currentPage - 1)}
           type="button"
+          onClick={() =>
+            onPageChange(
+              Math.max(1, currentPage - 1)
+            )
+          }
+          disabled={currentPage === 1}
         >
-          ← Anterior
+          Anterior
         </button>
 
-        {getPages().map((p, idx) =>
-          p === "..." ? (
-            <span key={`dots-${idx}`} className="foro-pagination-dots">...</span>
+        {obtenerNumerosDePagina(
+          currentPage,
+          totalPages
+        ).map((pagina, i) =>
+          pagina === "…" ? (
+            <span
+              key={`dots-${i}`}
+              className="team-pages-dots"
+            >
+              …
+            </span>
           ) : (
             <button
-              key={p}
-              className={`foro-pagination-btn ${currentPage === p ? "active" : ""}`}
-              onClick={() => onPageChange(p)}
+              key={pagina}
               type="button"
+              className={
+                pagina === currentPage
+                  ? "team-page-number team-page-active"
+                  : "team-page-number"
+              }
+              aria-current={
+                pagina === currentPage
+                  ? "page"
+                  : undefined
+              }
+              onClick={() =>
+                onPageChange(pagina)
+              }
             >
-              {p}
+              {pagina}
             </button>
           )
         )}
 
         <button
-          className="foro-pagination-btn"
-          disabled={currentPage === totalPages}
-          onClick={() => onPageChange(currentPage + 1)}
           type="button"
+          onClick={() =>
+            onPageChange(
+              Math.min(
+                totalPages,
+                currentPage + 1
+              )
+            )
+          }
+          disabled={currentPage === totalPages}
         >
-          Siguiente →
+          Siguiente
         </button>
-      </div>
-    </div>
+      </nav>
+    </footer>
   );
 }
