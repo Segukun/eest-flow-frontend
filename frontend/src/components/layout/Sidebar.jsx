@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
@@ -23,6 +22,7 @@ export default function Sidebar({
   onOpenPerfil,
   onOpenConfiguracion,
   onOpenAddCategory,
+  onRequestEditCategory,
   onRequestDeleteCategory,
 }) {
   const {
@@ -34,7 +34,9 @@ export default function Sidebar({
     unreadCount,
   } = useApp();
 
-  const isAdmin = currentUser?.accountType === "admin";
+  const isAdmin =
+    currentUser?.accountType === "admin";
+
   const navigate = useNavigate();
 
   const [menuOpen, setMenuOpen] = useState(false);
@@ -42,8 +44,11 @@ export default function Sidebar({
   const ref = useRef(null);
 
   useEffect(() => {
-    const onClick = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) {
+    const onClick = (event) => {
+      if (
+        ref.current &&
+        !ref.current.contains(event.target)
+      ) {
         setMenuOpen(false);
       }
     };
@@ -63,12 +68,13 @@ export default function Sidebar({
   return (
     <aside
       className={
-        "sidebar" + (collapsed ? " sidebar--collapsed" : "")
+        "sidebar" +
+        (collapsed ? " sidebar--collapsed" : "")
       }
     >
       <button
         className="sidebar__collapse-btn"
-        onClick={() => setCollapsed((v) => !v)}
+        onClick={() => setCollapsed((value) => !value)}
         title={collapsed ? "Expandir" : "Colapsar"}
         type="button"
       >
@@ -85,9 +91,15 @@ export default function Sidebar({
         {!collapsed && (
           <div className="sidebar__brand-text">
             <span className="brand-name">
-              EEST<span className="brand-name--accent">Flow</span>
+              EEST
+              <span className="brand-name--accent">
+                Flow
+              </span>
             </span>
-            <span className="brand-sub">Técnica Digital</span>
+
+            <span className="brand-sub">
+              Técnica Digital
+            </span>
           </div>
         )}
       </div>
@@ -99,11 +111,16 @@ export default function Sidebar({
             to={item.to}
             end={item.end}
             className={({ isActive }) =>
-              "nav-item" + (isActive ? " nav-item--active" : "")
+              "nav-item" +
+              (isActive ? " nav-item--active" : "")
             }
             title={collapsed ? item.label : undefined}
           >
-            <img src={item.icon} alt="" className="icon" />
+            <img
+              src={item.icon}
+              alt=""
+              className="icon"
+            />
 
             {!collapsed && <span>{item.label}</span>}
 
@@ -114,7 +131,9 @@ export default function Sidebar({
                   aria-label={`${unreadCount} notificaciones sin leer`}
                   title={`${unreadCount} notificaciones sin leer`}
                 >
-                  {unreadCount > 99 ? "99+" : unreadCount}
+                  {unreadCount > 99
+                    ? "99+"
+                    : unreadCount}
                 </span>
               )}
           </NavLink>
@@ -125,6 +144,7 @@ export default function Sidebar({
         <div className="sidebar__section">
           <div className="sidebar__section-head">
             <span>Categorías</span>
+
             {isAdmin && (
               <button
                 className="sidebar__add"
@@ -143,36 +163,75 @@ export default function Sidebar({
             </p>
           ) : (
             <ul className="cat-list">
-              {categories.map((c) => (
-                <li key={c.id} className="cat-item-row">
+              {categories.map((category) => (
+                <li
+                  key={category.id}
+                  className={
+                    "cat-item-row" +
+                    (isAdmin
+                      ? " cat-item-row--admin"
+                      : "")
+                  }
+                >
                   <button
                     className={
                       "cat-item" +
-                      (activeCategory === c.id
+                      (activeCategory === category.id
                         ? " cat-item--active"
                         : "")
                     }
-                    onClick={() => handleCategoryClick(c.id)}
+                    onClick={() =>
+                      handleCategoryClick(category.id)
+                    }
                     type="button"
                   >
                     <span
                       className="cat-dot"
-                      style={{ background: c.color }}
-                    />
-                    <span className="cat-name">{c.name}</span>
-                  </button>
-                  {isAdmin && categories.length > 1 && (
-                    <button
-                      className="cat-item__delete"
-                      title="Eliminar categoría"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onRequestDeleteCategory(c);
+                      style={{
+                        background: category.color,
                       }}
-                      type="button"
-                    >
-                      🗑
-                    </button>
+                    />
+
+                    <span className="cat-name">
+                      {category.name}
+                    </span>
+                  </button>
+
+                  {isAdmin && (
+                    <>
+                      <button
+                        className={
+                          "cat-item__edit" +
+                          (categories.length <= 1
+                            ? " cat-item__edit--only"
+                            : "")
+                        }
+                        title="Editar categoría"
+                        aria-label={`Editar categoría ${category.name}`}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onRequestEditCategory(category);
+                        }}
+                        type="button"
+                      >
+                        ✎
+                      </button>
+
+                      {categories.length > 1 && (
+                        <button
+                          className="cat-item__delete"
+                          title="Eliminar categoría"
+                          aria-label={`Eliminar categoría ${category.name}`}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            onRequestDeleteCategory(category);
+                          }}
+                          type="button"
+                        >
+                          🗑
+                        </button>
+                      )}
+                    </>
                   )}
                 </li>
               ))}
@@ -185,11 +244,17 @@ export default function Sidebar({
         <NavLink
           to="/equipo"
           className={({ isActive }) =>
-            "nav-item" + (isActive ? " nav-item--active" : "")
+            "nav-item" +
+            (isActive ? " nav-item--active" : "")
           }
           title={collapsed ? "Mi Equipo" : undefined}
         >
-          <img src="/icons/team.svg" alt="" className="icon" />
+          <img
+            src="/icons/team.svg"
+            alt=""
+            className="icon"
+          />
+
           {!collapsed && <span>Mi Equipo</span>}
         </NavLink>
       </div>
@@ -197,7 +262,7 @@ export default function Sidebar({
       <div className="sidebar__user" ref={ref}>
         <button
           className="user-card"
-          onClick={() => setMenuOpen((v) => !v)}
+          onClick={() => setMenuOpen((value) => !value)}
           disabled={collapsed || !currentUser}
           type="button"
         >
@@ -214,6 +279,7 @@ export default function Sidebar({
                 <strong>
                   {currentUser?.name ?? "Cargando…"}
                 </strong>
+
                 <small>
                   {currentUser?.accountType === "admin"
                     ? "Administrador"
@@ -221,7 +287,9 @@ export default function Sidebar({
                 </small>
               </span>
 
-              <span className="user-card__chevron">⌄</span>
+              <span className="user-card__chevron">
+                ⌄
+              </span>
             </>
           )}
         </button>

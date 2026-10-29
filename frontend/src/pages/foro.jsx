@@ -599,10 +599,11 @@ export default function Foro() {
             />
 
             <ForoPagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              totalPosts={sorted.length}
-              onPageChange={setCurrentPage}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalPosts={sorted.length}
+            visiblePosts={paginatedPosts.length}
+            onPageChange={setCurrentPage}
             />
           </div>
         )}

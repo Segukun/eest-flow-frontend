@@ -580,3 +580,25 @@
   line-height: 1.2;
   white-space: nowrap;
 }
+
+
+.team-card--current-user {
+  border: 1px solid rgba(34, 160, 107, 0.55);
+  box-shadow: inset 3px 0 0 rgba(34, 160, 107, 0.75);
+}
+
+.team-card-current-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 6px;
+  color: #39b77d;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.team-card-current-label svg {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+}

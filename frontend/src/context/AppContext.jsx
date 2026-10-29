@@ -19,6 +19,7 @@ import {
 import {
   fetchCategories,
   createCategoryRequest,
+  updateCategoryRequest,
   deleteCategoryRequest,
 } from "../api/categories";
 
@@ -38,39 +39,71 @@ const AppContext = createContext(null);
 const POLL_INTERVAL_MS = 10000;
 
 export const COLUMNS = [
-  { id: "pending", title: "Pendiente", dot: "var(--color-orange)" },
-  { id: "in_progress", title: "En curso", dot: "var(--color-green)" },
-  { id: "review", title: "En revisión", dot: "var(--color-terracotta)" },
-  { id: "completed", title: "Terminado", dot: "#9aa0a6" },
+  { id: "pending", title: "Pendiente", dot: "#E2E8F0" },
+  { id: "in_progress", title: "En curso", dot: "#BAE6FD" },
+  { id: "review", title: "En revisión", dot: "#FEF08A" },
+  { id: "completed", title: "Terminado", dot: "#BBF7D0" },
 ];
 
 export const PRIORITIES = {
-  low: { id: "low", label: "Baja", color: "#9aa0a6" },
-  medium: { id: "medium", label: "Media", color: "var(--color-terracotta)" },
-  high: { id: "high", label: "Alta", color: "var(--color-orange)" },
+  low: { id: "low", label: "Baja", color: "#15803D" },
+  medium: { id: "medium", label: "Media", color: "#FEF08A" },
+  high: { id: "high", label: "Alta", color: "#DC2626" },
 };
 
-function normalizeTask(raw) {
+function getId(value) {
+  if (value && typeof value === "object") {
+    return value._id ?? value.id ?? value;
+  }
+
+  return value;
+}
+
+function normalizeIdList(values) {
+  return (Array.isArray(values) ? values : [])
+    .map(getId)
+    .filter((value) => value !== null && value !== undefined)
+    .map(String);
+}
+
+function unwrapEntity(raw, key) {
+  if (!raw || typeof raw !== "object") return {};
+
+  return raw[key] ?? raw.data?.[key] ?? raw.data ?? raw;
+}
+
+function normalizeTask(raw, fallback = {}) {
+  const source = unwrapEntity(raw, "task");
+  const dueDate = source.dueDate ?? fallback.dueDate ?? "";
+
   return {
-    id: raw._id,
-    title: raw.title,
-    description: raw.description,
-    priority: raw.priority,
-    column: raw.state,
-    categoryId: raw.category,
-    members: raw.assignedUser ?? [],
-    labelIds: raw.labels ?? [],
-    dueDate: raw.dueDate ? raw.dueDate.slice(0, 10) : "",
-    order: raw.order ?? 0,
+    id: source._id ?? source.id ?? fallback.id,
+    title: source.title ?? fallback.title ?? "",
+    description: source.description ?? fallback.description ?? "",
+    priority: source.priority ?? fallback.priority ?? "medium",
+    column: source.state ?? source.column ?? fallback.column ?? "pending",
+    categoryId: getId(
+      source.category ?? source.categoryId ?? fallback.categoryId
+    ),
+    members: normalizeIdList(
+      source.assignedUser ?? source.members ?? fallback.members
+    ),
+    labelIds: normalizeIdList(
+      source.labels ?? source.labelIds ?? fallback.labelIds
+    ),
+    dueDate: dueDate ? String(dueDate).slice(0, 10) : "",
+    order: source.order ?? fallback.order ?? 0,
   };
 }
 
-function normalizeCategory(raw) {
+function normalizeCategory(raw, fallback = {}) {
+  const source = unwrapEntity(raw, "category");
+
   return {
-    id: raw._id,
-    name: raw.name,
-    color: raw.color,
-    sectors: raw.sectors ?? [],
+    id: source._id ?? source.id ?? fallback.id,
+    name: source.name ?? fallback.name ?? "",
+    color: source.color ?? fallback.color ?? "#05903e",
+    sectors: source.sectors ?? fallback.sectors ?? [],
   };
 }
 
@@ -179,7 +212,7 @@ export function AppProvider({ children }) {
 
     try {
       const raw = await fetchCategories();
-      const normalized = raw.map(normalizeCategory);
+      const normalized = raw.map((category) => normalizeCategory(category));
 
       setCategories(normalized);
       setActiveCategory((prev) => prev ?? normalized[0]?.id ?? null);
@@ -297,7 +330,7 @@ export function AppProvider({ children }) {
       }
 
       tasksSignature.current = signature;
-      setTasks(raw.map(normalizeTask));
+      setTasks(raw.map((task) => normalizeTask(task)));
     } catch (err) {
       if (!silent) {
         setTasksError(
@@ -495,13 +528,21 @@ export function AppProvider({ children }) {
       }
       if (patch.order !== undefined) payload.order = patch.order;
 
+      const existing = tasks.find((task) => String(task.id) === String(id));
       const updated = await updateTaskRequest(id, payload);
+      const normalized = normalizeTask(updated, {
+        ...existing,
+        ...patch,
+        id,
+      });
 
       setTasks((prev) =>
-        prev.map((t) =>
-          t.id === id ? normalizeTask(updated) : t
+        prev.map((task) =>
+          String(task.id) === String(id) ? normalized : task
         )
       );
+
+      return normalized;
     });
 
   const deleteTask = (id) =>
@@ -580,10 +621,46 @@ export function AppProvider({ children }) {
       sectors: sectorIds,
     });
 
-    const normalized = normalizeCategory(created);
+    const normalized = normalizeCategory(created, {
+      name,
+      color,
+      sectors: sectorIds,
+    });
 
     setCategories((prev) => [...prev, normalized]);
     setActiveCategory(normalized.id);
+
+    return normalized.id;
+  };
+
+  const updateCategory = async (
+    id,
+    { name, color, sectors: sectorIds }
+  ) => {
+    const existing = categories.find(
+      (category) => String(category.id) === String(id)
+    );
+
+    const updated = await updateCategoryRequest(id, {
+      name,
+      color,
+      sectors: sectorIds,
+    });
+
+    const normalized = normalizeCategory(updated, {
+      id,
+      name: name ?? existing?.name,
+      color: color ?? existing?.color,
+      sectors: sectorIds ?? existing?.sectors,
+    });
+
+    setCategories((prev) =>
+      prev.map((category) =>
+        String(category.id) === String(id)
+          ? normalized
+          : category
+      )
+    );
 
     return normalized.id;
   };
@@ -661,6 +738,7 @@ export function AppProvider({ children }) {
     activeCategory,
     setActiveCategory,
     addCategory,
+    updateCategory,
     deleteCategory,
 
     columns: COLUMNS,

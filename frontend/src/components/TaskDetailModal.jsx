@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useApp, PRIORITIES } from "../context/AppContext";
 import { IoPencil } from "react-icons/io5";
 import "../styles/components/task-detail-modal.css";
@@ -10,10 +10,19 @@ export default function TaskDetailModal({ taskId, onClose, onEdit }) {
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState("");
   const [savingTitle, setSavingTitle] = useState(false);
+  const titleRef = useRef(null);
 
   const [editingDescription, setEditingDescription] = useState(false);
   const [descriptionDraft, setDescriptionDraft] = useState("");
   const [savingDescription, setSavingDescription] = useState(false);
+
+  // El textarea del título crece a medida que se escribe
+  useEffect(() => {
+    const el = titleRef.current;
+    if (!editingTitle || !el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [titleDraft, editingTitle]);
 
   if (!task) return null;
 
@@ -23,6 +32,10 @@ export default function TaskDetailModal({ taskId, onClose, onEdit }) {
   const taskLabels = task.labelIds.map((id) => labels.find((l) => l.id === id)).filter(Boolean);
 
   const startEditTitle = () => {
+    // Evita que el nombre y la descripción se editen al mismo tiempo.
+    if (savingDescription) return;
+    setEditingDescription(false);
+    setDescriptionDraft("");
     setTitleDraft(task.title);
     setEditingTitle(true);
   };
@@ -40,6 +53,10 @@ export default function TaskDetailModal({ taskId, onClose, onEdit }) {
   };
 
   const startEditDescription = () => {
+    // Evita que el nombre y la descripción se editen al mismo tiempo.
+    if (savingTitle) return;
+    setEditingTitle(false);
+    setTitleDraft("");
     setDescriptionDraft(task.description || "");
     setEditingDescription(true);
   };
@@ -81,17 +98,18 @@ export default function TaskDetailModal({ taskId, onClose, onEdit }) {
             </div>
           )}
 
-          {/* ---- título editable ---- */}
+          {/* ---- título editable (sin límite de largo) ---- */}
           {editingTitle ? (
             <div className="task-detail__editable">
-              <input
+              <textarea
+                ref={titleRef}
                 className="input task-detail__title-input"
                 value={titleDraft}
-                onChange={(e) => setTitleDraft(e.target.value)}
+                rows={1}
                 autoFocus
-                maxLength={50}
+                onChange={(e) => setTitleDraft(e.target.value.replace(/\n/g, " "))}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") saveTitle();
+                  if (e.key === "Enter") { e.preventDefault(); saveTitle(); }
                   if (e.key === "Escape") setEditingTitle(false);
                 }}
               />

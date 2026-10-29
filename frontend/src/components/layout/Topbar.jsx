@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
@@ -15,6 +14,7 @@ const NAV = [
 export default function Topbar({
   onOpenConfiguracion,
   onOpenAddCategory,
+  onRequestEditCategory,
   onRequestDeleteCategory,
 }) {
   const {
@@ -27,7 +27,8 @@ export default function Topbar({
   } = useApp();
 
   const navigate = useNavigate();
-  const isAdmin = currentUser?.accountType === "admin";
+  const isAdmin =
+    currentUser?.accountType === "admin";
 
   const [open, setOpen] = useState(false);
   const [catsOpen, setCatsOpen] = useState(false);
@@ -47,8 +48,12 @@ export default function Topbar({
             alt="EEST N°1"
             className="topbar__logo"
           />
+
           <span className="brand-name">
-            EEST<span className="brand-name--accent">Flow</span>
+            EEST
+            <span className="brand-name--accent">
+              Flow
+            </span>
           </span>
         </div>
 
@@ -71,7 +76,11 @@ export default function Topbar({
         />
       )}
 
-      <aside className={"drawer" + (open ? " drawer--open" : "")}>
+      <aside
+        className={
+          "drawer" + (open ? " drawer--open" : "")
+        }
+      >
         <div className="drawer__head">
           <div className="topbar__brand">
             <img
@@ -82,9 +91,15 @@ export default function Topbar({
 
             <div className="sidebar__brand-text">
               <span className="brand-name">
-                EEST<span className="brand-name--accent">Flow</span>
+                EEST
+                <span className="brand-name--accent">
+                  Flow
+                </span>
               </span>
-              <span className="brand-sub">Técnica Digital</span>
+
+              <span className="brand-sub">
+                Técnica Digital
+              </span>
             </div>
           </div>
 
@@ -99,37 +114,54 @@ export default function Topbar({
         </div>
 
         <nav className="drawer__nav">
-          {NAV.map((i) => (
+          {NAV.map((item) => (
             <NavLink
-              key={i.to}
-              to={i.to}
-              end={i.end}
+              key={item.to}
+              to={item.to}
+              end={item.end}
               onClick={() => setOpen(false)}
               className={({ isActive }) =>
-                "nav-item" + (isActive ? " nav-item--active" : "")
+                "nav-item" +
+                (isActive ? " nav-item--active" : "")
               }
             >
-              <img src={i.icon} alt="" className="icon" />
-              <span>{i.label}</span>
+              <img
+                src={item.icon}
+                alt=""
+                className="icon"
+              />
 
-              {i.to === "/notificaciones" && unreadCount > 0 && (
-                <span
-                  className="nav-item__badge"
-                  aria-label={`${unreadCount} notificaciones sin leer`}
-                >
-                  {unreadCount > 99 ? "99+" : unreadCount}
-                </span>
-              )}
+              <span>{item.label}</span>
+
+              {item.to === "/notificaciones" &&
+                unreadCount > 0 && (
+                  <span
+                    className="nav-item__badge"
+                    aria-label={`${unreadCount} notificaciones sin leer`}
+                  >
+                    {unreadCount > 99
+                      ? "99+"
+                      : unreadCount}
+                  </span>
+                )}
             </NavLink>
           ))}
 
           <button
             className="nav-item"
-            onClick={() => setCatsOpen((v) => !v)}
+            onClick={() =>
+              setCatsOpen((value) => !value)
+            }
             type="button"
           >
-            <img src="/icons/list.svg" alt="" className="icon" />
+            <img
+              src="/icons/list.svg"
+              alt=""
+              className="icon"
+            />
+
             <span>Categorías</span>
+
             <span className="nav-item__chevron">
               {catsOpen ? "⌃" : "⌄"}
             </span>
@@ -142,38 +174,77 @@ export default function Topbar({
               </p>
             ) : (
               <ul className="cat-list cat-list--drawer">
-                {categories.map((c) => (
-                  <li key={c.id} className="cat-item-row">
+                {categories.map((category) => (
+                  <li
+                    key={category.id}
+                    className={
+                      "cat-item-row" +
+                      (isAdmin
+                        ? " cat-item-row--admin"
+                        : "")
+                    }
+                  >
                     <button
                       className={
                         "cat-item" +
-                        (activeCategory === c.id
+                        (activeCategory === category.id
                           ? " cat-item--active"
                           : "")
                       }
-                      onClick={() => handleCategoryClick(c.id)}
+                      onClick={() =>
+                        handleCategoryClick(category.id)
+                      }
                       type="button"
                     >
                       <span
                         className="cat-dot"
-                        style={{ background: c.color }}
+                        style={{
+                          background: category.color,
+                        }}
                       />
-                      <span className="cat-name">{c.name}</span>
+
+                      <span className="cat-name">
+                        {category.name}
+                      </span>
                     </button>
 
-                    {isAdmin && categories.length > 1 && (
-                      <button
-                        className="cat-item__delete"
-                        title="Eliminar categoría"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onRequestDeleteCategory(c);
-                          setOpen(false);
-                        }}
-                        type="button"
-                      >
-                        🗑
-                      </button>
+                    {isAdmin && (
+                      <>
+                        <button
+                          className={
+                            "cat-item__edit" +
+                            (categories.length <= 1
+                              ? " cat-item__edit--only"
+                              : "")
+                          }
+                          title="Editar categoría"
+                          aria-label={`Editar categoría ${category.name}`}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            onRequestEditCategory(category);
+                            setOpen(false);
+                          }}
+                          type="button"
+                        >
+                          ✎
+                        </button>
+
+                        {categories.length > 1 && (
+                          <button
+                            className="cat-item__delete"
+                            title="Eliminar categoría"
+                            aria-label={`Eliminar categoría ${category.name}`}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              onRequestDeleteCategory(category);
+                              setOpen(false);
+                            }}
+                            type="button"
+                          >
+                            🗑
+                          </button>
+                        )}
+                      </>
                     )}
                   </li>
                 ))}
@@ -188,7 +259,10 @@ export default function Topbar({
                       }}
                       type="button"
                     >
-                      <span className="cat-dot cat-dot--add">+</span>
+                      <span className="cat-dot cat-dot--add">
+                        +
+                      </span>
+
                       <span className="cat-name">
                         Agregar categoría
                       </span>
@@ -208,7 +282,10 @@ export default function Topbar({
           </span>
 
           <div className="user-card__info">
-            <strong>{currentUser?.name ?? "Cargando…"}</strong>
+            <strong>
+              {currentUser?.name ?? "Cargando…"}
+            </strong>
+
             <span className="role-chip">
               {currentUser?.accountType === "admin"
                 ? "Administrador"

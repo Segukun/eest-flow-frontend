@@ -1312,3 +1312,20 @@
 [data-theme="dark"] .foro-pinned-bar {
   border-bottom-color: rgba(129, 140, 248, 0.35);
 }
+
+:root[data-theme="oscuro"] .foro-post,
+:root[data-theme="oscuro"] .foro-post.foro-post--pinned {
+  background: var(--theme-surface, #2b2229);
+  color: var(--theme-text, #fff9ed);
+}
+
+:root[data-theme="oscuro"] .foro-pinned-bar {
+  background: var(--theme-surface-soft, #342b32);
+  color: #a5b4fc;
+  border-bottom-color: var(--theme-border, #65545f);
+}
+
+:root[data-theme="oscuro"] .foro-post-foot .foro-post-pin.is-pinned {
+  color: #a5b4fc;
+  background: #342b32;
+}

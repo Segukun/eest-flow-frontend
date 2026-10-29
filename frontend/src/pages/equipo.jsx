@@ -1,3 +1,4 @@
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   FiSearch,
@@ -6,8 +7,10 @@ import {
   FiMoreVertical,
   FiMail,
   FiPlus,
+  FiMapPin,
 } from "react-icons/fi";
 
+import { useApp } from "../context/AppContext";
 import api from "../api.js";
 import "../styles/pages/equipo.css";
 import AgregarMiembro from "../components/AgregarMiembro.jsx";
@@ -33,17 +36,27 @@ const obtenerIniciales = (nombre) => {
 
 const convertirMiembro = (usuario) => {
   const esAdmin = usuario.accountType === "admin";
-  const sectoresUsuario = Array.isArray(usuario.sectors) ? usuario.sectors : [];
+  const sectoresUsuario = Array.isArray(usuario.sectors)
+    ? usuario.sectors
+    : [];
+
   const sectoresIds = sectoresUsuario
-    .map((sector) => typeof sector === "string" ? sector : sector?._id || sector?.id)
+    .map((sector) =>
+      typeof sector === "string"
+        ? sector
+        : sector?._id || sector?.id
+    )
     .filter(Boolean)
     .map(String);
+
   const nombresSectores = sectoresUsuario
-    .map((sector) => typeof sector === "object" ? sector?.name : "")
+    .map((sector) =>
+      typeof sector === "object" ? sector?.name : ""
+    )
     .filter(Boolean);
 
   return {
-    id: usuario._id,
+    id: String(usuario._id || usuario.id || ""),
     nombre: usuario.name || "",
     iniciales: obtenerIniciales(usuario.name),
     rol: esAdmin ? "Administrador" : "Colaborador",
@@ -52,15 +65,14 @@ const convertirMiembro = (usuario) => {
     accountType: esAdmin ? "admin" : "collaborator",
     sectors: sectoresIds,
     sectoresNombres: nombresSectores,
-    area: nombresSectores.length ? nombresSectores.join(", ") : "Sin sector asignado",
+    area: nombresSectores.length
+      ? nombresSectores.join(", ")
+      : "Sin sector asignado",
     correo: usuario.email || "",
   };
 };
 
-const obtenerNumerosDePagina = (
-  paginaActual,
-  totalPaginas
-) => {
+const obtenerNumerosDePagina = (paginaActual, totalPaginas) => {
   if (totalPaginas <= 5) {
     return Array.from(
       { length: totalPaginas },
@@ -74,28 +86,14 @@ const obtenerNumerosDePagina = (
     paginas.push("…");
   }
 
-  const inicio = Math.max(
-    2,
-    paginaActual - 1
-  );
+  const inicio = Math.max(2, paginaActual - 1);
+  const fin = Math.min(totalPaginas - 1, paginaActual + 1);
 
-  const fin = Math.min(
-    totalPaginas - 1,
-    paginaActual + 1
-  );
-
-  for (
-    let pagina = inicio;
-    pagina <= fin;
-    pagina += 1
-  ) {
+  for (let pagina = inicio; pagina <= fin; pagina += 1) {
     paginas.push(pagina);
   }
 
-  if (
-    paginaActual <
-    totalPaginas - 2
-  ) {
+  if (paginaActual < totalPaginas - 2) {
     paginas.push("…");
   }
 
@@ -106,11 +104,11 @@ const obtenerNumerosDePagina = (
 
 const MemberCard = ({
   miembro,
+  esUsuarioActual,
   onModificar,
   onEliminar,
 }) => {
-  const [menuOpen, setMenuOpen] =
-    useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const menuRef = useRef(null);
   const menuButtonRef = useRef(null);
@@ -121,9 +119,7 @@ const MemberCard = ({
     const cerrarAlClickAfuera = (e) => {
       if (
         menuRef.current &&
-        !menuRef.current.contains(
-          e.target
-        )
+        !menuRef.current.contains(e.target)
       ) {
         setMenuOpen(false);
       }
@@ -143,7 +139,11 @@ const MemberCard = ({
   }, [menuOpen]);
 
   return (
-    <article className="team-card">
+    <article
+      className={`team-card ${
+        esUsuarioActual ? "team-card--current-user" : ""
+      }`}
+    >
       <div className="team-card-top">
         <div
           className={`team-avatar ${
@@ -170,19 +170,21 @@ const MemberCard = ({
             >
               {miembro.rol}
             </span>
-
           </p>
+
+          {esUsuarioActual && (
+            <span className="team-card-current-label">
+              <FiMapPin aria-hidden="true" />
+              Tu cuenta
+            </span>
+          )}
         </div>
 
         <div
           className="team-card-menu-wrapper"
           ref={menuRef}
           onBlur={(e) => {
-            if (
-              !e.currentTarget.contains(
-                e.relatedTarget
-              )
-            ) {
+            if (!e.currentTarget.contains(e.relatedTarget)) {
               setMenuOpen(false);
             }
           }}
@@ -202,9 +204,7 @@ const MemberCard = ({
             aria-controls={`miembro-opciones-${miembro.id}`}
             onClick={(e) => {
               e.stopPropagation();
-              setMenuOpen(
-                (open) => !open
-              );
+              setMenuOpen((open) => !open);
             }}
           >
             <FiMoreVertical aria-hidden="true" />
@@ -225,6 +225,7 @@ const MemberCard = ({
               >
                 Editar miembro
               </button>
+
               <button
                 type="button"
                 className="user-menu__item team-card-dropdown-delete"
@@ -250,9 +251,7 @@ const MemberCard = ({
 
           <a
             href={`mailto:${miembro.correo}`}
-            onClick={(e) =>
-              e.stopPropagation()
-            }
+            onClick={(e) => e.stopPropagation()}
           >
             {miembro.correo}
           </a>
@@ -263,85 +262,44 @@ const MemberCard = ({
 };
 
 const Equipo = () => {
-  const [miembros, setMiembros] =
-    useState([]);
+  const { currentUser } = useApp();
 
-  const [
-    cargandoMiembros,
-    setCargandoMiembros,
-  ] = useState(true);
+  const idUsuarioActual = String(
+    currentUser?._id || currentUser?.id || ""
+  );
 
-  const [
-    errorMiembros,
-    setErrorMiembros,
-  ] = useState("");
+  const [miembros, setMiembros] = useState([]);
+  const [cargandoMiembros, setCargandoMiembros] = useState(true);
+  const [errorMiembros, setErrorMiembros] = useState("");
+  const [busqueda, setBusqueda] = useState("");
+  const [rolSeleccionado, setRolSeleccionado] = useState("");
+  const [sectorSeleccionado, setSectorSeleccionado] = useState("");
+  const [paginaActual, setPaginaActual] = useState(1);
 
-  const [busqueda, setBusqueda] =
-    useState("");
-
-  const [
-    rolSeleccionado,
-    setRolSeleccionado,
-  ] = useState("");
-
-  const [
-    sectorSeleccionado,
-    setSectorSeleccionado,
-  ] = useState("");
-
-  const [
-    paginaActual,
-    setPaginaActual,
-  ] = useState(1);
-
-  const [
-    modalAgregarOpen,
-    setModalAgregarOpen,
-  ] = useState(false);
-
-  const [
-    modalModificarOpen,
-    setModalModificarOpen,
-  ] = useState(false);
-
-  const [
-    modalEliminarOpen,
-    setModalEliminarOpen,
-  ] = useState(false);
-
-  const [
-    miembroSeleccionado,
-    setMiembroSeleccionado,
-  ] = useState(null);
+  const [modalAgregarOpen, setModalAgregarOpen] = useState(false);
+  const [modalModificarOpen, setModalModificarOpen] = useState(false);
+  const [modalEliminarOpen, setModalEliminarOpen] = useState(false);
+  const [miembroSeleccionado, setMiembroSeleccionado] = useState(null);
 
   const cargarMiembros = async () => {
     try {
       setCargandoMiembros(true);
       setErrorMiembros("");
 
-      const response =
-        await api.get("/api/users");
+      const response = await api.get("/api/users");
 
-      const usuarios = Array.isArray(
-        response.data
-      )
+      const usuarios = Array.isArray(response.data)
         ? response.data
         : [];
 
-      const miembrosConvertidos =
-        usuarios.map(convertirMiembro);
+      const miembrosConvertidos = usuarios.map(convertirMiembro);
 
       setMiembros(miembrosConvertidos);
       setPaginaActual(1);
     } catch (error) {
-      console.error(
-        "Error al cargar miembros:",
-        error
-      );
+      console.error("Error al cargar miembros:", error);
 
-      if (
-        error.response?.status === 401
-      ) {
+      if (error.response?.status === 401) {
         setErrorMiembros(
           "Tu sesión expiró. Volvé a iniciar sesión."
         );
@@ -360,22 +318,25 @@ const Equipo = () => {
   }, []);
 
   const roles = useMemo(
-    () =>
-      [
-        ...new Set(
-          miembros
-            .map(
-              (miembro) =>
-                miembro.rol
-            )
-            .filter(Boolean)
-        ),
-      ],
+    () => [
+      ...new Set(
+        miembros
+          .map((miembro) => miembro.rol)
+          .filter(Boolean)
+      ),
+    ],
     [miembros]
   );
 
   const sectores = useMemo(
-    () => [...new Set(miembros.flatMap((miembro) => miembro.sectoresNombres || []))].sort((a, b) => a.localeCompare(b, "es")),
+    () =>
+      [
+        ...new Set(
+          miembros.flatMap(
+            (miembro) => miembro.sectoresNombres || []
+          )
+        ),
+      ].sort((a, b) => a.localeCompare(b, "es")),
     [miembros]
   );
 
@@ -384,70 +345,63 @@ const Equipo = () => {
     rolSeleccionado !== "" ||
     sectorSeleccionado !== "";
 
-  const miembrosFiltrados =
-    useMemo(() => {
-      const termino =
-        busqueda.trim().toLowerCase();
+  const miembrosFiltrados = useMemo(() => {
+    const termino = busqueda.trim().toLowerCase();
 
-      return miembros.filter(
-        (miembro) => {
-          const pasaRol =
-            rolSeleccionado === "" ||
-            miembro.rol ===
-              rolSeleccionado;
+    return miembros.filter((miembro) => {
+      const pasaRol =
+        rolSeleccionado === "" ||
+        miembro.rol === rolSeleccionado;
 
-          const pasaSector =
-            sectorSeleccionado === "" ||
-            (miembro.sectoresNombres || []).includes(sectorSeleccionado);
+      const pasaSector =
+        sectorSeleccionado === "" ||
+        (miembro.sectoresNombres || []).includes(
+          sectorSeleccionado
+        );
 
-          const pasaBusqueda =
-            termino === "" ||
-            miembro.nombre
-              .toLowerCase()
-              .includes(termino) ||
-            miembro.area
-              .toLowerCase()
-              .includes(termino);
+      const pasaBusqueda =
+        termino === "" ||
+        miembro.nombre.toLowerCase().includes(termino) ||
+        miembro.area.toLowerCase().includes(termino);
 
-          return (
-            pasaRol &&
-            pasaSector &&
-            pasaBusqueda
-          );
-        }
-      );
-    }, [
-      miembros,
-      busqueda,
-      rolSeleccionado,
-      sectorSeleccionado,
-    ]);
+      return pasaRol && pasaSector && pasaBusqueda;
+    });
+  }, [
+    miembros,
+    busqueda,
+    rolSeleccionado,
+    sectorSeleccionado,
+  ]);
 
-  const totalPaginas =
-    Math.max(
-      1,
-      Math.ceil(
-        miembrosFiltrados.length /
-          MIEMBROS_POR_PAGINA
-      )
-    );
+  const miembrosOrdenados = useMemo(() => {
+    return [...miembrosFiltrados].sort((a, b) => {
+      const aEsActual =
+        idUsuarioActual !== "" &&
+        a.id === idUsuarioActual;
 
-  const paginaSegura = Math.min(
-    paginaActual,
-    totalPaginas
+      const bEsActual =
+        idUsuarioActual !== "" &&
+        b.id === idUsuarioActual;
+
+      return Number(bEsActual) - Number(aEsActual);
+    });
+  }, [miembrosFiltrados, idUsuarioActual]);
+
+  const totalPaginas = Math.max(
+    1,
+    Math.ceil(
+      miembrosOrdenados.length / MIEMBROS_POR_PAGINA
+    )
   );
 
-  const miembrosDeLaPagina =
-    miembrosFiltrados.slice(
-      (paginaSegura - 1) *
-        MIEMBROS_POR_PAGINA,
-      paginaSegura *
-        MIEMBROS_POR_PAGINA
-    );
+  const paginaSegura = Math.min(paginaActual, totalPaginas);
 
-  const cambiarFiltro = (
-    actualizar
-  ) => {
+  const miembrosDeLaPagina = miembrosOrdenados.slice(
+    (paginaSegura - 1) * MIEMBROS_POR_PAGINA,
+    paginaSegura * MIEMBROS_POR_PAGINA
+  );
+
+  const cambiarFiltro = (actualizar) => {
     actualizar();
     setPaginaActual(1);
   };
@@ -459,12 +413,8 @@ const Equipo = () => {
     setPaginaActual(1);
   };
 
-  const abrirModalModificar = (
-    miembro
-  ) => {
-    setMiembroSeleccionado(
-      miembro
-    );
+  const abrirModalModificar = (miembro) => {
+    setMiembroSeleccionado(miembro);
     setModalModificarOpen(true);
   };
 
@@ -488,26 +438,18 @@ const Equipo = () => {
       <main className="team-page">
         <header className="team-header">
           <div>
-            <h1>
-              Equipo Institucional
-            </h1>
+            <h1>Equipo Institucional</h1>
 
             <p>
-              Gestión de profesores,
-              directivos, personal
-              técnico de taller y
-              preceptoría.
+              Gestión de profesores, directivos, personal
+              técnico de taller y preceptoría.
             </p>
           </div>
 
           <button
             type="button"
             className="team-add-button"
-            onClick={() =>
-              setModalAgregarOpen(
-                true
-              )
-            }
+            onClick={() => setModalAgregarOpen(true)}
           >
             <FiPlus />
             Agregar miembro
@@ -525,11 +467,7 @@ const Equipo = () => {
                 aria-label="Buscar integrantes"
                 value={busqueda}
                 onChange={(e) =>
-                  cambiarFiltro(() =>
-                    setBusqueda(
-                      e.target.value
-                    )
-                  )
+                  cambiarFiltro(() => setBusqueda(e.target.value))
                 }
               />
             </div>
@@ -538,31 +476,20 @@ const Equipo = () => {
               <select
                 className="team-select"
                 aria-label="Filtrar por sector"
-                value={
-                  sectorSeleccionado
-                }
+                value={sectorSeleccionado}
                 onChange={(e) =>
                   cambiarFiltro(() =>
-                    setSectorSeleccionado(
-                      e.target.value
-                    )
+                    setSectorSeleccionado(e.target.value)
                   )
                 }
               >
-                <option value="">
-                  Todos los Sectores
-                </option>
+                <option value="">Todos los Sectores</option>
 
-                {sectores.map(
-                  (sector) => (
-                    <option
-                      key={sector}
-                      value={sector}
-                    >
-                      {sector}
-                    </option>
-                  )
-                )}
+                {sectores.map((sector) => (
+                  <option key={sector} value={sector}>
+                    {sector}
+                  </option>
+                ))}
               </select>
 
               <FiChevronDown className="team-select-icon" />
@@ -572,31 +499,20 @@ const Equipo = () => {
               <select
                 className="team-select"
                 aria-label="Filtrar por rol"
-                value={
-                  rolSeleccionado
-                }
+                value={rolSeleccionado}
                 onChange={(e) =>
                   cambiarFiltro(() =>
-                    setRolSeleccionado(
-                      e.target.value
-                    )
+                    setRolSeleccionado(e.target.value)
                   )
                 }
               >
-                <option value="">
-                  Todos los Roles
-                </option>
+                <option value="">Todos los Roles</option>
 
-                {roles.map(
-                  (rol) => (
-                    <option
-                      key={rol}
-                      value={rol}
-                    >
-                      {rol}
-                    </option>
-                  )
-                )}
+                {roles.map((rol) => (
+                  <option key={rol} value={rol}>
+                    {rol}
+                  </option>
+                ))}
               </select>
 
               <FiChevronDown className="team-select-icon" />
@@ -611,13 +527,10 @@ const Equipo = () => {
               <FiRefreshCw />
             </button>
           </div>
-
         </section>
 
         {errorMiembros && (
-          <p className="team-empty-state">
-            {errorMiembros}
-          </p>
+          <p className="team-empty-state">{errorMiembros}</p>
         )}
 
         <section className="team-grid">
@@ -625,25 +538,22 @@ const Equipo = () => {
             <p className="team-empty-state">
               Cargando integrantes...
             </p>
-          ) : miembrosDeLaPagina.length >
-            0 ? (
-            miembrosDeLaPagina.map(
-              (miembro) => (
-                <MemberCard
-                  key={miembro.id}
-                  miembro={miembro}
-                  onModificar={
-                    abrirModalModificar
-                  }
-                  onEliminar={abrirModalEliminar}
-                />
-              )
-            )
+          ) : miembrosDeLaPagina.length > 0 ? (
+            miembrosDeLaPagina.map((miembro) => (
+              <MemberCard
+                key={miembro.id}
+                miembro={miembro}
+                esUsuarioActual={
+                  idUsuarioActual !== "" &&
+                  miembro.id === idUsuarioActual
+                }
+                onModificar={abrirModalModificar}
+                onEliminar={abrirModalEliminar}
+              />
+            ))
           ) : (
             <p className="team-empty-state">
-              No se encontraron
-              integrantes con esos
-              filtros.
+              No se encontraron integrantes con esos filtros.
             </p>
           )}
         </section>
@@ -652,28 +562,16 @@ const Equipo = () => {
           <p className="team-pagination-count">
             {hayFiltrosActivos ? (
               <>
-                Mostrando{" "}
-                {
-                  miembrosDeLaPagina.length
-                }{" "}
-                de{" "}
-                {
-                  miembrosFiltrados.length
-                }{" "}
-                resultados filtrados
+                Mostrando {miembrosDeLaPagina.length} de{" "}
+                {miembrosOrdenados.length} resultados filtrados
               </>
             ) : (
               <>
-                Mostrando{" "}
-                {
-                  miembrosDeLaPagina.length
-                }{" "}
-                de {miembros.length}{" "}
-                miembros registrados
+                Mostrando {miembrosDeLaPagina.length} de{" "}
+                {miembros.length} miembros registrados
                 <span className="team-pagination-dot"></span>
                 <span className="team-pagination-link">
-                  Todos los sectores
-                  activos
+                  Todos los sectores activos
                 </span>
               </>
             )}
@@ -683,17 +581,9 @@ const Equipo = () => {
             <button
               type="button"
               onClick={() =>
-                setPaginaActual(
-                  (p) =>
-                    Math.max(
-                      1,
-                      p - 1
-                    )
-                )
+                setPaginaActual((p) => Math.max(1, p - 1))
               }
-              disabled={
-                paginaSegura === 1
-              }
+              disabled={paginaSegura === 1}
             >
               Anterior
             </button>
@@ -701,51 +591,38 @@ const Equipo = () => {
             {obtenerNumerosDePagina(
               paginaSegura,
               totalPaginas
-            ).map(
-              (pagina, i) =>
-                pagina === "…" ? (
-                  <span
-                    key={`dots-${i}`}
-                    className="team-pages-dots"
-                  >
-                    …
-                  </span>
-                ) : (
-                  <button
-                    key={pagina}
-                    type="button"
-                    className={
-                      pagina ===
-                      paginaSegura
-                        ? "team-page-number team-page-active"
-                        : "team-page-number"
-                    }
-                    onClick={() =>
-                      setPaginaActual(
-                        pagina
-                      )
-                    }
-                  >
-                    {pagina}
-                  </button>
-                )
+            ).map((pagina, i) =>
+              pagina === "…" ? (
+                <span
+                  key={`dots-${i}`}
+                  className="team-pages-dots"
+                >
+                  …
+                </span>
+              ) : (
+                <button
+                  key={pagina}
+                  type="button"
+                  className={
+                    pagina === paginaSegura
+                      ? "team-page-number team-page-active"
+                      : "team-page-number"
+                  }
+                  onClick={() => setPaginaActual(pagina)}
+                >
+                  {pagina}
+                </button>
+              )
             )}
 
             <button
               type="button"
               onClick={() =>
-                setPaginaActual(
-                  (p) =>
-                    Math.min(
-                      totalPaginas,
-                      p + 1
-                    )
+                setPaginaActual((p) =>
+                  Math.min(totalPaginas, p + 1)
                 )
               }
-              disabled={
-                paginaSegura ===
-                totalPaginas
-              }
+              disabled={paginaSegura === totalPaginas}
             >
               Siguiente
             </button>
@@ -755,31 +632,18 @@ const Equipo = () => {
 
       {modalAgregarOpen && (
         <AgregarMiembro
-          onClose={() =>
-            setModalAgregarOpen(
-              false
-            )
-          }
-          onAgregado={
-            cargarMiembros
-          }
+          onClose={() => setModalAgregarOpen(false)}
+          onAgregado={cargarMiembros}
         />
       )}
 
-      {modalModificarOpen &&
-        miembroSeleccionado && (
-          <ModificarMiembro
-            miembro={
-              miembroSeleccionado
-            }
-            onClose={
-              cerrarModalModificar
-            }
-            onActualizado={
-              cargarMiembros
-            }
-          />
-        )}
+      {modalModificarOpen && miembroSeleccionado && (
+        <ModificarMiembro
+          miembro={miembroSeleccionado}
+          onClose={cerrarModalModificar}
+          onActualizado={cargarMiembros}
+        />
+      )}
 
       {modalEliminarOpen && miembroSeleccionado && (
         <ConfirmacionEliminarMiembroModal
