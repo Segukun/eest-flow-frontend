@@ -105,3 +105,67 @@
     max-height: 94vh;
   }
 }
+
+/* =========================================================
+   TÍTULOS LARGOS
+   El título baja de renglón en vez de ensanchar el modal.
+   ========================================================= */
+
+/* los hijos del body pueden encogerse: sin esto un título largo estira el modal */
+.modal .modal__body > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* título en modo lectura (botón que contiene el h2 y el lápiz) */
+.modal .task-detail__title-btn {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  text-align: left;
+}
+
+.modal .task-detail__title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  text-align: left;
+}
+
+.modal .task-detail__title-btn .task-detail__edit-icon {
+  flex: none;
+  margin-top: 4px;
+}
+
+/* título en modo edición (textarea que crece) */
+.modal .task-detail__title-input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  resize: none;
+  overflow: hidden;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  font-family: inherit;
+  line-height: 1.35;
+}
+
+/* título en la vista previa del modal de editar tarea */
+.actions-modal .actions-modal__preview-title {
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.actions-modal .actions-modal__preview {
+  min-width: 0;
+  box-sizing: border-box;
+}

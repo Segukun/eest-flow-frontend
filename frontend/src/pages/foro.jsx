@@ -5,6 +5,7 @@ import { useSearchParams } from "react-router-dom";
 import ComentariosModal from "../components/ComentariosModal.jsx";
 import PublicarModal from "../components/PublicarModal.jsx";
 import ConfirmPinModal from "../components/ConfirmPinModal.jsx";
+import DeleteForoPostModal from "../components/DeleteForoPostModal.jsx"; // NUEVO
 import { useToast } from "../components/Toast.jsx";
 
 import {
@@ -71,6 +72,9 @@ export default function Foro() {
   // Estado del modal de pineado.
   const [pinModal, setPinModal] = useState(null);
   const [pinLoading, setPinLoading] = useState(false);
+
+  // NUEVO: id de la publicación que se quiere eliminar (null = modal cerrado).
+  const [deletePostId, setDeletePostId] = useState(null);
 
   const POSTS_PER_PAGE = 10;
 
@@ -382,23 +386,24 @@ export default function Foro() {
     }
   };
 
-  const handleDelete = async (postId) => {
-    if (!window.confirm("¿Querés borrar esta publicación?")) return;
+  // NUEVO: ya no usa window.confirm. Solo cierra el menú y abre el modal.
+  const handleDelete = (postId) => {
+    setOpenMenuId(null);
+    setDeletePostId(postId);
+  };
 
-    try {
-      await deletePostRequest(postId);
+  // NUEVO: se ejecuta al confirmar en el modal. Si falla, relanza el error
+  // para que el modal lo muestre y no se cierre.
+  const handleConfirmDelete = async () => {
+    if (!deletePostId) return;
 
-      setPosts((prev) =>
-        prev.filter((p) => String(p.id) !== String(postId)),
-      );
+    await deletePostRequest(deletePostId);
 
-      setOpenMenuId(null);
-      toast.success("Publicación eliminada");
-    } catch (e) {
-      toast.error(
-        e.response?.data?.message || "No se pudo borrar.",
-      );
-    }
+    setPosts((prev) =>
+      prev.filter((p) => String(p.id) !== String(deletePostId)),
+    );
+
+    toast.success("Publicación eliminada");
   };
 
   const handleSaveEdit = async () => {
@@ -658,6 +663,13 @@ export default function Foro() {
           }
         }}
         onConfirm={handleConfirmPin}
+      />
+
+      {/* NUEVO: modal de confirmación para eliminar una publicación. */}
+      <DeleteForoPostModal
+        open={Boolean(deletePostId)}
+        onClose={() => setDeletePostId(null)}
+        onConfirm={handleConfirmDelete}
       />
     </div>
   );
