@@ -1,6 +1,6 @@
-
 import { useEffect, useRef, useState } from "react";
 import { useApp } from "../context/AppContext";
+import useSubmitGuard from "../hooks/useSubmitGuard";
 
 export default function AddTask({
   columnId,
@@ -11,9 +11,9 @@ export default function AddTask({
 }) {
   const { addTask } = useApp();
   const [title, setTitle] = useState("");
-  const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const inputRef = useRef(null);
+  const guard = useSubmitGuard(1000);
 
   useEffect(() => {
     if (isOpen) {
@@ -26,7 +26,7 @@ export default function AddTask({
   }, [isOpen]);
 
   const close = () => {
-    if (saving) return;
+    if (guard.pending) return;
 
     setTitle("");
     setErrorMessage("");
@@ -35,27 +35,25 @@ export default function AddTask({
 
   const confirm = async () => {
     const taskTitle = title.trim();
+    if (!taskTitle) return;
 
-    if (!taskTitle || saving) return;
+    // si ya hay un envío en curso o en cooldown, run() lo ignora
+    await guard.run(async () => {
+      try {
+        setErrorMessage("");
+        await addTask(columnId, taskTitle);
 
-    try {
-      setSaving(true);
-      setErrorMessage("");
+        setTitle("");
+        onClose?.();
+      } catch (error) {
+        console.error("No se pudo crear la tarea:", error);
 
-      await addTask(columnId, taskTitle);
-
-      setTitle("");
-      onClose?.();
-    } catch (error) {
-      console.error("No se pudo crear la tarea:", error);
-
-      setErrorMessage(
-        error?.response?.data?.message ||
-          "No se pudo crear la tarea. Intentá nuevamente."
-      );
-    } finally {
-      setSaving(false);
-    }
+        setErrorMessage(
+          error?.response?.data?.message ||
+            "No se pudo crear la tarea. Intentá nuevamente."
+        );
+      }
+    });
   };
 
   if (!isOpen) {
@@ -101,15 +99,11 @@ export default function AddTask({
           setErrorMessage("");
 
           event.target.style.height = "auto";
-          event.target.style.height =
-            `${event.target.scrollHeight}px`;
+          event.target.style.height = `${event.target.scrollHeight}px`;
         }}
-        disabled={saving}
+        disabled={guard.pending}
         onKeyDown={(event) => {
-          if (
-            event.key === "Enter" &&
-            (event.ctrlKey || event.metaKey)
-          ) {
+          if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
             event.preventDefault();
             confirm();
           }
@@ -131,16 +125,16 @@ export default function AddTask({
           className="btn btn--primary btn--sm"
           type="button"
           onClick={confirm}
-          disabled={saving || !title.trim()}
+          disabled={guard.busy || !title.trim()}
         >
-          {saving ? "Guardando..." : "✓"}
+          {guard.pending ? "Guardando..." : "✓"}
         </button>
 
         <button
           className="btn btn--ghost btn--sm"
           type="button"
           onClick={close}
-          disabled={saving}
+          disabled={guard.pending}
         >
           ✕
         </button>

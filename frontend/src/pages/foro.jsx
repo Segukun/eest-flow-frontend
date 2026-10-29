@@ -20,6 +20,8 @@ import {
 import { likePostRequest, unlikePostRequest } from "../api/likes";
 import { fetchSectors } from "../api/sectors";
 
+import useSubmitGuard from "../hooks/useSubmitGuard.js";
+
 import ForoSearch from "../components/ForoSearch.jsx";
 import ForoCreate from "../components/ForoCreate.jsx";
 import ForoFeed from "../components/ForoFeed.jsx";
@@ -37,6 +39,8 @@ import "../styles/pages/Foro.css";
 
 export default function Foro() {
   const toast = useToast();
+
+  const publishGuard = useSubmitGuard(2000);
 
   const currentUser = useMemo(() => getCurrentUser(), []);
   const currentUserId = useMemo(
@@ -203,47 +207,53 @@ export default function Foro() {
   }, [search]);
 
   const createPost = async (arg) => {
-    try {
-      let text = "";
-      let files = [];
+    let text = "";
+    let files = [];
 
-      if (typeof arg === "string") {
-        text = arg;
-      } else if (arg && typeof arg === "object") {
-        text = arg.text ?? arg.content ?? "";
-        files = arg.files ?? [];
-      }
-
-      if (!text.trim() && !files.length) return;
-
-      const res = await createPostRequest({
-        content: [text.trim()],
-        files: files.map((i) => i.file || i).filter(Boolean),
-      });
-
-      const created = res?.data;
-
-      if (!created) {
-        throw new Error("No devolvió post");
-      }
-
-      setPosts((prev) => [
-        mapPostFromApi(created, sectors, currentUserId),
-        ...prev,
-      ]);
-
-      setNewPost("");
-      setInlineFiles([]);
-      setIsCreateActive(false);
-
-      toast.success("Publicación creada");
-      setCurrentPage(1);
-    } catch (e) {
-      toast.error(
-        e.response?.data?.message ||
-          "No se pudo crear la publicación.",
-      );
+    if (typeof arg === "string") {
+      text = arg;
+    } else if (arg && typeof arg === "object") {
+      text = arg.text ?? arg.content ?? "";
+      files = arg.files ?? [];
     }
+
+    if (!text.trim() && !files.length) return false;
+
+    const result = await publishGuard.run(async () => {
+      try {
+        const res = await createPostRequest({
+          content: [text.trim()],
+          files: files.map((i) => i.file || i).filter(Boolean),
+        });
+
+        const created = res?.data;
+
+        if (!created) {
+          throw new Error("No devolvió post");
+        }
+
+        setPosts((prev) => [
+          mapPostFromApi(created, sectors, currentUserId),
+          ...prev,
+        ]);
+
+        setNewPost("");
+        setInlineFiles([]);
+        setIsCreateActive(false);
+
+        toast.success("Publicación creada");
+        setCurrentPage(1);
+        return true;
+      } catch (e) {
+        toast.error(
+          e.response?.data?.message ||
+            "No se pudo crear la publicación.",
+        );
+        return false;
+      }
+    });
+
+    return result === true;
   };
 
   // Abre el modal de confirmación al pulsar el icono de pin.
@@ -561,6 +571,7 @@ export default function Foro() {
               });
             }
           }}
+          publishing={publishGuard.busy}
         />
 
         {error && <div className="foro-empty">{error}</div>}
