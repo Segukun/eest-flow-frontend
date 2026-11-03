@@ -1,4 +1,3 @@
-
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   FiSearch,
@@ -16,6 +15,7 @@ import "../styles/pages/equipo.css";
 import AgregarMiembro from "../components/AgregarMiembro.jsx";
 import ModificarMiembro from "../components/ModificarMiembro.jsx";
 import ConfirmacionEliminarMiembroModal from "../components/ConfirmacionEliminarMiembroModal.jsx";
+import { useToast } from "../components/Toast.jsx"; // NUEVO
 
 const MIEMBROS_POR_PAGINA = 6;
 
@@ -263,6 +263,7 @@ const MemberCard = ({
 
 const Equipo = () => {
   const { currentUser } = useApp();
+  const toast = useToast(); // NUEVO
 
   const idUsuarioActual = String(
     currentUser?._id || currentUser?.id || ""
@@ -650,6 +651,8 @@ const Equipo = () => {
           miembro={miembroSeleccionado}
           onClose={cerrarModalEliminar}
           onEliminado={async () => {
+            // NUEVO: toast de éxito (solo se llega acá si el borrado salió bien)
+            toast.success("Se ha eliminado al miembro");
             cerrarModalEliminar();
             await cargarMiembros();
           }}
