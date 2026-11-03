@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
 import "../../styles/layout/topbar.css";
 import { MdDelete } from "react-icons/md";
+import { BrowserRouter, Route, Routes , Link } from "react-router-dom";
 const NAV = [
   { to: "/", label: "Inicio", icon: "/icons/home.svg", end: true },
   { to: "/sectores", label: "Sectores", icon: "/icons/teamsection.svg" },
@@ -42,6 +43,7 @@ export default function Topbar({
   return (
     <>
       <header className="topbar">
+        <Link to="/" className="topbar__brand-link">
         <div className="topbar__brand">
           <img
             src="/eestn1logo.png"
@@ -56,7 +58,7 @@ export default function Topbar({
             </span>
           </span>
         </div>
-
+        </Link>
         <button
           className="topbar__burger"
           onClick={() => setOpen(true)}

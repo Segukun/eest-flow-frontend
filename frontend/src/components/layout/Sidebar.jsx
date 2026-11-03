@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
 import "../../styles/layout/sidebar.css";
+import { BrowserRouter, Route, Routes, Link } from "react-router-dom";
 import { MdDelete } from "react-icons/md";
 const NAV = [
   { to: "/", label: "Inicio", icon: "/icons/home.svg", end: true },
@@ -81,6 +82,7 @@ export default function Sidebar({
         {collapsed ? "»" : "«"}
       </button>
 
+      <Link to="/" className="sidebar__brand-link">
       <div className="sidebar__brand">
         <img
           src="/eestn1logo.png"
@@ -103,7 +105,7 @@ export default function Sidebar({
           </div>
         )}
       </div>
-
+        </Link>
       <nav className="sidebar__nav">
         {NAV.map((item) => (
           <NavLink

@@ -101,7 +101,7 @@ const Login = () => {
 
       if (error.response) {
         if (error.response.status === 401) {
-          setServerError("email o password incorrectos");
+          setServerError("Usuario o contraseña incorrectos.");
         } else {
           setServerError(
             error.response.data?.message ||
