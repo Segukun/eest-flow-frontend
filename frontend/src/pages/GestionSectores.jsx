@@ -12,6 +12,7 @@ import {
 import AgregarSectorModal from "../components/AgregarSectorModal.jsx";
 import AgregarMiembroModal from "../components/AgregarMiembroModal.jsx";
 import ConfirmacionQuitarMiembroModal from "../components/ConfirmacionQuitarMiembroModal.jsx";
+import ConfirmacionEliminarSectorModal from "../components/ConfirmarEliminarSectorModal.jsx";
 import { useToast } from "../components/Toast.jsx";
 import api from "../api.js";
 import { useApp } from "../context/AppContext";
@@ -102,6 +103,7 @@ export default function GestionSectores() {
   const [editingMember, setEditingMember] = useState(null);
 
   const [memberToRemove, setMemberToRemove] = useState(null);
+  const [sectorToDelete, setSectorToDelete] = useState(null);
 
   const adminSector = sectores.find(
     (sector) => sector.id === adminSectorId
@@ -216,50 +218,30 @@ export default function GestionSectores() {
     }
   };
 
-  const handleDeleteSector = async (id) => {
+  // Solo abre el modal de confirmación (ya no hay window.confirm)
+  const handleDeleteSector = (sector) => {
     if (!isAdmin) return;
-    const sector = sectores.find(
-      (item) => item.id === id
-    );
+    if (!sector?.id) return;
 
-    if (!sector) {
-      return;
-    }
+    setSectorToDelete(sector);
+  };
 
-    const confirmar = window.confirm(
-      `¿Eliminar el sector "${sector.nombre}"?`
-    );
+  // Se ejecuta al apretar "Sí, eliminar sector".
+  // Si algo falla, lanza el error y el modal lo muestra.
+  const confirmDeleteSector = async () => {
+    if (!isAdmin || !sectorToDelete) return;
 
-    if (!confirmar) {
-      return;
-    }
+    const sector = sectorToDelete;
 
-    try {
-      await api.delete(`/api/sectors/${id}`);
+    await api.delete(`/api/sectors/${sector.id}`);
 
-      setIsAdminModalOpen(false);
-      setAdminSectorId(null);
+    setSectorToDelete(null);
+    setIsAdminModalOpen(false);
+    setAdminSectorId(null);
 
-      await cargarSectores();
-    } catch (error) {
-      console.error("Error al eliminar sector:", error);
+    await cargarSectores();
 
-      const status = error.response?.status;
-      const message = error.response?.data?.message;
-
-      if (status === 409) {
-        alert(
-          message ||
-            "No se puede eliminar el sector porque tiene miembros asignados."
-        );
-      } else if (status === 403) {
-        alert(
-          "No tenés permisos para eliminar este sector."
-        );
-      } else {
-        alert("No se pudo eliminar el sector.");
-      }
-    }
+    toast.success(`Se ha eliminado el sector ${sector.nombre}.`);
   };
 
   const openAdminModal = async (id) => {
@@ -789,9 +771,7 @@ export default function GestionSectores() {
                 <button
                   className="gs-danger"
                   onClick={() =>
-                    handleDeleteSector(
-                      adminSector.id
-                    )
+                    handleDeleteSector(adminSector)
                   }
                 >
                   <FiTrash2 />
@@ -809,6 +789,14 @@ export default function GestionSectores() {
           sectorNombre={adminSector?.nombre}
           onClose={() => setMemberToRemove(null)}
           onConfirm={confirmRemoveMember}
+        />
+      )}
+
+      {sectorToDelete && (
+        <ConfirmacionEliminarSectorModal
+          sector={sectorToDelete}
+          onClose={() => setSectorToDelete(null)}
+          onConfirm={confirmDeleteSector}
         />
       )}
     </>
