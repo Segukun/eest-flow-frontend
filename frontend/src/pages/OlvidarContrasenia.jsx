@@ -432,7 +432,7 @@ const OlvidarContrasenia = () => {
                     Se ha cambiado la contraseña correctamente
                   </p>
                   <Link className="olvidar-submit olvidar-submit--link" to="/login">
-                    Volver al Log In
+                    Volver al inicio de sesión
                   </Link>
                 </>
               ) : (
