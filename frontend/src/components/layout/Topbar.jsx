@@ -2,7 +2,7 @@ import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
 import "../../styles/layout/topbar.css";
-
+import { MdDelete } from "react-icons/md";
 const NAV = [
   { to: "/", label: "Inicio", icon: "/icons/home.svg", end: true },
   { to: "/sectores", label: "Sectores", icon: "/icons/teamsection.svg" },
@@ -241,7 +241,7 @@ export default function Topbar({
                             }}
                             type="button"
                           >
-                            🗑
+                            <MdDelete />
                           </button>
                         )}
                       </>

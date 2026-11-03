@@ -37,6 +37,8 @@
 .list-row__title {
   font-weight: 600;
   font-size: 14px;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 .list-row__labels {
   display: flex;

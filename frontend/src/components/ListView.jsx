@@ -53,7 +53,7 @@ export default function ListView() {
                         ) : null;
                       })}
                     </span>
-                    <span className="list-row__due">{t.dueDate || "—"}</span>
+                    <span className="list-row__due">{t.dueDate || "-/-/-"}</span>
                   </button>
                 );
               })}

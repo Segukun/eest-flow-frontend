@@ -80,7 +80,6 @@ export default function Column({
           {column.title}
           <span className="column__count">{tasks.length}</span>
         </div>
-        <button className="column__more">···</button>
       </header>
 
       <div className="column__body" ref={bodyRef}>

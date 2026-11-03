@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
 import "../../styles/layout/sidebar.css";
-
+import { MdDelete } from "react-icons/md";
 const NAV = [
   { to: "/", label: "Inicio", icon: "/icons/home.svg", end: true },
   {
@@ -228,7 +228,7 @@ export default function Sidebar({
                           }}
                           type="button"
                         >
-                          🗑
+                         <MdDelete />
                         </button>
                       )}
                     </>

@@ -29,6 +29,7 @@
 }
 .avatars {
   display: flex;
+  min-width: fit-content;
 }
 .avatars .avatar + .avatar {
   margin-left: -10px;
