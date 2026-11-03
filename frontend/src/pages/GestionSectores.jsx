@@ -11,6 +11,8 @@ import {
 } from "react-icons/fi";
 import AgregarSectorModal from "../components/AgregarSectorModal.jsx";
 import AgregarMiembroModal from "../components/AgregarMiembroModal.jsx";
+import ConfirmacionQuitarMiembroModal from "../components/ConfirmacionQuitarMiembroModal.jsx";
+import { useToast } from "../components/Toast.jsx";
 import api from "../api.js";
 import { useApp } from "../context/AppContext";
 import "../styles/pages/GestionSectores.css";
@@ -85,6 +87,7 @@ const convertirSector = (sector, miembros = []) => ({
 
 export default function GestionSectores() {
   const { currentUser } = useApp();
+  const toast = useToast();
   const isAdmin = currentUser?.accountType === "admin";
   const [sectores, setSectores] = useState([]);
   const [cargando, setCargando] = useState(true);
@@ -97,6 +100,8 @@ export default function GestionSectores() {
 
   const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
   const [editingMember, setEditingMember] = useState(null);
+
+  const [memberToRemove, setMemberToRemove] = useState(null);
 
   const adminSector = sectores.find(
     (sector) => sector.id === adminSectorId
@@ -427,82 +432,58 @@ export default function GestionSectores() {
     }
   };
 
-  const handleDeleteMember = async (member) => {
+  // Solo abre el modal de confirmación (ya no hay window.confirm)
+  const handleDeleteMember = (member) => {
     if (!isAdmin) return;
-    if (!member?.id) {
-      return;
-    }
+    if (!member?.id) return;
 
-    const confirmar = window.confirm(
-      `¿Quitar a ${member.nombre} de este sector?`
-    );
+    setMemberToRemove(member);
+  };
 
-    if (!confirmar) {
-      return;
-    }
+  // Se ejecuta al apretar "Sí, quitar miembro".
+  // Si algo falla, lanza el error y el modal lo muestra.
+  const confirmRemoveMember = async () => {
+    if (!isAdmin || !memberToRemove) return;
 
-    try {
-      const userResponse = await api.get(
-        `/api/users/${member.id}`
-      );
+    const member = memberToRemove;
+    const sectorNombre = adminSector?.nombre || "";
 
-      const usuario = userResponse.data?.user || userResponse.data;
+    const userResponse = await api.get(`/api/users/${member.id}`);
 
-      const sectoresActuales = Array.isArray(usuario.sectors)
-        ? usuario.sectors
-        : [];
+    const usuario = userResponse.data?.user || userResponse.data;
 
-      const sectoresIds = sectoresActuales.map((sector) => {
-        if (typeof sector === "string") {
-          return sector;
-        }
+    const sectoresActuales = Array.isArray(usuario.sectors)
+      ? usuario.sectors
+      : [];
 
-        return sector?._id || sector?.id;
-      });
-
-      const nuevosSectores = sectoresIds.filter(
-        (id) => id !== adminSectorId
-      );
-
-      if (nuevosSectores.length === 0) {
-        alert(
-          "El usuario debe pertenecer al menos a un sector."
-        );
-        return;
+    const sectoresIds = sectoresActuales.map((sector) => {
+      if (typeof sector === "string") {
+        return sector;
       }
 
-      await api.put(`/api/users/${member.id}`, {
-        sectors: nuevosSectores,
-      });
+      return sector?._id || sector?.id;
+    });
 
-      await cargarSectores();
+    const nuevosSectores = sectoresIds.filter(
+      (id) => id !== adminSectorId
+    );
 
-      const miembrosResponse = await api.get(
-        `/api/sectors/${adminSectorId}/members`
-      );
-
-      const miembros = Array.isArray(miembrosResponse.data)
-        ? miembrosResponse.data
-        : miembrosResponse.data.members || [];
-
-      setSectores((prev) =>
-        prev.map((sector) =>
-          sector.id === adminSectorId
-            ? {
-                ...sector,
-                miembros: miembros.map(convertirMiembro),
-              }
-            : sector
-        )
-      );
-    } catch (error) {
-      console.error(
-        "Error al quitar miembro:",
-        error
-      );
-
-      alert("No se pudo quitar el miembro del sector.");
+    if (nuevosSectores.length === 0) {
+      throw new Error("El usuario debe pertenecer al menos a un sector.");
     }
+
+    await api.put(`/api/users/${member.id}`, {
+      sectors: nuevosSectores,
+    });
+
+    // Recarga sectores y miembros (también actualiza la lista del modal)
+    await cargarSectores();
+
+    setMemberToRemove(null);
+
+    toast.success(
+      `Se ha quitado a ${member.nombre} del sector ${sectorNombre}.`
+    );
   };
 
   return (
@@ -820,6 +801,15 @@ export default function GestionSectores() {
             )}
           </div>
         </div>
+      )}
+
+      {memberToRemove && (
+        <ConfirmacionQuitarMiembroModal
+          miembro={memberToRemove}
+          sectorNombre={adminSector?.nombre}
+          onClose={() => setMemberToRemove(null)}
+          onConfirm={confirmRemoveMember}
+        />
       )}
     </>
   );
