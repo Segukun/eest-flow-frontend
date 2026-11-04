@@ -236,17 +236,19 @@ function normalizeUser(raw) {
     .toUpperCase();
 
   return {
-    id: raw._id,
+    id: raw._id ?? raw.id,
     name: raw.name,
     email: raw.email,
     initials,
     accountType: raw.accountType,
+    sectors: raw.sectors,
+    active: raw.active,
   };
 }
 
 export function AppProvider({ children }) {
   // ---- sesión ----
-  const [sessionUser] = useState(() => {
+  const [sessionUser, setSessionUser] = useState(() => {
     try {
       const raw = localStorage.getItem("user");
       return raw ? JSON.parse(raw) : null;
@@ -264,6 +266,7 @@ export function AppProvider({ children }) {
   // ---- sectores / usuarios ----
   const [sectors, setSectors] = useState([]);
   const [users, setUsers] = useState([]);
+  const usersVersion = useRef(0);
 
   // ---- etiquetas ----
   const [labels, setLabels] = useState([]);
@@ -291,6 +294,7 @@ export function AppProvider({ children }) {
     ? users.find((u) => u.id === sessionUser._id) ?? {
         id: sessionUser._id,
         name: sessionUser.name,
+        email: sessionUser.email,
         initials:
           (sessionUser.name || "")
             .split(" ")
@@ -308,12 +312,42 @@ export function AppProvider({ children }) {
   /* ---------- categorías ---------- */
 
   const reloadUsers = useCallback(async () => {
+    const version = usersVersion.current;
     const raw = await fetchUsers();
 
-    setUsers(raw.map(normalizeUser));
+    if (version === usersVersion.current) {
+      setUsers(raw.map(normalizeUser));
+    }
 
     return raw;
   }, []);
+
+  const updateCurrentUser = (updatedUser) => {
+    const id = updatedUser._id ?? updatedUser.id;
+    if (!sessionUser || id !== sessionUser._id) return;
+
+    // Solo datos públicos del usuario; nunca guardar el formulario de contraseña.
+    const normalized = normalizeUser({ ...currentUser, ...updatedUser });
+    usersVersion.current += 1;
+    setUsers((prev) => prev.some((user) => user.id === id)
+      ? prev.map((user) => user.id === id ? { ...user, ...normalized } : user)
+      : [...prev, normalized]);
+
+    const nextSession = {
+      _id: normalized.id,
+      name: normalized.name,
+      email: normalized.email,
+      accountType: normalized.accountType,
+      sectors: normalized.sectors,
+      active: normalized.active,
+    };
+    setSessionUser(nextSession);
+    try {
+      localStorage.setItem("user", JSON.stringify(nextSession));
+    } catch {
+      // La actualización visual funciona aunque el almacenamiento esté bloqueado.
+    }
+  };
 
   const loadCategories = useCallback(async () => {
     setCategoriesLoading(true);
@@ -1060,6 +1094,7 @@ export function AppProvider({ children }) {
   const value = {
     currentUser,
     reloadUsers,
+    updateCurrentUser,
 
     categories,
     categoriesLoading,

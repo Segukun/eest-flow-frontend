@@ -282,6 +282,10 @@ export default function Sidebar({
                   {currentUser?.name ?? "Cargando…"}
                 </strong>
 
+                <small title={currentUser?.email}>
+                  {currentUser?.email}
+                </small>
+
                 <small>
                   {currentUser?.accountType === "admin"
                     ? "Administrador"

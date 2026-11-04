@@ -105,6 +105,26 @@ test("identifica únicamente el error real de token inválido o vencido", () => 
   assert.match(mensajeErrorRecuperacion({ response }), /Solicite un nuevo código/);
 });
 
+test("muestra el rechazo de contraseña reutilizada y permite reintentar sin perder el token", async () => {
+  const message = "La nueva contraseña debe ser diferente a la contraseña actual.";
+  const error = { response: { status: 400, data: { message } } };
+  const post = mock.method(api, "post", async () => { throw error; });
+
+  await assert.rejects(
+    guardarNuevaContrasenia(email, "fixture-only", "secret123"),
+    (actual) => actual === error,
+  );
+  assert.equal(mensajeErrorRecuperacion(error), message);
+  assert.equal(esTokenInvalido(error), false);
+
+  post.mock.mockImplementation(async () => ({ data: { ok: true } }));
+  assert.deepEqual(
+    await guardarNuevaContrasenia(email, "fixture-only", "diferente123"),
+    { ok: true },
+  );
+  assert.equal(post.mock.calls[1].arguments[1].resetToken, "fixture-only");
+});
+
 test("distingue red, timeout, validación, servidor y respuestas inesperadas sin filtrar detalles", () => {
   assert.match(mensajeErrorRecuperacion({}), /conectar/);
   assert.match(mensajeErrorRecuperacion({ code: "ECONNABORTED" }), /tardó demasiado/);

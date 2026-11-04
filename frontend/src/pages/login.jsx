@@ -63,8 +63,6 @@ const Login = () => {
         password: password,
       });
 
-      console.log("Respuesta del servidor:", response.data);
-
       // 1. GUARDAR TOKEN - esto es lo que usa ProtectedRoutes para proteger
       const token = response.data.token || response.data.accessToken || response.data.access_token;
       if (token) {
@@ -97,8 +95,6 @@ const Login = () => {
 
     } 
     catch (error) {
-      console.error("Error al iniciar sesión:", error);
-
       if (error.response) {
         if (error.response.status === 401) {
           setServerError("Usuario o contraseña incorrectos.");

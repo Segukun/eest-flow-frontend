@@ -57,6 +57,10 @@ export const esTokenInvalido = (error) =>
 
 // Nunca se muestran ni registran el cuerpo de la petición o errores crudos de Axios.
 export function mensajeErrorRecuperacion(error) {
+  if (error.response?.status === 400 &&
+      error.response?.data?.message === "La nueva contraseña debe ser diferente a la contraseña actual.") {
+    return "La nueva contraseña debe ser diferente a la contraseña actual.";
+  }
   if (esTokenInvalido(error)) {
     return "La autorización para restablecer la contraseña no es válida o venció. Solicite un nuevo código.";
   }
