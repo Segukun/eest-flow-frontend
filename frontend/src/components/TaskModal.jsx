@@ -1,5 +1,6 @@
 import { readableAccent, avatarStyle } from "../theme";
 import { useApp } from "../context/AppContext";
+import { MAX_TASK_TITLE_LENGTH } from "../taskDrafts.js";
 import { PRIORITIES, ALL_LABELS, LABEL_COLORS } from "../mock/db";
 import "../styles/components/task-modal.css";
 
@@ -29,6 +30,7 @@ export default function TaskModal({ taskId, onClose }) {
             <input
               className="input input--title"
               value={task.title}
+              maxLength={MAX_TASK_TITLE_LENGTH}
               onChange={(e) => updateTask(task.id, { title: e.target.value })}
             />
           </label>

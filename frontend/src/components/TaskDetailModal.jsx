@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { useApp, PRIORITIES } from "../context/AppContext";
+import { MAX_TASK_TITLE_LENGTH } from "../taskDrafts.js";
 
 import { IoPencil } from "react-icons/io5";
 
@@ -126,6 +127,7 @@ export default function TaskDetailModal({
 
   const saveTitle = async () => {
     const trimmed = titleDraft.trim();
+    if (titleDraft.length > MAX_TASK_TITLE_LENGTH) return;
 
     if (!trimmed || trimmed === task.title) {
       setEditingTitle(false);
@@ -275,6 +277,7 @@ export default function TaskDetailModal({
                     ref={titleRef}
                     className="input task-detail__title-input"
                     value={titleDraft}
+                    maxLength={MAX_TASK_TITLE_LENGTH}
                     rows={1}
                     autoFocus
                     onChange={(event) =>
@@ -308,7 +311,7 @@ export default function TaskDetailModal({
                       type="button"
                       className="btn btn--primary btn--sm"
                       onClick={saveTitle}
-                      disabled={!titleDraft.trim() || savingTitle || titleDraft == ""}
+                      disabled={!titleDraft.trim() || savingTitle || titleDraft.length > MAX_TASK_TITLE_LENGTH}
                     >
                       {savingTitle
                         ? "Guardando…"

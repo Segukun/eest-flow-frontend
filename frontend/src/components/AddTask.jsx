@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
+import { FiCheck } from "react-icons/fi";
 import { useApp } from "../context/AppContext";
 import useSubmitGuard from "../hooks/useSubmitGuard";
+import { MAX_TASK_TITLE_LENGTH, taskDraftKey } from "../taskDrafts.js";
 
 export default function AddTask({
   columnId,
@@ -9,49 +11,68 @@ export default function AddTask({
   onOpen,
   onClose,
 }) {
-  const { addTask } = useApp();
-  const [title, setTitle] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
+  const { addTask, activeCategory, taskDrafts, setTaskDraft } = useApp();
+  const draftKey = taskDraftKey(activeCategory, columnId);
+  const title = taskDrafts[draftKey] ?? "";
+  const [error, setError] = useState(null);
+  const errorMessage = error?.key === draftKey ? error.message : "";
   const inputRef = useRef(null);
+  const formRef = useRef(null);
+  const categoryRef = useRef(activeCategory);
   const guard = useSubmitGuard(1000);
 
   useEffect(() => {
+    categoryRef.current = activeCategory;
     if (isOpen) {
       inputRef.current?.focus();
-      return;
     }
+  }, [isOpen, activeCategory]);
 
-    setTitle("");
-    setErrorMessage("");
-  }, [isOpen]);
+  useEffect(() => {
+    if (!isOpen || guard.pending) return;
+    const closeOutside = (event) => {
+      if (formRef.current && !formRef.current.contains(event.target)) {
+        onClose?.();
+      }
+    };
+    document.addEventListener("pointerdown", closeOutside);
+    return () => document.removeEventListener("pointerdown", closeOutside);
+  }, [isOpen, guard.pending, onClose]);
+
+  useEffect(() => {
+    const input = inputRef.current;
+    if (!isOpen || !input) return;
+    input.style.height = "auto";
+    input.style.height = `${input.scrollHeight}px`;
+  }, [isOpen, title]);
 
   const close = () => {
     if (guard.pending) return;
 
-    setTitle("");
-    setErrorMessage("");
+    setError(null);
     onClose?.();
   };
 
   const confirm = async () => {
     const taskTitle = title.trim();
-    if (!taskTitle) return;
+    if (!taskTitle || title.length > MAX_TASK_TITLE_LENGTH || !activeCategory) return;
 
     // si ya hay un envío en curso o en cooldown, run() lo ignora
     await guard.run(async () => {
       try {
-        setErrorMessage("");
+        setError(null);
         await addTask(columnId, taskTitle);
 
-        setTitle("");
-        onClose?.();
+        setTaskDraft(activeCategory, columnId, "");
+        if (categoryRef.current === activeCategory) onClose?.();
       } catch (error) {
         console.error("No se pudo crear la tarea:", error);
 
-        setErrorMessage(
-          error?.response?.data?.message ||
-            "No se pudo crear la tarea. Intentá nuevamente."
-        );
+        setError({
+          key: draftKey,
+          message: error?.response?.data?.message ||
+            "No se pudo crear la tarea. Intentá nuevamente.",
+        });
       }
     });
   };
@@ -85,21 +106,19 @@ export default function AddTask({
   }
 
   return (
-    <div className="add-task">
+    <div className="add-task" ref={formRef} aria-busy={guard.pending}>
       <textarea
         ref={inputRef}
         className="add-task__input"
         placeholder="Título de la tarea…"
         aria-label="Título de la nueva tarea"
         value={title}
+        maxLength={MAX_TASK_TITLE_LENGTH}
         rows={2}
         wrap="soft"
         onChange={(event) => {
-          setTitle(event.target.value);
-          setErrorMessage("");
-
-          event.target.style.height = "auto";
-          event.target.style.height = `${event.target.scrollHeight}px`;
+          setTaskDraft(activeCategory, columnId, event.target.value);
+          setError(null);
         }}
         disabled={guard.pending}
         onKeyDown={(event) => {
@@ -121,22 +140,21 @@ export default function AddTask({
       )}
 
       <div className="add-task__actions">
+        <small
+          className="add-task__remaining"
+          aria-label={`${MAX_TASK_TITLE_LENGTH - title.length} caracteres restantes`}
+        >
+          {MAX_TASK_TITLE_LENGTH - title.length}
+        </small>
         <button
-          className="btn btn--primary btn--sm"
+          className="add-task__confirm"
           type="button"
+          aria-label={guard.pending ? "Creando tarea" : "Crear tarea"}
+          title="Crear tarea"
           onClick={confirm}
-          disabled={guard.busy || !title.trim()}
+          disabled={guard.busy || !title.trim() || !activeCategory}
         >
-          {guard.pending ? "Guardando..." : "✓"}
-        </button>
-
-        <button
-          className="btn btn--ghost btn--sm"
-          type="button"
-          onClick={close}
-          disabled={guard.pending}
-        >
-          ✕
+          <FiCheck aria-hidden="true" />
         </button>
       </div>
     </div>

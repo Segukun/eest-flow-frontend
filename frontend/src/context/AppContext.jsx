@@ -34,6 +34,7 @@ import {
 import { fetchSectors } from "../api/sectors";
 import { fetchUsers } from "../api/users";
 import { fetchNotifications } from "../api/notifications";
+import { updateTaskDrafts } from "../taskDrafts.js";
 
 const AppContext = createContext(null);
 
@@ -274,6 +275,10 @@ export function AppProvider({ children }) {
 
   // ---- tareas ----
   const [tasks, setTasks] = useState([]);
+  const [taskDrafts, setTaskDrafts] = useState({});
+  const setTaskDraft = useCallback((categoryId, columnId, title) => {
+    setTaskDrafts((prev) => updateTaskDrafts(prev, categoryId, columnId, title));
+  }, []);
   const [tasksLoading, setTasksLoading] = useState(true);
   const [tasksError, setTasksError] = useState(null);
 
@@ -1122,6 +1127,8 @@ export function AppProvider({ children }) {
     reloadTasks: () => loadTasks(),
 
     addTask,
+    taskDrafts,
+    setTaskDraft,
     updateTask,
     deleteTask,
     moveTask,
