@@ -306,6 +306,9 @@ export default function GestionSectores() {
     }
 
     const userId = usuario._id || usuario.id;
+    const nombreMiembro = usuario.name || usuario.nombre || "el miembro";
+    const nombreSector = adminSector?.nombre || "";
+    const eraEdicion = !!editingMember;
 
     try {
       const userResponse = await api.get(
@@ -365,6 +368,13 @@ export default function GestionSectores() {
 
       setIsMemberModalOpen(false);
       setEditingMember(null);
+
+      // El guardado ya salió bien: avisamos con el toast
+      toast.success(
+        eraEdicion
+          ? `Se ha actualizado a ${nombreMiembro} en el sector ${nombreSector}.`
+          : `Se ha agregado a ${nombreMiembro} al sector ${nombreSector}.`
+      );
 
       await cargarSectores();
 
