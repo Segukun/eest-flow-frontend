@@ -1,32 +1,26 @@
 import { useEffect, useState } from "react";
-import api from "../api"; // ajustá la ruta si tu api.js está en otro lado
+import api from "../api";
+import { useApp } from "../context/AppContext";
+import { MAX_CONTRASENIA, validarContrasenia } from "../services/passwordRecovery.js";
 import "../styles/components/MiPerfil.css";
 
 // Prefijos reales según el app.js del backend
 const USERS_URL = "/api/users";
 const AUTH_URL = "/api/auth";
 
-// Lee el usuario guardado en el login
-const getSessionUser = () => {
-  try {
-    const raw = localStorage.getItem("user");
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-};
-
 export const MiPerfil = ({ onClose }) => {
-  const sessionUser = getSessionUser();
+  const { currentUser, updateCurrentUser } = useApp();
+  const userId = currentUser?.id;
 
-  const [nombre, setNombre] = useState(sessionUser?.name ?? "");
-  const [email, setEmail] = useState(sessionUser?.email ?? "");
+  const [nombre, setNombre] = useState(currentUser?.name ?? "");
+  const [email, setEmail] = useState(currentUser?.email ?? "");
   // valores guardados en el servidor, para saber si hubo cambios
   const [original, setOriginal] = useState({
-    name: sessionUser?.name ?? "",
-    email: sessionUser?.email ?? "",
+    name: currentUser?.name ?? "",
+    email: currentUser?.email ?? "",
   });
 
+  const [passwordActual, setPasswordActual] = useState("");
   const [nuevaPassword, setNuevaPassword] = useState("");
   const [confirmarPassword, setConfirmarPassword] = useState("");
 
@@ -37,7 +31,7 @@ export const MiPerfil = ({ onClose }) => {
 
   // Trae los datos actuales del usuario desde el backend
   useEffect(() => {
-    if (!sessionUser?._id) {
+    if (!userId) {
       setError("No se encontró la sesión. Volvé a iniciar sesión.");
       setCargando(false);
       return;
@@ -46,7 +40,7 @@ export const MiPerfil = ({ onClose }) => {
     let cancelado = false;
 
     api
-      .get(`${USERS_URL}/${sessionUser._id}`)
+      .get(`${USERS_URL}/${userId}`)
       .then(({ data }) => {
         if (cancelado) return;
         setNombre(data.name);
@@ -67,8 +61,7 @@ export const MiPerfil = ({ onClose }) => {
     return () => {
       cancelado = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [userId]);
 
   const guardarPerfil = async () => {
     const nombreLimpio = nombre.trim();
@@ -82,13 +75,14 @@ export const MiPerfil = ({ onClose }) => {
       return setError("El email puede tener como máximo 50 caracteres.");
 
     const quiereCambiarPassword =
-      nuevaPassword.length > 0 || confirmarPassword.length > 0;
+      passwordActual.length > 0 || nuevaPassword.length > 0 || confirmarPassword.length > 0;
 
     if (quiereCambiarPassword) {
-      if (nuevaPassword.length < 6)
-        return setError("La contraseña debe tener al menos 6 caracteres.");
-      if (nuevaPassword !== confirmarPassword)
-        return setError("Las contraseñas no coinciden.");
+      if (!passwordActual) return setError("Ingresá tu contraseña actual.");
+      if (!nuevaPassword) return setError("Ingresá una nueva contraseña.");
+      if (!confirmarPassword) return setError("Confirmá la nueva contraseña.");
+      const errorPassword = validarContrasenia(nuevaPassword, confirmarPassword);
+      if (errorPassword) return setError(errorPassword);
     }
 
     // Solo se envía lo que cambió
@@ -106,7 +100,7 @@ export const MiPerfil = ({ onClose }) => {
       if (Object.keys(payload).length > 0) {
         try {
           const { data } = await api.put(
-            `${USERS_URL}/${sessionUser._id}`,
+            `${USERS_URL}/${userId}`,
             payload
           );
 
@@ -114,11 +108,8 @@ export const MiPerfil = ({ onClose }) => {
           setEmail(data.email);
           setOriginal({ name: data.name, email: data.email });
 
-          // actualiza la sesión guardada, sin tocar el resto de sus campos
-          localStorage.setItem(
-            "user",
-            JSON.stringify({ ...sessionUser, name: data.name, email: data.email })
-          );
+          updateCurrentUser(data);
+          setMensaje("Nombre y email actualizados correctamente.");
         } catch (err) {
           if (err?.response?.status === 409) {
             setError("Ese email ya está en uso.");
@@ -131,12 +122,14 @@ export const MiPerfil = ({ onClose }) => {
         }
       }
 
-      // 2) contraseña: directo, sin código
+      // 2) Cambio de contraseña propio, verificado por el backend.
       if (quiereCambiarPassword) {
         try {
           await api.post(`${AUTH_URL}/change-password`, {
+            currentPassword: passwordActual,
             newPassword: nuevaPassword,
           });
+          setPasswordActual("");
           setNuevaPassword("");
           setConfirmarPassword("");
         } catch (err) {
@@ -204,17 +197,34 @@ export const MiPerfil = ({ onClose }) => {
           </div>
 
           <div className="perfil-campo">
+            <label htmlFor="passwordActual">Contraseña actual</label>
+            <input
+              id="passwordActual"
+              type="password"
+              autoComplete="current-password"
+              maxLength={MAX_CONTRASENIA}
+              placeholder="Ingresá tu contraseña actual"
+              value={passwordActual}
+              disabled={bloqueado}
+              onChange={(e) => setPasswordActual(e.target.value)}
+            />
+            <small>Solo es necesaria para cambiar tu contraseña.</small>
+          </div>
+
+          <div className="perfil-campo">
             <label htmlFor="nuevaPassword">Nueva contraseña</label>
             <input
               id="nuevaPassword"
               type="password"
+              autoComplete="new-password"
+              maxLength={MAX_CONTRASENIA}
               placeholder="Ingresá una nueva contraseña"
               value={nuevaPassword}
               disabled={bloqueado}
               onChange={(e) => setNuevaPassword(e.target.value)}
             />
             <small>
-              Mínimo 6 caracteres. Dejá vacío si no querés cambiarla.
+              Entre 6 y 64 caracteres. Dejá vacío si no querés cambiarla.
             </small>
           </div>
 
@@ -223,6 +233,8 @@ export const MiPerfil = ({ onClose }) => {
             <input
               id="confirmarPassword"
               type="password"
+              autoComplete="new-password"
+              maxLength={MAX_CONTRASENIA}
               placeholder="Repetí la nueva contraseña"
               value={confirmarPassword}
               disabled={bloqueado}

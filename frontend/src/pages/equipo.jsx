@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   FiSearch,
   FiChevronDown,
@@ -10,7 +10,6 @@ import {
 } from "react-icons/fi";
 
 import { useApp } from "../context/AppContext";
-import api from "../api.js";
 import "../styles/pages/equipo.css";
 import AgregarMiembro from "../components/AgregarMiembro.jsx";
 import ModificarMiembro from "../components/ModificarMiembro.jsx";
@@ -262,14 +261,14 @@ const MemberCard = ({
 };
 
 const Equipo = () => {
-  const { currentUser } = useApp();
+  const { currentUser, users, reloadUsers } = useApp();
   const toast = useToast(); // NUEVO
 
   const idUsuarioActual = String(
     currentUser?._id || currentUser?.id || ""
   );
 
-  const [miembros, setMiembros] = useState([]);
+  const miembros = useMemo(() => users.map(convertirMiembro), [users]);
   const [cargandoMiembros, setCargandoMiembros] = useState(true);
   const [errorMiembros, setErrorMiembros] = useState("");
   const [busqueda, setBusqueda] = useState("");
@@ -282,20 +281,12 @@ const Equipo = () => {
   const [modalEliminarOpen, setModalEliminarOpen] = useState(false);
   const [miembroSeleccionado, setMiembroSeleccionado] = useState(null);
 
-  const cargarMiembros = async () => {
+  const cargarMiembros = useCallback(async () => {
     try {
       setCargandoMiembros(true);
       setErrorMiembros("");
 
-      const response = await api.get("/api/users");
-
-      const usuarios = Array.isArray(response.data)
-        ? response.data
-        : [];
-
-      const miembrosConvertidos = usuarios.map(convertirMiembro);
-
-      setMiembros(miembrosConvertidos);
+      await reloadUsers();
       setPaginaActual(1);
     } catch (error) {
       console.error("Error al cargar miembros:", error);
@@ -312,11 +303,11 @@ const Equipo = () => {
     } finally {
       setCargandoMiembros(false);
     }
-  };
+  }, [reloadUsers]);
 
   useEffect(() => {
     cargarMiembros();
-  }, []);
+  }, [cargarMiembros]);
 
   const roles = useMemo(
     () => [
