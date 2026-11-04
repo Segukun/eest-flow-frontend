@@ -1,4 +1,3 @@
-
 import {
   createContext,
   useContext,
@@ -14,6 +13,8 @@ import {
   createTaskRequest,
   updateTaskRequest,
   deleteTaskRequest,
+  uploadTaskAttachmentsRequest,
+  deleteTaskAttachmentRequest,
 } from "../api/tasks";
 
 import {
@@ -72,27 +73,117 @@ function unwrapEntity(raw, key) {
   return raw[key] ?? raw.data?.[key] ?? raw.data ?? raw;
 }
 
+/**
+ * Normaliza los archivos adjuntos que llegan desde MongoDB.
+ *
+ * La información de los adjuntos permanece separada
+ * de las etiquetas y de los usuarios asignados.
+ */
+function normalizeAttachments(values) {
+  return (Array.isArray(values) ? values : []).map((file) => ({
+    id: String(
+      getId(file) ?? file.path ?? file.url ?? "",
+    ),
+
+    originalName:
+      file.originalName ??
+      file.originalname ??
+      file.name ??
+      "Archivo adjunto",
+
+    name:
+      file.originalName ??
+      file.originalname ??
+      file.name ??
+      "Archivo adjunto",
+
+    path: file.path ?? "",
+
+    url:
+      file.url ??
+      file.signedUrl ??
+      file.publicUrl ??
+      "",
+
+    mimeType:
+      file.mimeType ??
+      file.mimetype ??
+      file.type ??
+      "",
+
+    size: Number(file.size ?? 0),
+
+    uploadedAt:
+      file.uploadedAt ??
+      file.createdAt ??
+      null,
+  }));
+}
+
 function normalizeTask(raw, fallback = {}) {
   const source = unwrapEntity(raw, "task");
-  const dueDate = source.dueDate ?? fallback.dueDate ?? "";
+
+  const dueDate =
+    source.dueDate ??
+    fallback.dueDate ??
+    "";
 
   return {
     id: source._id ?? source.id ?? fallback.id,
-    title: source.title ?? fallback.title ?? "",
-    description: source.description ?? fallback.description ?? "",
-    priority: source.priority ?? fallback.priority ?? "medium",
-    column: source.state ?? source.column ?? fallback.column ?? "pending",
+
+    title:
+      source.title ??
+      fallback.title ??
+      "",
+
+    description:
+      source.description ??
+      fallback.description ??
+      "",
+
+    priority:
+      source.priority ??
+      fallback.priority ??
+      "medium",
+
+    column:
+      source.state ??
+      source.column ??
+      fallback.column ??
+      "pending",
+
     categoryId: getId(
-      source.category ?? source.categoryId ?? fallback.categoryId
+      source.category ??
+      source.categoryId ??
+      fallback.categoryId
     ),
+
     members: normalizeIdList(
-      source.assignedUser ?? source.members ?? fallback.members
+      source.assignedUser ??
+      source.members ??
+      fallback.members
     ),
+
     labelIds: normalizeIdList(
-      source.labels ?? source.labelIds ?? fallback.labelIds
+      source.labels ??
+      source.labelIds ??
+      fallback.labelIds
     ),
-    dueDate: dueDate ? String(dueDate).slice(0, 10) : "",
-    order: source.order ?? fallback.order ?? 0,
+
+    dueDate: dueDate
+      ? String(dueDate).slice(0, 10)
+      : "",
+
+    order:
+      source.order ??
+      fallback.order ??
+      0,
+
+    // Campo adicional para archivos adjuntos.
+    attachments: normalizeAttachments(
+      source.attachments ??
+      fallback.attachments
+    ),
   };
 }
 
@@ -101,9 +192,21 @@ function normalizeCategory(raw, fallback = {}) {
 
   return {
     id: source._id ?? source.id ?? fallback.id,
-    name: source.name ?? fallback.name ?? "",
-    color: source.color ?? fallback.color ?? "#05903e",
-    sectors: source.sectors ?? fallback.sectors ?? [],
+
+    name:
+      source.name ??
+      fallback.name ??
+      "",
+
+    color:
+      source.color ??
+      fallback.color ??
+      "#05903e",
+
+    sectors:
+      source.sectors ??
+      fallback.sectors ??
+      [],
   };
 }
 
@@ -176,6 +279,7 @@ export function AppProvider({ children }) {
 
   const [view, setView] = useState("tablero");
   const [search, setSearch] = useState("");
+
   const [filters, setFilters] = useState({
     onlyMine: false,
     priorities: [],
@@ -187,13 +291,16 @@ export function AppProvider({ children }) {
     ? users.find((u) => u.id === sessionUser._id) ?? {
         id: sessionUser._id,
         name: sessionUser.name,
-        initials: (sessionUser.name || "")
-          .split(" ")
-          .map((w) => w[0])
-          .join("")
-          .slice(0, 2)
-          .toUpperCase() || "?",
-        // El rol guardado puede estar obsoleto; esperar la consulta actual.
+        initials:
+          (sessionUser.name || "")
+            .split(" ")
+            .map((w) => w[0])
+            .join("")
+            .slice(0, 2)
+            .toUpperCase() || "?",
+
+        // El rol guardado puede estar obsoleto.
+        // Esperamos la consulta actual.
         accountType: undefined,
       }
     : null;
@@ -202,7 +309,9 @@ export function AppProvider({ children }) {
 
   const reloadUsers = useCallback(async () => {
     const raw = await fetchUsers();
+
     setUsers(raw.map(normalizeUser));
+
     return raw;
   }, []);
 
@@ -212,10 +321,16 @@ export function AppProvider({ children }) {
 
     try {
       const raw = await fetchCategories();
-      const normalized = raw.map((category) => normalizeCategory(category));
+
+      const normalized = raw.map(
+        (category) => normalizeCategory(category),
+      );
 
       setCategories(normalized);
-      setActiveCategory((prev) => prev ?? normalized[0]?.id ?? null);
+
+      setActiveCategory(
+        (prev) => prev ?? normalized[0]?.id ?? null,
+      );
     } catch (err) {
       setCategoriesError(
         err?.response?.data?.message ||
@@ -243,7 +358,10 @@ export function AppProvider({ children }) {
 
       const count = response?.data?.unreadCount;
 
-      if (typeof count === "number" && Number.isFinite(count)) {
+      if (
+        typeof count === "number" &&
+        Number.isFinite(count)
+      ) {
         setUnreadCount(Math.max(0, count));
       }
     } catch (err) {
@@ -280,6 +398,7 @@ export function AppProvider({ children }) {
 
     return () => {
       clearInterval(intervalId);
+
       document.removeEventListener(
         "visibilitychange",
         refreshNotifications
@@ -304,56 +423,69 @@ export function AppProvider({ children }) {
     }
   };
 
-  const loadTasks = useCallback(async ({ silent = false } = {}) => {
-    if (!silent) {
-      setTasksLoading(true);
-      setTasksError(null);
-    }
-
-    const versionAtStart = mutationVersion.current;
-
-    try {
-      const raw = await fetchTasks();
-
-      if (
-        silent &&
-        (mutationsInFlight.current > 0 ||
-          mutationVersion.current !== versionAtStart)
-      ) {
-        return;
-      }
-
-      const signature = JSON.stringify(raw);
-
-      if (silent && signature === tasksSignature.current) {
-        return;
-      }
-
-      tasksSignature.current = signature;
-      setTasks(raw.map((task) => normalizeTask(task)));
-    } catch (err) {
+  const loadTasks = useCallback(
+    async ({ silent = false } = {}) => {
       if (!silent) {
-        setTasksError(
-          err?.response?.data?.message ||
-            "No se pudieron cargar las tareas."
+        setTasksLoading(true);
+        setTasksError(null);
+      }
+
+      const versionAtStart = mutationVersion.current;
+
+      try {
+        const raw = await fetchTasks();
+
+        if (
+          silent &&
+          (
+            mutationsInFlight.current > 0 ||
+            mutationVersion.current !== versionAtStart
+          )
+        ) {
+          return;
+        }
+
+        const signature = JSON.stringify(raw);
+
+        if (
+          silent &&
+          signature === tasksSignature.current
+        ) {
+          return;
+        }
+
+        tasksSignature.current = signature;
+
+        setTasks(
+          raw.map((task) => normalizeTask(task)),
         );
+      } catch (err) {
+        if (!silent) {
+          setTasksError(
+            err?.response?.data?.message ||
+              "No se pudieron cargar las tareas."
+          );
+        }
+      } finally {
+        if (!silent) {
+          setTasksLoading(false);
+        }
       }
-    } finally {
-      if (!silent) {
-        setTasksLoading(false);
-      }
-    }
-  }, []);
+    },
+    [],
+  );
 
   useEffect(() => {
     loadCategories();
     loadTasks();
 
     fetchSectors()
-      .then((raw) => setSectors(raw.map(normalizeSector)))
+      .then((raw) =>
+        setSectors(raw.map(normalizeSector))
+      )
       .catch(() => setSectors([]));
-    reloadUsers()
-      .catch(() => setUsers([]));
+
+    reloadUsers().catch(() => setUsers([]));
   }, [loadCategories, loadTasks, reloadUsers]);
 
   /* ---------- actualización automática de tareas ---------- */
@@ -365,13 +497,23 @@ export function AppProvider({ children }) {
       }
     };
 
-    const intervalId = setInterval(refresh, POLL_INTERVAL_MS);
+    const intervalId = setInterval(
+      refresh,
+      POLL_INTERVAL_MS,
+    );
 
-    document.addEventListener("visibilitychange", refresh);
+    document.addEventListener(
+      "visibilitychange",
+      refresh,
+    );
 
     return () => {
       clearInterval(intervalId);
-      document.removeEventListener("visibilitychange", refresh);
+
+      document.removeEventListener(
+        "visibilitychange",
+        refresh,
+      );
     };
   }, [loadTasks]);
 
@@ -387,6 +529,7 @@ export function AppProvider({ children }) {
 
     try {
       const raw = await fetchLabels(activeCategory);
+
       setLabels(raw.map(normalizeLabel));
     } catch {
       setLabels([]);
@@ -405,6 +548,7 @@ export function AppProvider({ children }) {
     let n = 0;
 
     if (filters.onlyMine) n++;
+
     n += filters.priorities.length;
 
     if (filters.sector) n++;
@@ -414,15 +558,21 @@ export function AppProvider({ children }) {
   }, [filters]);
 
   const sectorIdOf = (s) =>
-    s && typeof s === "object" ? s._id ?? s.id : s;
+    s && typeof s === "object"
+      ? s._id ?? s.id
+      : s;
 
   const visibleTasks = useMemo(() => {
     const now = new Date();
-    const diffDays = (d) => (new Date(d) - now) / 86400000;
+
+    const diffDays = (d) =>
+      (new Date(d) - now) / 86400000;
 
     return tasks
       .filter((t) => {
-        if (t.categoryId !== activeCategory) return false;
+        if (t.categoryId !== activeCategory) {
+          return false;
+        }
 
         if (
           search &&
@@ -451,23 +601,36 @@ export function AppProvider({ children }) {
             (c) => c.id === t.categoryId
           );
 
-          const ids = (category?.sectors ?? []).map(sectorIdOf);
+          const ids = (category?.sectors ?? []).map(
+            sectorIdOf
+          );
 
-          if (!ids.includes(filters.sector)) return false;
+          if (!ids.includes(filters.sector)) {
+            return false;
+          }
         }
 
         if (filters.due && t.dueDate) {
           const d = diffDays(t.dueDate);
 
-          if (filters.due === "hoy" && !(d >= -1 && d < 1)) {
+          if (
+            filters.due === "hoy" &&
+            !(d >= -1 && d < 1)
+          ) {
             return false;
           }
 
-          if (filters.due === "48" && !(d < 2)) {
+          if (
+            filters.due === "48" &&
+            !(d < 2)
+          ) {
             return false;
           }
 
-          if (filters.due === "7" && !(d < 7)) {
+          if (
+            filters.due === "7" &&
+            !(d < 7)
+          ) {
             return false;
           }
         }
@@ -475,7 +638,14 @@ export function AppProvider({ children }) {
         return true;
       })
       .sort((a, b) => a.order - b.order);
-  }, [tasks, categories, activeCategory, search, filters, currentUser]);
+  }, [
+    tasks,
+    categories,
+    activeCategory,
+    search,
+    filters,
+    currentUser,
+  ]);
 
   /* ---------- acciones: tareas ---------- */
 
@@ -502,43 +672,71 @@ export function AppProvider({ children }) {
         order: nextOrder,
       });
 
-      setTasks((prev) => [...prev, normalizeTask(created)]);
+      setTasks((prev) => [
+        ...prev,
+        normalizeTask(created),
+      ]);
     });
 
   const updateTask = (id, patch) =>
     track(async () => {
       const payload = {};
 
-      if (patch.title !== undefined) payload.title = patch.title;
+      if (patch.title !== undefined) {
+        payload.title = patch.title;
+      }
+
       if (patch.description !== undefined) {
         payload.description = patch.description;
       }
+
       if (patch.priority !== undefined) {
         payload.priority = patch.priority;
       }
-      if (patch.column !== undefined) payload.state = patch.column;
+
+      if (patch.column !== undefined) {
+        payload.state = patch.column;
+      }
+
       if (patch.members !== undefined) {
         payload.assignedUser = patch.members;
       }
+
       if (patch.labelIds !== undefined) {
         payload.labels = patch.labelIds;
       }
+
       if (patch.dueDate !== undefined) {
         payload.dueDate = patch.dueDate || null;
       }
-      if (patch.order !== undefined) payload.order = patch.order;
 
-      const existing = tasks.find((task) => String(task.id) === String(id));
-      const updated = await updateTaskRequest(id, payload);
-      const normalized = normalizeTask(updated, {
-        ...existing,
-        ...patch,
+      if (patch.order !== undefined) {
+        payload.order = patch.order;
+      }
+
+      const existing = tasks.find(
+        (task) => String(task.id) === String(id)
+      );
+
+      const updated = await updateTaskRequest(
         id,
-      });
+        payload,
+      );
+
+      const normalized = normalizeTask(
+        updated,
+        {
+          ...existing,
+          ...patch,
+          id,
+        },
+      );
 
       setTasks((prev) =>
         prev.map((task) =>
-          String(task.id) === String(id) ? normalized : task
+          String(task.id) === String(id)
+            ? normalized
+            : task
         )
       );
 
@@ -548,13 +746,91 @@ export function AppProvider({ children }) {
   const deleteTask = (id) =>
     track(async () => {
       await deleteTaskRequest(id);
-      setTasks((prev) => prev.filter((t) => t.id !== id));
+
+      setTasks((prev) =>
+        prev.filter((t) => t.id !== id)
+      );
+    });
+
+  /* ---------- acciones: adjuntos de tareas ---------- */
+
+  /**
+   * Sube archivos y actualiza solamente la tarea correspondiente.
+   */
+  const uploadTaskAttachments = (id, files) =>
+    track(async () => {
+      const existing = tasks.find(
+        (task) => String(task.id) === String(id)
+      );
+
+      const updated = await uploadTaskAttachmentsRequest(
+        id,
+        files,
+      );
+
+      const normalized = normalizeTask(
+        updated,
+        {
+          ...existing,
+          id,
+        },
+      );
+
+      setTasks((prev) =>
+        prev.map((task) =>
+          String(task.id) === String(id)
+            ? normalized
+            : task
+        )
+      );
+
+      return normalized;
+    });
+
+  /**
+   * Elimina un adjunto específico sin reemplazar
+   * el resto de la información de la tarea.
+   */
+  const deleteTaskAttachment = (
+    taskId,
+    attachmentId,
+  ) =>
+    track(async () => {
+      const existing = tasks.find(
+        (task) => String(task.id) === String(taskId)
+      );
+
+      const updated = await deleteTaskAttachmentRequest(
+        taskId,
+        attachmentId,
+      );
+
+      const normalized = normalizeTask(
+        updated,
+        {
+          ...existing,
+          id: taskId,
+        },
+      );
+
+      setTasks((prev) =>
+        prev.map((task) =>
+          String(task.id) === String(taskId)
+            ? normalized
+            : task
+        )
+      );
+
+      return normalized;
     });
 
   const moveTask = (id, columnId, beforeId = null) =>
     track(async () => {
       const previous = tasks;
-      const moving = tasks.find((t) => t.id === id);
+
+      const moving = tasks.find(
+        (t) => t.id === id
+      );
 
       if (!moving || id === beforeId) return;
 
@@ -571,10 +847,14 @@ export function AppProvider({ children }) {
         ? target.findIndex((t) => t.id === beforeId)
         : -1;
 
-      target.splice(index === -1 ? target.length : index, 0, {
-        ...moving,
-        column: columnId,
-      });
+      target.splice(
+        index === -1 ? target.length : index,
+        0,
+        {
+          ...moving,
+          column: columnId,
+        },
+      );
 
       const renumbered = target.map((t, i) => ({
         ...t,
@@ -582,7 +862,9 @@ export function AppProvider({ children }) {
       }));
 
       const changed = renumbered.filter((t) => {
-        const old = tasks.find((o) => o.id === t.id);
+        const old = tasks.find(
+          (o) => o.id === t.id
+        );
 
         return (
           !old ||
@@ -591,7 +873,9 @@ export function AppProvider({ children }) {
         );
       });
 
-      const byId = new Map(renumbered.map((t) => [t.id, t]));
+      const byId = new Map(
+        renumbered.map((t) => [t.id, t])
+      );
 
       setTasks((prev) =>
         prev.map((t) => byId.get(t.id) ?? t)
@@ -614,20 +898,31 @@ export function AppProvider({ children }) {
 
   /* ---------- acciones: categorías ---------- */
 
-  const addCategory = async ({ name, color, sectors: sectorIds }) => {
+  const addCategory = async ({
+    name,
+    color,
+    sectors: sectorIds,
+  }) => {
     const created = await createCategoryRequest({
       name,
       color,
       sectors: sectorIds,
     });
 
-    const normalized = normalizeCategory(created, {
-      name,
-      color,
-      sectors: sectorIds,
-    });
+    const normalized = normalizeCategory(
+      created,
+      {
+        name,
+        color,
+        sectors: sectorIds,
+      },
+    );
 
-    setCategories((prev) => [...prev, normalized]);
+    setCategories((prev) => [
+      ...prev,
+      normalized,
+    ]);
+
     setActiveCategory(normalized.id);
 
     return normalized.id;
@@ -635,24 +930,34 @@ export function AppProvider({ children }) {
 
   const updateCategory = async (
     id,
-    { name, color, sectors: sectorIds }
+    {
+      name,
+      color,
+      sectors: sectorIds,
+    },
   ) => {
     const existing = categories.find(
       (category) => String(category.id) === String(id)
     );
 
-    const updated = await updateCategoryRequest(id, {
-      name,
-      color,
-      sectors: sectorIds,
-    });
-
-    const normalized = normalizeCategory(updated, {
+    const updated = await updateCategoryRequest(
       id,
-      name: name ?? existing?.name,
-      color: color ?? existing?.color,
-      sectors: sectorIds ?? existing?.sectors,
-    });
+      {
+        name,
+        color,
+        sectors: sectorIds,
+      },
+    );
+
+    const normalized = normalizeCategory(
+      updated,
+      {
+        id,
+        name: name ?? existing?.name,
+        color: color ?? existing?.color,
+        sectors: sectorIds ?? existing?.sectors,
+      },
+    );
 
     setCategories((prev) =>
       prev.map((category) =>
@@ -670,10 +975,15 @@ export function AppProvider({ children }) {
 
     await deleteCategoryRequest(id);
 
-    setCategories((prev) => prev.filter((c) => c.id !== id));
+    setCategories((prev) =>
+      prev.filter((c) => c.id !== id)
+    );
 
     if (activeCategory === id) {
-      const fallback = categories.find((c) => c.id !== id);
+      const fallback = categories.find(
+        (c) => c.id !== id
+      );
+
       setActiveCategory(fallback?.id ?? null);
     }
   };
@@ -693,17 +1003,32 @@ export function AppProvider({ children }) {
 
     const normalized = normalizeLabel(created);
 
-    setLabels((prev) => [...prev, normalized]);
+    setLabels((prev) => [
+      ...prev,
+      normalized,
+    ]);
 
     return normalized;
   };
 
-  const updateLabel = async (id, { title, color }) => {
-    const updated = await updateLabelRequest(id, { title, color });
+  const updateLabel = async (
+    id,
+    { title, color },
+  ) => {
+    const updated = await updateLabelRequest(
+      id,
+      {
+        title,
+        color,
+      },
+    );
+
     const normalized = normalizeLabel(updated);
 
     setLabels((prev) =>
-      prev.map((l) => (l.id === id ? normalized : l))
+      prev.map((l) =>
+        l.id === id ? normalized : l
+      )
     );
 
     return normalized;
@@ -712,14 +1037,18 @@ export function AppProvider({ children }) {
   const deleteLabel = async (id) => {
     await deleteLabelRequest(id);
 
-    setLabels((prev) => prev.filter((l) => l.id !== id));
+    setLabels((prev) =>
+      prev.filter((l) => l.id !== id)
+    );
 
     setTasks((prev) =>
       prev.map((t) =>
         t.labelIds.includes(id)
           ? {
               ...t,
-              labelIds: t.labelIds.filter((lid) => lid !== id),
+              labelIds: t.labelIds.filter(
+                (lid) => lid !== id
+              ),
             }
           : t
       )
@@ -762,6 +1091,10 @@ export function AppProvider({ children }) {
     deleteTask,
     moveTask,
 
+    // Nuevas operaciones de adjuntos.
+    uploadTaskAttachments,
+    deleteTaskAttachment,
+
     view,
     setView,
     search,
@@ -771,7 +1104,7 @@ export function AppProvider({ children }) {
     setFilters,
     activeFiltersCount,
 
-    // Notificaciones
+    // Notificaciones.
     unreadCount,
     reloadUnreadCount,
   };

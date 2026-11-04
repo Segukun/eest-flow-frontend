@@ -1,59 +1,163 @@
 import { useApp, PRIORITIES } from "../context/AppContext";
 
-// dropMarker: "before" | "after" | null -> línea naranja que muestra dónde va a caer la tarea
-export default function TaskCard({ task, isDragging, dropMarker, onDragStart, onDragEnd, onView, onEdit }) {
-  const { users, labels } = useApp();
-  const priority = PRIORITIES[task.priority];
-  const members = task.members.map((id) => users.find((u) => u.id === id)).filter(Boolean);
-  const taskLabels = task.labelIds.map((id) => labels.find((l) => l.id === id)).filter(Boolean);
+import {
+  FiMenu,
+  FiPaperclip,
+} from "react-icons/fi";
 
-  // box-shadow no cambia el tamaño ni la posición de las tarjetas, así que
-  // la línea no "mueve" nada mientras arrastrás
+import "../styles/components/task-card-attachments.css";
+
+// dropMarker: "before" | "after" | null
+// Línea naranja que indica dónde se insertará la tarea.
+export default function TaskCard({
+  task,
+  isDragging,
+  dropMarker,
+  onDragStart,
+  onDragEnd,
+  onView,
+  onEdit,
+}) {
+  const { users, labels } = useApp();
+
+  const priority =
+    PRIORITIES[task.priority] ?? PRIORITIES.medium;
+
+  const members = (task.members ?? [])
+    .map((id) =>
+      users.find((user) => user.id === id)
+    )
+    .filter(Boolean);
+
+  const taskLabels = (task.labelIds ?? [])
+    .map((id) =>
+      labels.find((label) => label.id === id)
+    )
+    .filter(Boolean);
+
+  const attachments = Array.isArray(task.attachments)
+    ? task.attachments
+    : [];
+
+  const description = (task.description ?? "").trim();
+
+  // No mostrar indicador para la descripción predeterminada.
+  const hasDescription = Boolean(
+    description &&
+    description.toLowerCase() !== "sin descripción"
+  );
+
   const markerStyle = dropMarker
-    ? { boxShadow: `0 ${dropMarker === "before" ? "-4px" : "4px"} 0 0 var(--color-orange)` }
+    ? {
+        boxShadow: `0 ${
+          dropMarker === "before" ? "-4px" : "4px"
+        } 0 0 var(--color-orange)`,
+      }
     : undefined;
 
-  // El drop ya no se maneja acá: se maneja en la columna (Column.jsx), que
-  // calcula la posición exacta según la altura del mouse.
   return (
     <article
-      className={"task-card" + (isDragging ? " task-card--dragging" : "")}
+      className={
+        "task-card" +
+        (isDragging ? " task-card--dragging" : "")
+      }
       style={markerStyle}
       draggable
-      onDragStart={(e) => { e.dataTransfer.effectAllowed = "move"; onDragStart(task.id); }}
+      onDragStart={(event) => {
+        event.dataTransfer.effectAllowed = "move";
+        onDragStart(task.id);
+      }}
       onDragEnd={onDragEnd}
       onClick={() => onView(task.id)}
     >
-      <span className="task-card__priority" style={{ background: priority.color }} />
+      <span
+        className="task-card__priority"
+        style={{ background: priority.color }}
+      />
 
-      <button className="task-card__edit" title="Editar tarjeta" onClick={(e) => { e.stopPropagation(); onEdit(task.id); }}>
+      <button
+        className="task-card__edit"
+        title="Editar tarjeta"
+        onClick={(event) => {
+          event.stopPropagation();
+          onEdit(task.id);
+        }}
+      >
         ✎
       </button>
 
       {taskLabels.length > 0 && (
         <div className="task-card__labels">
-          {taskLabels.map((l) => (
-            <span key={l.id} className="label" style={{ color: l.color, background: `color-mix(in srgb, ${l.color} 14%, transparent)` }}>
-              {l.title || "·"}
+          {taskLabels.map((label) => (
+            <span
+              key={label.id}
+              className="label"
+              style={{
+                color: label.color,
+                background: `color-mix(in srgb, ${label.color} 14%, transparent)`,
+              }}
+            >
+              {label.title || "·"}
             </span>
           ))}
         </div>
       )}
 
-      <h4 className="task-card__title">{task.title}</h4>
+      <h4 className="task-card__title">
+        {task.title}
+      </h4>
 
       <div className="task-card__foot">
-        <div className="avatars">
-          {members.slice(0, 3).map((m) => (
-            <span key={m.id} className="avatar avatar--sm" style={{ background: "var(--color-green)" }} title={m.name}>
-              {m.initials}
-            </span>
-          ))}
-          {members.length > 3 && <span className="avatar avatar--sm avatar--more">+{members.length - 3}</span>}
+        <div className="task-card__foot-left">
+          <div className="avatars">
+            {members.slice(0, 3).map((member) => (
+              <span
+                key={member.id}
+                className="avatar avatar--sm"
+                style={{ background: "var(--color-green)" }}
+                title={member.name}
+              >
+                {member.initials}
+              </span>
+            ))}
+
+            {members.length > 3 && (
+              <span className="avatar avatar--sm avatar--more">
+                +{members.length - 3}
+              </span>
+            )}
+          </div>
+
+          <div
+            className="task-card__indicators"
+            aria-label="Detalles de la tarea"
+          >
+            {attachments.length > 0 && (
+              <span
+                title={`${attachments.length} archivos adjuntos`}
+              >
+                <FiPaperclip aria-hidden="true" />
+                <span>{attachments.length}</span>
+              </span>
+            )}
+
+            {hasDescription && (
+              <span title="Esta tarea tiene descripción">
+                <FiMenu aria-hidden="true" />
+              </span>
+            )}
+          </div>
         </div>
+
         {task.dueDate && (
           <span className="task-card__due">
-            {new Date(task.dueDate).toLocaleDateString("es-AR", { day: "2-digit", month: "short" })}
+            {new Date(task.dueDate).toLocaleDateString(
+              "es-AR",
+              {
+                day: "2-digit",
+                month: "short",
+              },
+            )}
           </span>
         )}
       </div>

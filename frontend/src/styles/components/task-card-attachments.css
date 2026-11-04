@@ -1,0 +1,28 @@
+.task-card__foot-left {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.task-card__indicators {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--theme-secondary, var(--color-muted));
+}
+
+.task-card__indicators > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 600;
+}
+
+.task-card__indicators svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 1.9;
+}
