@@ -12,7 +12,7 @@ import {
   IoList,
   IoPricetagOutline,
   IoCalendarClear,
-  IoTrashBinOutline,
+  IoFileTrayFull,
   IoPencil,
   IoClose,
   IoCheckmark,
@@ -73,8 +73,8 @@ const OPTIONS = [
   },
   {
     id: "delete",
-    label: "Borrar",
-    icon: <IoTrashBinOutline />,
+    label: "Archivar",
+    icon: <IoFileTrayFull />,
     tone: "danger",
   },
 ];

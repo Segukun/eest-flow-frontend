@@ -15,6 +15,7 @@ import {
   deleteTaskRequest,
   uploadTaskAttachmentsRequest,
   deleteTaskAttachmentRequest,
+  restoreTaskRequest, // ARCHIVERO
 } from "../api/tasks";
 
 import {
@@ -782,6 +783,7 @@ export function AppProvider({ children }) {
       return normalized;
     });
 
+  // Archiva la tarea (soft delete): sale del tablero y pasa al archivero.
   const deleteTask = (id) =>
     track(async () => {
       await deleteTaskRequest(id);
@@ -789,6 +791,20 @@ export function AppProvider({ children }) {
       setTasks((prev) =>
         prev.filter((t) => t.id !== id)
       );
+    });
+
+  // ARCHIVERO: restaura una tarea archivada y la vuelve a mostrar en el tablero.
+  const restoreArchivedTask = (id) =>
+    track(async () => {
+      const restored = await restoreTaskRequest(id);
+      const normalized = normalizeTask(restored);
+
+      setTasks((prev) => [
+        ...prev.filter((task) => String(task.id) !== String(normalized.id)),
+        normalized,
+      ]);
+
+      return normalized;
     });
 
   /* ---------- acciones: adjuntos de tareas ---------- */
@@ -1131,9 +1147,10 @@ export function AppProvider({ children }) {
     setTaskDraft,
     updateTask,
     deleteTask,
+    restoreArchivedTask, // ARCHIVERO
     moveTask,
 
-    // Nuevas operaciones de adjuntos.
+    // Operaciones de adjuntos.
     uploadTaskAttachments,
     deleteTaskAttachment,
 
