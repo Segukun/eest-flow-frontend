@@ -3,12 +3,34 @@ import { useEffect, useRef, useState } from "react";
 import { useApp, PRIORITIES } from "../context/AppContext";
 
 import { IoPencil } from "react-icons/io5";
-import { FiPaperclip } from "react-icons/fi";
+
+import {
+  FiPaperclip,
+  FiMenu,
+  FiCalendar,
+  FiFlag,
+  FiUsers,
+  FiImage,
+  FiFileText,
+  FiSliders,
+  FiX,
+  FiAlertCircle,
+} from "react-icons/fi";
 
 import TaskAttachmentsModal from "./TaskAttachmentsModal";
 
 import "../styles/components/task-detail-modal.css";
 import "../styles/components/task-attachments-modal.css";
+
+const MAX_FILE_PREVIEWS = 4;
+
+// "2026-09-18" -> fecha local.
+// Evita que new Date("2026-09-18") interprete la fecha en UTC
+// y en Argentina termine mostrando el día anterior.
+const parseLocalDate = (value) =>
+  value
+    ? new Date(`${String(value).slice(0, 10)}T00:00:00`)
+    : null;
 
 export default function TaskDetailModal({
   taskId,
@@ -76,6 +98,20 @@ export default function TaskDetailModal({
     ? task.attachments
     : [];
 
+  const hasDescription =
+    task.hasDescription ??
+    Boolean((task.description || "").trim());
+
+  const dueDate = parseLocalDate(task.dueDate);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const isOverdue =
+    Boolean(dueDate) &&
+    dueDate < today &&
+    task.column !== "completed";
+
   /* ---------- edición del título ---------- */
 
   const startEditTitle = () => {
@@ -117,14 +153,20 @@ export default function TaskDetailModal({
     setEditingTitle(false);
     setTitleDraft("");
 
-    setDescriptionDraft(task.description || "");
+    setDescriptionDraft(
+      hasDescription ? task.description : ""
+    );
+
     setEditingDescription(true);
   };
 
   const saveDescription = async () => {
     const trimmed = descriptionDraft.trim();
 
-    if (trimmed === (task.description || "")) {
+    if (
+      trimmed ===
+      (hasDescription ? task.description : "")
+    ) {
       setEditingDescription(false);
       return;
     }
@@ -155,307 +197,410 @@ export default function TaskDetailModal({
         className="modal task-detail"
         onClick={(event) => event.stopPropagation()}
       >
-        <header className="modal__head">
-          <span className="modal__eyebrow">
+        {/* Franja superior según prioridad */}
+
+        <span
+          className="task-detail__accent"
+          style={{ background: priority.color }}
+        />
+
+        {/* Encabezado */}
+
+        <header className="task-detail__head">
+          <span className="task-detail__status">
             <span
-              className="task-detail__priority-dot"
-              style={{ background: priority.color }}
+              className="task-detail__status-dot"
+              style={{
+                background: column?.dot ?? priority.color,
+              }}
             />
 
             {column?.title}
           </span>
 
-          <div className="modal__head-actions">
+          <div className="task-detail__head-actions">
             <button
-              className="icon-btn"
-              title="Más opciones"
+              type="button"
+              className="task-detail__round-btn"
+              title="Acciones de la tarjeta"
               onClick={() => onEdit(task.id)}
             >
-              ✎
+              <FiSliders />
             </button>
 
             <button
-              className="icon-btn"
-              onClick={onClose}
+              type="button"
+              className="task-detail__round-btn"
               title="Cerrar"
+              onClick={onClose}
             >
-              ✕
+              <FiX />
             </button>
           </div>
         </header>
 
-        <div className="modal__body task-detail__body">
+        {/* Cuerpo con scroll */}
 
-          {/* Etiquetas */}
+        <div className="task-detail__scroll">
+          <div className="task-detail__layout">
 
-          {taskLabels.length > 0 && (
-            <div className="task-card__labels">
-              {taskLabels.map((label) => (
-                <span
-                  key={label.id}
-                  className="label"
-                  style={{
-                    color: label.color,
-                    background: `color-mix(in srgb, ${label.color} 14%, transparent)`,
-                  }}
-                >
-                  {label.title}
-                </span>
-              ))}
-            </div>
-          )}
+            {/* ================= COLUMNA PRINCIPAL ================= */}
 
-          {/* Título */}
+            <div className="task-detail__main">
 
-          {editingTitle ? (
-            <div className="task-detail__editable">
-              <textarea
-                ref={titleRef}
-                className="input task-detail__title-input"
-                value={titleDraft}
-                rows={1}
-                autoFocus
-                onChange={(event) =>
-                  setTitleDraft(
-                    event.target.value.replace(/\n/g, " ")
-                  )
-                }
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    event.preventDefault();
-                    saveTitle();
-                  }
+              {/* Etiquetas */}
 
-                  if (event.key === "Escape") {
-                    setEditingTitle(false);
-                  }
-                }}
-              />
+              {taskLabels.length > 0 && (
+                <div className="task-detail__labels">
+                  {taskLabels.map((label) => (
+                    <span
+                      key={label.id}
+                      className="label"
+                      style={{
+                        color: label.color,
+                        background: `color-mix(in srgb, ${label.color} 14%, transparent)`,
+                      }}
+                    >
+                      {label.title}
+                    </span>
+                  ))}
+                </div>
+              )}
 
-              <div className="task-detail__editable-actions">
-                <button
-                  type="button"
-                  className="btn btn--ghost btn--sm"
-                  onClick={() => setEditingTitle(false)}
-                  disabled={savingTitle}
-                >
-                  Cancelar
-                </button>
+              {/* Título */}
 
-                <button
-                  type="button"
-                  className="btn btn--primary btn--sm"
-                  onClick={saveTitle}
-                  disabled={!titleDraft.trim() || savingTitle}
-                >
-                  {savingTitle
-                    ? "Guardando…"
-                    : "Guardar cambios"}
-                </button>
-              </div>
-            </div>
-          ) : (
-            <button
-              className="task-detail__title-btn"
-              onClick={startEditTitle}
-            >
-              <h2 className="task-detail__title">
-                {task.title}
-              </h2>
-
-              <IoPencil className="task-detail__edit-icon" />
-            </button>
-          )}
-
-          {/* Descripción */}
-
-          <div className="task-detail__section">
-            <span className="field__label">
-              Descripción
-            </span>
-
-            {editingDescription ? (
-              <div className="task-detail__editable">
-                <textarea
-                  className="input task-detail__description-input"
-                  value={descriptionDraft}
-                  onChange={(event) =>
-                    setDescriptionDraft(event.target.value)
-                  }
-                  rows={4}
-                  maxLength={500}
-                  autoFocus
-                  onKeyDown={(event) => {
-                    if (event.key === "Escape") {
-                      setEditingDescription(false);
+              {editingTitle ? (
+                <div className="task-detail__editable">
+                  <textarea
+                    ref={titleRef}
+                    className="input task-detail__title-input"
+                    value={titleDraft}
+                    rows={1}
+                    autoFocus
+                    onChange={(event) =>
+                      setTitleDraft(
+                        event.target.value.replace(/\n/g, " ")
+                      )
                     }
-                  }}
-                />
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        saveTitle();
+                      }
 
-                <div className="task-detail__editable-actions">
+                      if (event.key === "Escape") {
+                        setEditingTitle(false);
+                      }
+                    }}
+                  />
+
+                  <div className="task-detail__editable-actions">
+                    <button
+                      type="button"
+                      className="btn btn--ghost btn--sm"
+                      onClick={() => setEditingTitle(false)}
+                      disabled={savingTitle}
+                    >
+                      Cancelar
+                    </button>
+
+                    <button
+                      type="button"
+                      className="btn btn--primary btn--sm"
+                      onClick={saveTitle}
+                      disabled={!titleDraft.trim() || savingTitle || titleDraft == ""}
+                    >
+                      {savingTitle
+                        ? "Guardando…"
+                        : "Guardar cambios"}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  className="task-detail__title-btn"
+                  onClick={startEditTitle}
+                  title="Editar título"
+                >
+                  <h2 className="task-detail__title">
+                    {task.title}
+                  </h2>
+
+                  <IoPencil className="task-detail__edit-icon" />
+                </button>
+              )}
+
+              {/* Descripción */}
+
+              <section className="task-detail__block">
+                <div className="task-detail__block-head">
+                  <h3 className="task-detail__block-title">
+                    <FiMenu />
+                    Descripción
+                  </h3>
+                </div>
+
+                {editingDescription ? (
+                  <div className="task-detail__editable">
+                    <textarea
+                      className="input task-detail__description-input"
+                      value={descriptionDraft}
+                      onChange={(event) =>
+                        setDescriptionDraft(event.target.value)
+                      }
+                      rows={4}
+                      maxLength={500}
+                      autoFocus
+                      placeholder="Agregá una descripción…"
+                      onKeyDown={(event) => {
+                        if (event.key === "Escape") {
+                          setEditingDescription(false);
+                        }
+                      }}
+                    />
+
+                    <div className="task-detail__editable-actions">
+                      <span className="task-detail__counter">
+                        {descriptionDraft.length}/500
+                      </span>
+
+                      <button
+                        type="button"
+                        className="btn btn--ghost btn--sm"
+                        onClick={() =>
+                          setEditingDescription(false)
+                        }
+                        disabled={savingDescription}
+                      >
+                        Cancelar
+                      </button>
+
+                      <button
+                        type="button"
+                        className="btn btn--primary btn--sm"
+                        onClick={saveDescription}
+                        disabled={savingDescription || descriptionDraft == ""}
+                      >
+                        {savingDescription
+                          ? "Guardando…"
+                          : "Guardar cambios"}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
                   <button
-                    className="btn btn--ghost btn--sm"
-                    onClick={() => setEditingDescription(false)}
+                    type="button"
+                    className={
+                      "task-detail__description-btn" +
+                      (hasDescription
+                        ? ""
+                        : " task-detail__description-btn--empty")
+                    }
+                    onClick={startEditDescription}
+                    title="Editar descripción"
                   >
-                    Cancelar
+                    <p className="task-detail__description">
+                      {hasDescription
+                        ? task.description
+                        : "Todavía no hay descripción. Tocá para agregar una."}
+                    </p>
+
+                    <IoPencil className="task-detail__edit-icon" />
                   </button>
+                )}
+              </section>
+
+              {/* Archivos adjuntos */}
+
+              <section className="task-detail__block">
+                <div className="task-detail__block-head">
+                  <h3 className="task-detail__block-title">
+                    <FiPaperclip />
+
+                    Archivos adjuntos
+
+                    {attachments.length > 0 && (
+                      <span className="task-detail__count">
+                        {attachments.length}
+                      </span>
+                    )}
+                  </h3>
 
                   <button
-                    className="btn btn--primary btn--sm"
-                    onClick={saveDescription}
-                    disabled={savingDescription}
+                    type="button"
+                    className="task-detail__link-btn"
+                    onClick={() => setShowAttachments(true)}
                   >
-                    {savingDescription
-                      ? "Guardando…"
-                      : "Guardar cambios"}
+                    Administrar
                   </button>
                 </div>
-              </div>
-            ) : (
-              <button
-                className="task-detail__description-btn"
-                onClick={startEditDescription}
-              >
-                <p className="task-detail__description">
-                  {task.description ||
-                    "Sin descripción todavía. Tocá para agregar una."}
-                </p>
 
-                <IoPencil className="task-detail__edit-icon" />
-              </button>
-            )}
-          </div>
+                {attachments.length > 0 ? (
+                  <ul className="task-detail__files">
+                    {attachments
+                      .slice(0, MAX_FILE_PREVIEWS)
+                      .map((file) => {
+                        const name =
+                          file.originalName ||
+                          file.name ||
+                          "Archivo";
 
-          {/* Archivos adjuntos */}
+                        const isImage =
+                          file.type === "image" ||
+                          file.mimeType?.startsWith("image/") ||
+                          file.mimeType?.startsWith("image");
 
-          <section className="task-detail__attachments">
-            <div className="task-detail__attachments-heading">
-              <div>
-                <span className="field__label">
-                  Archivos adjuntos
-                </span>
+                        return (
+                          <li
+                            key={file.id}
+                            className="task-detail__file"
+                            title={name}
+                          >
+                            <span className="task-detail__file-icon">
+                              {isImage ? (
+                                <FiImage />
+                              ) : (
+                                <FiFileText />
+                              )}
+                            </span>
 
-                <span className="task-detail__attachments-count">
-                  {attachments.length}{" "}
-                  {attachments.length === 1
-                    ? "archivo"
-                    : "archivos"}
-                </span>
-              </div>
+                            <span className="task-detail__file-name">
+                              {name}
+                            </span>
+                          </li>
+                        );
+                      })}
 
-              <button
-                type="button"
-                className="task-detail__attachments-trigger"
-                onClick={() => setShowAttachments(true)}
-              >
-                <FiPaperclip />
-                Administrar archivos
-              </button>
-            </div>
-
-            {attachments.length > 0 && (
-              <div className="task-detail__attachment-preview-list">
-                {attachments.slice(0, 3).map((file) => (
-                  <span
-                    className="task-detail__attachment-chip"
-                    key={file.id}
-                    title={file.originalName || file.name}
+                    {attachments.length > MAX_FILE_PREVIEWS && (
+                      <li className="task-detail__file task-detail__file--more">
+                        +{attachments.length - MAX_FILE_PREVIEWS} más
+                      </li>
+                    )}
+                  </ul>
+                ) : (
+                  <button
+                    type="button"
+                    className="task-detail__empty"
+                    onClick={() => setShowAttachments(true)}
                   >
                     <FiPaperclip />
 
                     <span>
-                      {file.originalName || file.name}
+                      Todavía no hay archivos. Tocá para agregar.
                     </span>
-                  </span>
-                ))}
-
-                {attachments.length > 3 && (
-                  <span className="task-detail__attachment-more">
-                    +{attachments.length - 3} más
-                  </span>
+                  </button>
                 )}
-              </div>
-            )}
-          </section>
-
-          {/* Prioridad y fecha límite */}
-
-          <div className="task-detail__grid">
-            <div className="task-detail__section">
-              <span className="field__label">
-                Prioridad
-              </span>
-
-              <span
-                className="pill pill--on"
-                style={{
-                  background: priority.color,
-                  borderColor: priority.color,
-                }}
-              >
-                <span
-                  className="pill__dot"
-                  style={{ background: "#fff" }}
-                />
-
-                {priority.label}
-              </span>
+              </section>
             </div>
 
-            <div className="task-detail__section">
-              <span className="field__label">
-                Fecha límite
-              </span>
+            {/* ================= COLUMNA LATERAL ================= */}
 
-              <span className="task-detail__value">
-                {task.dueDate
-                  ? new Date(task.dueDate).toLocaleDateString(
-                      "es-AR",
-                      {
+            <aside className="task-detail__side">
+
+              {/* Prioridad */}
+
+              <div className="task-detail__card">
+                <span className="task-detail__card-label">
+                  <FiFlag />
+                  Prioridad
+                </span>
+
+                <span
+                  className="pill pill--on task-detail__priority"
+                  style={{
+                    background: priority.color,
+                    borderColor: priority.color,
+                  }}
+                >
+                  <span
+                    className="pill__dot"
+                    style={{ background: "#fff" }}
+                  />
+
+                  {priority.label}
+                </span>
+              </div>
+
+              {/* Fecha límite */}
+
+              <div className="task-detail__card">
+                <span className="task-detail__card-label">
+                  <FiCalendar />
+                  Fecha límite
+                </span>
+
+                {dueDate ? (
+                  <>
+                    <span className="task-detail__value">
+                      {dueDate.toLocaleDateString("es-AR", {
                         day: "2-digit",
                         month: "long",
                         year: "numeric",
-                      },
-                    )
-                  : "Sin definir"}
-              </span>
-            </div>
-          </div>
-
-          {/* Asignados */}
-
-          <div className="task-detail__section">
-            <span className="field__label">
-              Asignados
-            </span>
-
-            {members.length > 0 ? (
-              <div className="member-grid member-grid--static">
-                {members.map((member) => (
-                  <div
-                    key={member.id}
-                    className="member member--static"
-                  >
-                    <span
-                      className="avatar avatar--sm"
-                      style={{
-                        background: "var(--color-green)",
-                      }}
-                    >
-                      {member.initials}
+                      })}
                     </span>
 
-                    <span className="member__name">
-                      {member.name}
-                    </span>
-                  </div>
-                ))}
+                    {isOverdue && (
+                      <span className="task-detail__overdue">
+                        <FiAlertCircle />
+                        Vencida
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  <span className="task-detail__muted">
+                    Sin definir
+                  </span>
+                )}
               </div>
-            ) : (
-              <span className="task-detail__value">
-                Sin asignar
-              </span>
-            )}
+
+              {/* Miembros asignados */}
+
+              <div className="task-detail__card">
+                <span className="task-detail__card-label">
+                  <FiUsers />
+
+                  Asignados
+
+                  {members.length > 0 && (
+                    <span className="task-detail__count">
+                      {members.length}
+                    </span>
+                  )}
+                </span>
+
+                {members.length > 0 ? (
+                  <ul
+                    className="task-detail__members"
+                    aria-label="Personal asignado a la tarea"
+                  >
+                    {members.map((member) => (
+                      <li
+                        key={member.id}
+                        className="task-detail__member"
+                      >
+                        <span
+                          className="avatar avatar--sm"
+                          style={{
+                            background: "var(--color-green)",
+                          }}
+                        >
+                          {member.initials}
+                        </span>
+
+                        <span className="task-detail__member-name">
+                          {member.name}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <span className="task-detail__muted">
+                    Sin asignar
+                  </span>
+                )}
+              </div>
+            </aside>
           </div>
         </div>
       </div>
@@ -470,7 +615,10 @@ export default function TaskDetailModal({
             uploadTaskAttachments(task.id, files)
           }
           onDelete={(attachment) =>
-            deleteTaskAttachment(task.id, attachment.id)
+            deleteTaskAttachment(
+              task.id,
+              attachment.id
+            )
           }
         />
       )}

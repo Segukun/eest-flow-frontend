@@ -48,7 +48,7 @@ export const COLUMNS = [
 
 export const PRIORITIES = {
   low: { id: "low", label: "Baja", color: "#15803D" },
-  medium: { id: "medium", label: "Media", color: "#FEF08A" },
+  medium: { id: "medium", label: "Media", color: "#FFAA00" },
   high: { id: "high", label: "Alta", color: "#DC2626" },
 };
 
@@ -665,7 +665,7 @@ export function AppProvider({ children }) {
 
       const created = await createTaskRequest({
         title,
-        description: "Sin descripción",
+        description: " ",
         priority: "medium",
         state: columnId,
         category: activeCategory,

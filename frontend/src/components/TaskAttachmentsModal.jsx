@@ -367,7 +367,7 @@ export default function TaskAttachmentsModal({
           <div className="task-attachments__heading">
             <span className="task-attachments__eyebrow">
               <FiPaperclip />
-              Archivos de la tarea
+              Archivos de la tarjeta
             </span>
 
             <h2 id="task-attachments-title">
@@ -717,22 +717,6 @@ export default function TaskAttachmentsModal({
             </p>
           )}
         </div>
-
-        {/* Footer */}
-
-        <footer className="task-attachments__footer">
-          <span>
-            Los archivos se guardan como adjuntos de esta tarea.
-          </span>
-
-          <button
-            className="btn btn--ghost btn--sm"
-            type="button"
-            onClick={onClose}
-          >
-            Cerrar
-          </button>
-        </footer>
       </section>
     </div>
   );

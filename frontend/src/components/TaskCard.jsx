@@ -44,7 +44,7 @@ export default function TaskCard({
   // No mostrar indicador para la descripción predeterminada.
   const hasDescription = Boolean(
     description &&
-    description.toLowerCase() !== "sin descripción"
+    description.toLowerCase() !== ""
   );
 
   const markerStyle = dropMarker

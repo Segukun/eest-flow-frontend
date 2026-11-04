@@ -145,7 +145,6 @@
   overflow-y: auto;
 }
 
-
 /* ---- fila de etiqueta ---- */
 
 .label-manager__row {
@@ -153,7 +152,6 @@
   align-items: center;
   gap: 8px;
 }
-
 
 /* ---- etiqueta ---- */
 
@@ -177,7 +175,6 @@
   box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.4);
 }
 
-
 /* ---- botón editar ---- */
 
 .label-manager__edit-btn {
@@ -195,7 +192,6 @@
   color: var(--theme-text, var(--color-graphite));
 }
 
-
 /* =========================================================
    EDICIÓN DE ETIQUETA
    ========================================================= */
@@ -206,28 +202,18 @@
   gap: 10px;
   padding: 12px;
 
-  border: 1px solid var(
-    --theme-border,
-    var(--color-border)
-  );
+  border: 1px solid var(--theme-border, var(--color-border));
 
   border-radius: var(--radius-md);
 
-  background: var(
-    --theme-surface-soft,
-    var(--color-bone)
-  );
+  background: var(--theme-surface-soft, var(--color-bone));
 
-  color: var(
-    --theme-text,
-    var(--color-graphite)
-  );
+  color: var(--theme-text, var(--color-graphite));
 }
 
 .label-manager__edit-input {
   width: 100%;
 }
-
 
 /* ---- colores ---- */
 
@@ -246,14 +232,10 @@
 }
 
 .label-manager__swatch.is-selected {
-  border-color: var(
-    --theme-text,
-    var(--color-graphite)
-  );
+  border-color: var(--theme-text, var(--color-graphite));
 
   transform: scale(1.1);
 }
-
 
 /* ---- acciones ---- */
 
@@ -263,23 +245,15 @@
   gap: 6px;
 }
 
-
 /* ---- eliminar ---- */
 
 .icon-btn--danger {
-  color: var(
-    --theme-danger-text,
-    var(--color-danger)
-  );
+  color: var(--theme-danger-text, var(--color-danger));
 }
 
 .icon-btn--danger:hover {
-  background: var(
-    --theme-danger-soft,
-    rgba(224, 52, 43, 0.1)
-  );
+  background: var(--theme-danger-soft, rgba(224, 52, 43, 0.1));
 }
-
 
 /* ---- guardar ---- */
 
@@ -298,7 +272,6 @@
   cursor: default;
 }
 
-
 /* =========================================================
    CREAR ETIQUETA
    ========================================================= */
@@ -307,10 +280,7 @@
   margin-top: 14px;
   padding-top: 14px;
 
-  border-top: 1px solid var(
-    --theme-border,
-    var(--color-border)
-  );
+  border-top: 1px solid var(--theme-border, var(--color-border));
 
   display: flex;
   flex-direction: column;
@@ -332,24 +302,17 @@
 }
 
 .label-creator__swatch.is-selected {
-  border-color: var(
-    --theme-text,
-    var(--color-graphite)
-  );
+  border-color: var(--theme-text, var(--color-graphite));
 
   transform: scale(1.1);
 }
 
 .label-creator__error {
-  color: var(
-    --theme-danger-text,
-    var(--color-danger)
-  );
+  color: var(--theme-danger-text, var(--color-danger));
 
   font-size: 12px;
   margin: 0;
 }
-
 
 /* =========================================================
    ASIGNAR PERSONAL
@@ -398,7 +361,6 @@
   color: var(--theme-secondary, rgba(31, 21, 28, 0.4));
 }
 
-
 /* ---- lista ---- */
 
 .member-list {
@@ -422,7 +384,6 @@
   background: var(--theme-border, #e6dcbf);
   border-radius: 10px;
 }
-
 
 /* ---- tarjeta de miembro ---- */
 
@@ -500,7 +461,6 @@
   flex-shrink: 0;
 }
 
-
 /* ---- sin resultados ---- */
 
 .member-empty {
@@ -512,4 +472,272 @@
   border: 1px dashed var(--theme-border, #e6dcbf);
   border-radius: 12px;
   background: var(--theme-surface-soft, #fffcf7);
+}
+
+/* =====================================================
+   VISTA PREVIA DE LA TARJETA
+===================================================== */
+
+.actions-modal__preview {
+  max-height: 150px;
+  min-width: 0;
+  box-sizing: border-box;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+/* Scrollbar */
+
+.actions-modal__preview::-webkit-scrollbar {
+  width: 5px;
+}
+
+.actions-modal__preview::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.actions-modal__preview::-webkit-scrollbar-thumb {
+  background: var(--theme-border);
+  border-radius: 10px;
+}
+
+.actions-modal__preview::-webkit-scrollbar-thumb:hover {
+  background: var(--theme-secondary);
+}
+
+/* =====================================================
+   PRIORIDAD
+===================================================== */
+
+.actions-modal__preview .actions-modal__preview-priority {
+  position: static;
+  display: block;
+
+  width: 100%;
+  height: 4px;
+
+  margin: 0 0 10px;
+
+  border-radius: 4px;
+}
+
+.actions-modal__preview-priority--low {
+  background: #15803d;
+}
+
+.actions-modal__preview-priority--medium {
+  background: #fef08a;
+}
+
+.actions-modal__preview-priority--high {
+  background: #dc2626;
+}
+
+/* =====================================================
+   TÍTULO
+===================================================== */
+
+.actions-modal__preview-title {
+  display: block;
+
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  margin: 0;
+
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+
+  line-height: 1.4;
+}
+
+/* =====================================================
+   ETIQUETAS
+===================================================== */
+
+.actions-modal__preview .actions-modal__preview-label {
+  display: inline-flex;
+  align-items: center;
+
+  max-width: 100%;
+
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.actions-modal__preview-label--green {
+  color: var(--color-green);
+  background: color-mix(in srgb, var(--color-green) 14%, transparent);
+}
+
+.actions-modal__preview-label--orange {
+  color: var(--color-orange);
+  background: color-mix(in srgb, var(--color-orange) 14%, transparent);
+}
+
+.actions-modal__preview-label--terracotta {
+  color: var(--color-terracotta);
+  background: color-mix(in srgb, var(--color-terracotta) 14%, transparent);
+}
+
+.actions-modal__preview-label--graphite {
+  color: var(--color-graphite);
+  background: color-mix(in srgb, var(--color-graphite) 14%, transparent);
+}
+
+.actions-modal__preview-label--purple {
+  color: #6c4ae0;
+  background: color-mix(in srgb, #6c4ae0 14%, transparent);
+}
+
+.actions-modal__preview-label--cyan {
+  color: #1f9fb8;
+  background: color-mix(in srgb, #1f9fb8 14%, transparent);
+}
+
+.actions-modal__preview-label--red {
+  color: #e0342b;
+  background: color-mix(in srgb, #e0342b 14%, transparent);
+}
+
+.actions-modal__preview-label--blue {
+  color: #2563eb;
+  background: color-mix(in srgb, #2563eb 14%, transparent);
+}
+
+.actions-modal__preview-label--default {
+  color: var(--theme-secondary);
+  background: var(--theme-hover);
+}
+
+/* =====================================================
+   PIE DE TARJETA
+===================================================== */
+
+.actions-modal__preview-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  flex-wrap: wrap;
+  gap: 10px;
+
+  min-width: 0;
+}
+
+.actions-modal__preview-meta {
+  display: flex;
+  align-items: center;
+
+  flex-wrap: wrap;
+  gap: 10px;
+
+  min-width: 0;
+}
+
+/* Avatar */
+
+.actions-modal__preview-avatar {
+  background: var(--color-green);
+}
+
+/* =====================================================
+   INDICADORES
+===================================================== */
+
+.actions-modal__preview-indicators {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  color: var(--theme-secondary);
+  font-size: 13px;
+}
+
+.actions-modal__preview-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 4px;
+
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.actions-modal__preview-indicator svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+.actions-modal__preview-attachment svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* =====================================================
+   COLORES DE PRIORIDAD EN LOS SELECTORES
+===================================================== */
+
+.pill__dot[data-priority="low"] {
+  background: #15803d;
+}
+
+.pill__dot[data-priority="medium"] {
+  background: #fef08a;
+}
+
+.pill__dot[data-priority="high"] {
+  background: #dc2626;
+}
+
+/* =====================================================
+   COLORES DE LAS ETIQUETAS EN LOS SELECTORES
+===================================================== */
+
+.label-manager__swatch[data-color="green"],
+.label-creator__swatch[data-color="green"] {
+  background: var(--color-green);
+}
+
+.label-manager__swatch[data-color="orange"],
+.label-creator__swatch[data-color="orange"] {
+  background: var(--color-orange);
+}
+
+.label-manager__swatch[data-color="terracotta"],
+.label-creator__swatch[data-color="terracotta"] {
+  background: var(--color-terracotta);
+}
+
+.label-manager__swatch[data-color="graphite"],
+.label-creator__swatch[data-color="graphite"] {
+  background: var(--color-graphite);
+}
+
+.label-manager__swatch[data-color="purple"],
+.label-creator__swatch[data-color="purple"] {
+  background: #6c4ae0;
+}
+
+.label-manager__swatch[data-color="cyan"],
+.label-creator__swatch[data-color="cyan"] {
+  background: #1f9fb8;
+}
+
+.label-manager__swatch[data-color="red"],
+.label-creator__swatch[data-color="red"] {
+  background: #e0342b;
+}
+
+.label-manager__swatch[data-color="blue"],
+.label-creator__swatch[data-color="blue"] {
+  background: #2563eb;
 }
