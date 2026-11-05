@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { FiCheck } from "react-icons/fi";
+import { FiCheck, FiX } from "react-icons/fi";
 import { useApp } from "../context/AppContext";
 import useSubmitGuard from "../hooks/useSubmitGuard";
 import { MAX_TASK_TITLE_LENGTH, taskDraftKey } from "../taskDrafts.js";
@@ -146,6 +146,18 @@ export default function AddTask({
         >
           {MAX_TASK_TITLE_LENGTH - title.length}
         </small>
+
+        <button
+          className="add-task__cancel"
+          type="button"
+          aria-label="Cancelar"
+          title="Cancelar"
+          onClick={close}
+          disabled={guard.pending}
+        >
+          <FiX aria-hidden="true" />
+        </button>
+
         <button
           className="add-task__confirm"
           type="button"
