@@ -12,7 +12,7 @@
   flex-direction: column;
   min-height: 100vh;
   min-height: 100dvh;
-  background: var(--theme-background, #fbf8f0);
+  background: var(--theme-background, var(--color-bone));
   color: var(--theme-text, var(--color-graphite));
   font-family: var(--font-family-base);
   padding: 20px 28px 40px;
