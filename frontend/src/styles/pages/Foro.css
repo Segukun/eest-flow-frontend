@@ -79,7 +79,7 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #1f151c;
+  background: var(--theme-green-fill, #05903e) !important;
   color: white;
   display: grid;
   place-items: center;
@@ -98,7 +98,6 @@
   width: 0;
 }
 
-/* EFECTO MINIMALISTA - solo borde y fondo */
 .foro-create:hover {
   border-color: var(--theme-border, #d4c8a8);
 }
@@ -233,7 +232,6 @@
   min-width: 0;
 }
 
-/* MENU 3 PUNTITOS */
 .foro-post-menu-wrapper {
   position: relative;
   margin-left: auto;
@@ -303,7 +301,6 @@
   background: var(--theme-danger-soft, #fef2f2) !important;
 }
 
-/* EDITAR */
 .foro-edit-area {
   display: flex;
   flex-direction: column;
@@ -400,7 +397,6 @@
   margin-bottom: 4px;
 }
 
-/* ARCHIVOS ADJUNTOS */
 .foro-attachments {
   margin-top: 16px;
   display: flex;
@@ -592,7 +588,6 @@
   }
 }
 
-/* VER MAS INCREMENTAL */
 .foro-ver-mas-wrapper {
   margin-top: 8px;
   display: flex;
@@ -614,7 +609,6 @@
   font-size: 12px;
 }
 
-/* Cuando está agrandado - resaltado con otro color */
 .foro-ver-mas-wrapper--expanded {
   margin-top: 20px;
   width: fit-content;
@@ -644,7 +638,6 @@
   margin-top: 6px;
 }
 
-/* MODAL COMENTARIOS */
 .foro-modal-overlay {
   position: fixed;
   inset: 0;
@@ -777,7 +770,6 @@
   opacity: 0.4;
 }
 
-/* DESCARGABLE - FIX MOBILE */
 .foro-file-downloadable,
 .foro-attachment-downloadable {
   cursor: pointer;
@@ -834,7 +826,6 @@
   font-weight: 700;
 }
 
-/* CREATE TEXTAREA EXPAND */
 .foro-create {
   display: flex;
   align-items: flex-end;
@@ -880,7 +871,6 @@
   overflow-y: auto !important;
 }
 
-/* FIX BOTON PDF EN CELULAR */
 @media (max-width: 480px) {
   .foro-file {
     padding: 10px;
@@ -927,7 +917,6 @@
   }
 }
 
-/* IMAGENES - VISTA PREVIA CHIQUITA */
 .foro-attachments {
   display: flex;
   flex-direction: row;
@@ -991,7 +980,6 @@
   border-radius: 12px;
 }
 
-/* MODAL IMAGEN GRANDE */
 .foro-image-modal-overlay {
   position: fixed;
   inset: 0;
@@ -1182,7 +1170,6 @@
   padding-bottom: 4px;
 }
 
-/* PAGINACIÓN FORO */
 .foro-pagination {
   display: flex;
   flex-direction: column;
@@ -1240,13 +1227,11 @@
   color: var(--text-secondary, #9ca3af);
 }
 
-/* Publicación pineada: contorno destacado. */
 .foro-post.foro-post--pinned {
   border: 1px solid var(--foro-pinned-border, #818cf8);
   box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.09);
 }
 
-/* Franja superior que indica que está anclada. */
 .foro-pinned-bar {
   display: flex;
   align-items: center;
@@ -1265,7 +1250,6 @@
   flex-shrink: 0;
 }
 
-/* Acción de pin en el footer. */
 .foro-post-foot .foro-post-pin {
   display: inline-flex;
   align-items: center;
@@ -1298,7 +1282,6 @@
   outline-offset: 2px;
 }
 
-/* Adaptación básica para temas oscuros. */
 [data-theme="dark"] .foro-pinned-bar,
 [data-theme="dark"] .foro-post-foot .foro-post-pin.is-pinned {
   color: #a5b4fc;
@@ -1328,4 +1311,26 @@
 :root[data-theme="oscuro"] .foro-post-foot .foro-post-pin.is-pinned {
   color: #a5b4fc;
   background: #342b32;
+}
+
+/* ============================================
+   FIX: COLOR USUARIO VERDE = POSTS VERDE
+   Esto hace que tu publicación sea verde como el sidebar
+   ============================================ */
+.foro-post--own {
+  border-color: rgba(5, 144, 62, 0.35) !important;
+}
+
+.foro-post--own .foro-post-avatar {
+  background: var(--theme-green-fill, #05903e) !important;
+  background-color: var(--theme-green-fill, #05903e) !important;
+  color: white !important;
+}
+
+.foro-post--own .foro-post-head h3 {
+  color: var(--theme-green-text, #05903e);
+}
+
+.foro-comment--own .foro-comment-avatar {
+  background: var(--theme-green-fill, #05903e) !important;
 }

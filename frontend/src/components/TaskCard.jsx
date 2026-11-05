@@ -1,3 +1,5 @@
+import AssignedUsersPreview from "./AssignedUsersPreview";
+import TaskQuickActions from "./TaskQuickActions";
 import { colorChipStyle } from "../colorPresets.js";
 import { useApp, PRIORITIES } from "../context/AppContext";
 import { parseLocalDate } from "./dates";
@@ -89,55 +91,32 @@ export default function TaskCard({
         style={{ background: priority.color }}
       />
 
-      <button
-        className="task-card__edit"
-        title="Editar tarjeta"
-        onClick={(event) => {
-          event.stopPropagation();
-          onEdit(task.id);
-        }}
-      >
-        ✎
-      </button>
+      <div className="task-card__heading">
+        {taskLabels.length > 0 ? (
+          <div className="task-card__labels">
+            {taskLabels.map((label) => (
+              <span
+                key={label.id}
+                className="label"
+                style={colorChipStyle(label.color)}
+              >
+                {label.title || "·"}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <h4 className="task-card__title">{task.title}</h4>
+        )}
+        <TaskQuickActions taskId={task.id} onEdit={onEdit} />
+      </div>
 
       {taskLabels.length > 0 && (
-        <div className="task-card__labels">
-          {taskLabels.map((label) => (
-            <span
-              key={label.id}
-              className="label"
-              style={colorChipStyle(label.color)}
-            >
-              {label.title || "·"}
-            </span>
-          ))}
-        </div>
+        <h4 className="task-card__title">{task.title}</h4>
       )}
-
-      <h4 className="task-card__title">
-        {task.title}
-      </h4>
 
       <div className="task-card__foot">
         <div className="task-card__foot-left">
-          <div className="avatars">
-            {members.slice(0, 3).map((member) => (
-              <span
-                key={member.id}
-                className="avatar avatar--sm"
-                style={{ background: "var(--color-green)" }}
-                title={member.name}
-              >
-                {member.initials}
-              </span>
-            ))}
-
-            {members.length > 3 && (
-              <span className="avatar avatar--sm avatar--more">
-                +{members.length - 3}
-              </span>
-            )}
-          </div>
+          <AssignedUsersPreview members={members} />
 
           <div
             className="task-card__indicators"

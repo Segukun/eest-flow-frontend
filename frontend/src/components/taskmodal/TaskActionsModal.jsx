@@ -674,7 +674,12 @@ export default function TaskActionsModal({
                 }}
               />
 
-              <div className="label-manager__list">
+              <div
+                className="label-manager__list"
+                role="region"
+                aria-label="Etiquetas disponibles"
+                tabIndex={0}
+              >
                 {labels.length === 0 && (
                   <p className="actions-modal__empty-hint">
                     Esta categoría todavía no tiene etiquetas.

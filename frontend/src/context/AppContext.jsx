@@ -317,7 +317,11 @@ export function AppProvider({ children }) {
 
       setCategories(normalized);
 
-      setActiveCategory((prev) => prev ?? normalized[0]?.id ?? null);
+      setActiveCategory((prev) =>
+        normalized.some((category) => category.id === prev)
+          ? prev
+          : normalized[0]?.id ?? null,
+      );
     } catch (err) {
       setCategoriesError(
         err?.response?.data?.message || "No se pudieron cargar las categorías.",

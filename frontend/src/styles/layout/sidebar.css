@@ -172,40 +172,6 @@
   margin: 0;
 }
 
-.cat-item-row {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-.cat-item-row .cat-item {
-  flex: 1;
-  padding-right: 34px;
-}
-
-.cat-item__delete {
-  position: absolute;
-  right: 6px;
-  width: 26px;
-  height: 26px;
-  border-radius: 8px;
-  display: grid;
-  place-items: center;
-  font-size: 13px;
-  color: var(--color-muted);
-  opacity: 0;
-  transition:
-    opacity 0.15s ease,
-    background 0.15s ease,
-    color 0.15s ease;
-}
-.cat-item-row:hover .cat-item__delete {
-  opacity: 1;
-}
-.cat-item__delete:hover {
-  background: rgba(224, 52, 43, 0.1);
-  color: var(--theme-danger-text, var(--color-danger));
-}
-
 .sidebar__nav .nav-item__badge {
   margin-left: auto;
   flex-shrink: 0;
@@ -228,6 +194,7 @@
   box-sizing: border-box;
 }
 
+/* ===== filas de categorías (sidebar y menú móvil) ===== */
 .cat-item-row {
   position: relative;
   display: flex;
@@ -246,7 +213,6 @@
 .cat-item__edit,
 .cat-item__delete {
   position: absolute;
-  right: 6px;
   width: 26px;
   height: 26px;
   border-radius: 8px;
@@ -254,29 +220,46 @@
   place-items: center;
   font-size: 13px;
   color: var(--color-muted);
+  opacity: 0; /* escritorio: ocultos hasta pasar el mouse */
   transition:
     opacity 0.15s ease,
     background 0.15s ease,
     color 0.15s ease;
 }
 
-.cat-item__edit {
-  right: 34px;
-  opacity: 0.75;
+.cat-item__delete {
+  right: 6px;
 }
 
+.cat-item__edit {
+  right: 34px;
+}
+
+/* si es la única categoría no hay botón de borrar */
 .cat-item__edit--only {
   right: 6px;
 }
 
-.cat-item__delete {
-  opacity: 0;
-}
-
+/* escritorio: aparecen al pasar el mouse sobre la categoría,
+   o al llegar a ellos con el teclado */
 .cat-item-row:hover .cat-item__edit,
 .cat-item-row:hover .cat-item__delete,
 .cat-item__edit:focus-visible,
 .cat-item__delete:focus-visible {
+  opacity: 1;
+}
+
+/* celular / pantallas táctiles: siempre visibles (no existe el hover) */
+@media (hover: none), (max-width: 700px) {
+  .cat-item__edit,
+  .cat-item__delete {
+    opacity: 1;
+  }
+}
+
+/* el menú lateral del celular siempre los muestra */
+.cat-list--drawer .cat-item__edit,
+.cat-list--drawer .cat-item__delete {
   opacity: 1;
 }
 

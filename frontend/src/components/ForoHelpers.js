@@ -1,65 +1,120 @@
-import { AVATAR_COLORS } from "./ForoConstants.js";
+const USER_GREEN = "#05903e";
+const COLORS_PALETTE = ["#05903e"];
+
+function hashCode(str) {
+  let hash = 0;
+  if (!str) return 0;
+  for (let i = 0; i < String(str).length; i++) {
+    hash = String(str).charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return hash;
+}
 
 export function getCurrentUser() {
-  try { return JSON.parse(localStorage.getItem("user") || "null"); } catch { return null; }
-}
-export function getCurrentUserId(user) { return user?._id || user?.id || null; }
-export function getSectorId(sector) { return sector?._id || sector?.id || null; }
-export function getSectorName(sector) { return sector?.name || sector?.title || "Sector"; }
-export function getAuthorInitials(name = "") {
-  return name.trim().split(/\s+/).filter(Boolean).map(p=>p[0]).join("").slice(0,2).toUpperCase() || "U";
-}
-export function getAvatarColor(name = "") {
-  let hash=0; for(let i=0;i<name.length;i++) hash=name.charCodeAt(i)+((hash<<5)-hash);
-  return AVATAR_COLORS[Math.abs(hash)%AVATAR_COLORS.length];
-}
-export function formatRelativeDate(dateString) {
-  if(!dateString) return "";
-  const date=new Date(dateString); if(isNaN(date.getTime())) return "";
-  const diffMs=Date.now()-date.getTime(); const diffM=Math.floor(diffMs/60000);
-  if(diffM<1) return "Ahora"; if(diffM<60) return `hace ${diffM}m`;
-  const diffH=Math.floor(diffM/60); if(diffH<24) return `hace ${diffH}h`;
-  const diffD=Math.floor(diffH/24); if(diffD<7) return `hace ${diffD}d`;
-  return date.toLocaleDateString("es-AR",{day:"2-digit",month:"2-digit",year:"numeric"});
-}
-export function formatFileSize(size) {
-  if(!size) return ""; if(size<1024) return `${size} B`;
-  if(size<1024*1024) return `${(size/1024).toFixed(1)} KB`;
-  return `${(size/(1024*1024)).toFixed(1)} MB`;
+  try {
+    const raw = localStorage.getItem("user");
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
 }
 
-export function mapPostFromApi(post, sectors, currentUserId) {
-  const authorObject = post.author && typeof post.author==="object" ? post.author : null;
-  const sectorObject = post.sector && typeof post.sector==="object" ? post.sector : null;
-  const sectorId = sectorObject?._id || post.sector || null;
-  const fallbackSector = sectors.find(s=>String(s._id||s.id)===String(sectorId));
-  const authorId = authorObject?._id || post.author || null;
-  const authorName = authorObject?.name || "Usuario";
-  const isOwnPost = String(authorId)===String(currentUserId);
-  const sectorName = sectorObject?.name || fallbackSector?.name || "Sector";
+export function getCurrentUserId(currentUser) {
+  const u = currentUser || getCurrentUser();
+  return String(u?._id || u?.id || u?._id?.toString() || "");
+}
+
+function getInitials(name) {
+  if (!name) return "U";
+  return name.trim().split(/\s+/).map(n=>n[0]).join("").slice(0,2).toUpperCase();
+}
+
+// FIX PARA [object Object]
+function extractContentText(content) {
+  if (!content) return "";
+  if (typeof content === "string") return content;
+  
+  if (Array.isArray(content)) {
+    return content.map(c => {
+      if (typeof c === "string") return c;
+      if (c && typeof c === "object") {
+        return c.text || c.content || c.message || c.value || c.body || "";
+      }
+      return "";
+    }).filter(Boolean).join("\n");
+  }
+  
+  if (typeof content === "object") {
+    return content.text || content.content || content.message || content.value || content.body || "";
+  }
+  
+  return String(content);
+}
+
+function getAvatarColorForUser(userId, currentUserId, authorName, currentUserName) {
+  // FIX: si el nombre coincide, también es verde (por si los IDs no coinciden)
+  if (String(userId) === String(currentUserId)) return USER_GREEN;
+  if (authorName && currentUserName && authorName.toLowerCase().trim() === currentUserName.toLowerCase().trim()) {
+    return USER_GREEN;
+  }
+  const idx = Math.abs(hashCode(String(userId || authorName))) % COLORS_PALETTE.length;
+  const color = COLORS_PALETTE[idx];
+  // Nunca devuelvas rojo si es el usuario actual
+  return color;
+}
+
+export function mapPostFromApi(apiPost, sectors = [], currentUserId = "") {
+  const currentUser = getCurrentUser();
+  const currentUserName = currentUser?.name || currentUser?.displayName || "";
+  const resolvedCurrentId = currentUserId || getCurrentUserId(currentUser);
+
+  const authorId = apiPost.userId || apiPost.author?._id || apiPost.author?.id || apiPost.authorId || apiPost.user?._id || "";
+  const authorName = apiPost.author?.name || apiPost.authorName || apiPost.userName || apiPost.user?.name || "Usuario";
+
+  const isOwn = String(authorId) === String(resolvedCurrentId) || 
+                (authorName && currentUserName && authorName.toLowerCase().trim() === currentUserName.toLowerCase().trim());
+
+  const sectorId = apiPost.sectorId || apiPost.sector?._id;
+  const sectorName = sectors.find(s => String(s._id || s.id) === String(sectorId))?.name || apiPost.sectorName || "";
+
   return {
-    id: post._id,
-    author: isOwnPost ? "Tú" : authorName,
-    authorId, authorName,
-    role: [formatRelativeDate(post.createdAt), sectorName].filter(Boolean).join(" · "),
-    avatar: getAuthorInitials(authorName),
-    avatarColor: getAvatarColor(authorName),
-    sectorId, sectorName,
-    content: (post.content||[]).map(b=>typeof b==="string"?b:b?.text||"").filter(Boolean).join("\n\n"),
-    attachments: (post.attachments||[]).map(a=>({
-      id: a.path || a._id || `${post._id}-${a.originalName}`,
-      name: a.originalName || "Archivo",
-      size: formatFileSize(a.size),
-      type: a.type==="image" ? "image" : a.mimeType==="application/pdf" ? "pdf" : "file",
-      preview: a.type==="image" ? a.url : null,
-      url: a.url||null, path: a.path||null, mimeType: a.mimeType||null,
+    id: apiPost._id || apiPost.id,
+    authorId: authorId,
+    author: authorName,
+    initials: getInitials(authorName),
+    avatarColor: isOwn ? USER_GREEN : getAvatarColorForUser(authorId, resolvedCurrentId, authorName, currentUserName),
+    isOwn: isOwn,
+    content: extractContentText(apiPost.content), // FIX [object Object]
+    sectorName,
+    sectorId,
+    createdAt: apiPost.createdAt,
+    likes: apiPost.likesCount ?? apiPost.likes ?? 0,
+    liked: apiPost.likedBy?.includes(resolvedCurrentId) || false,
+    commentsCount: apiPost.commentsCount || 0,
+    pinned: !!apiPost.pinned,
+    attachments: (apiPost.files || apiPost.attachments || []).map(f => ({
+      name: f.name || f.filename || "archivo",
+      url: f.url || f.path,
+      type: f.mimetype || f.type || "",
+      size: "",
     })),
-    likes: post.likesCount ?? 0,
-    liked: post.isLiked ?? false,
-    commentsCount: post.commentsCount ?? 0,
-    pinned: post.pinned ?? false,
-    active: post.active ?? true,
-    createdAt: post.createdAt||null,
-    updatedAt: post.updatedAt||null,
   };
 }
+
+export function formatRelativeDate(dateInput) {
+  if (!dateInput) return "";
+  const date = new Date(dateInput);
+  if (isNaN(date.getTime())) return "";
+  const now = new Date();
+  const diffMs = now - date;
+  const diffSec = Math.floor(diffMs / 1000);
+  const diffMin = Math.floor(diffSec / 60);
+  const diffHour = Math.floor(diffMin / 60);
+  const diffDay = Math.floor(diffHour / 24);
+  if (diffSec < 60) return "ahora";
+  if (diffMin < 60) return `hace ${diffMin} min`;
+  if (diffHour < 24) return `hace ${diffHour} h`;
+  if (diffDay === 1) return "ayer";
+  if (diffDay < 7) return `hace ${diffDay} días`;
+  return date.toLocaleDateString("es-AR", { day: "2-digit", month: "short" });
+}
+export const formatDate = formatRelativeDate;
+export const timeAgo = formatRelativeDate;
