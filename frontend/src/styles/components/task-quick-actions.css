@@ -1,0 +1,61 @@
+.task-quick-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  transition: opacity 0.15s ease;
+}
+
+.task-quick-actions button {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  background: var(--theme-hover, rgba(31, 21, 28, 0.06));
+  color: var(--theme-text, var(--color-graphite));
+  cursor: pointer;
+}
+
+.task-quick-actions button:hover:not(:disabled) {
+  color: var(--theme-green-text, var(--color-green));
+}
+
+.task-quick-actions button:focus-visible {
+  outline: 2px solid var(--theme-green-text, var(--color-green));
+  outline-offset: 2px;
+}
+
+.task-quick-actions button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.task-card .task-quick-actions button {
+  width: 28px;
+  height: 28px;
+  font-size: 13px;
+}
+
+/* Mantiene el espacio para evitar saltos al pasar el mouse. El foco revela
+   las acciones también cuando se navega con Tab. */
+@media (min-width: 701px) and (hover: hover) and (pointer: fine) {
+  :is(.task-card, .list-row) .task-quick-actions {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  :is(.task-card, .list-row):is(:hover, :focus-within) .task-quick-actions {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+@media (max-width: 700px), (hover: none), (pointer: coarse) {
+  .task-card .task-quick-actions button {
+    width: 36px;
+    height: 36px;
+    font-size: 15px;
+  }
+}

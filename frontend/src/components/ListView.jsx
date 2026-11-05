@@ -1,49 +1,25 @@
 import { colorChipStyle } from "../colorPresets.js";
 import { useState } from "react";
-
 import { FiMenu, FiPaperclip } from "react-icons/fi";
-
-import {
-  useApp,
-  PRIORITIES,
-} from "../context/AppContext";
-
+import { useApp, PRIORITIES } from "../context/AppContext";
 import useTaskFromUrl from "../hooks/useTaskFromUrl";
-
 import TaskDetailModal from "./TaskDetailModal";
 import TaskActionsModal from "./taskmodal/TaskActionsModal.jsx";
-
+import AssignedUsersPreview from "./AssignedUsersPreview";
+import TaskQuickActions from "./TaskQuickActions";
 import "../styles/components/list-view.css";
 
-// Comprueba si existe una descripción real.
-// "Sin descripción" funciona como indicador, no como contenido.
 const hasRealDescription = (description) => {
   const value = String(description ?? "").trim();
-
-  const normalized = value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-
+  const normalized = value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
   return value.length > 0 && normalized !== "sin descripcion";
 };
 
 export default function ListView() {
-  const {
-    visibleTasks,
-    columns,
-    users,
-    labels,
-    tasksLoading,
-    categoriesLoading,
-  } = useApp();
-
+  const { visibleTasks, columns, users, labels, tasksLoading, categoriesLoading } = useApp();
   const [viewingId, setViewingId] = useState(null);
   const [editingId, setEditingId] = useState(null);
-
-  // Abre la tarjeta si la URL trae ?task=<id>.
   const clearTaskParam = useTaskFromUrl(setViewingId);
-
   const closeViewing = () => {
     setViewingId(null);
     clearTaskParam();
@@ -57,184 +33,63 @@ export default function ListView() {
     <>
       <div className="list-view">
         {columns.map((col) => {
-          const rows = visibleTasks.filter(
-            (t) => t.column === col.id
-          );
-
+          const rows = visibleTasks.filter((task) => task.column === col.id);
           if (!rows.length) return null;
 
           return (
-            <div key={col.id} className="list-group">
-
-              {/* Encabezado de columna */}
-
+            <section key={col.id} className="list-group">
               <h3 className="list-group__title">
-                <span
-                  className="column__dot"
-                  style={{ background: col.dot }}
-                />
-
+                <span className="column__dot" style={{ background: col.dot }} />
                 {col.title}
-
-                <span className="column__count">
-                  {rows.length}
-                </span>
+                <span className="column__count">{rows.length}</span>
               </h3>
-
-              {/* Tareas */}
-
-              {rows.map((t) => {
-                const taskLabels = (t.labelIds ?? [])
-                  .map((id) =>
-                    labels.find((l) => l.id === id)
-                  )
-                  .filter(Boolean);
-
-                const taskMembers = (t.members ?? [])
-                  .map((id) =>
-                    users.find((u) => u.id === id)
-                  )
-                  .filter(Boolean);
-
-                const attachments = Array.isArray(t.attachments)
-                  ? t.attachments
-                  : [];
-
-                const attachmentsCount = attachments.length;
-
-                const hasDescription = hasRealDescription(
-                  t.description
-                );
-
-                const priorityColor =
-                  PRIORITIES[t.priority]?.color ??
-                  PRIORITIES.medium.color;
-
+              <div className="list-header" aria-hidden="true">
+                <span>Tarea</span><span>Asignados</span><span>Etiquetas</span><span>Fecha</span><span>Acciones</span>
+              </div>
+              {rows.map((task) => {
+                const taskLabels = (task.labelIds ?? []).map((id) => labels.find((label) => label.id === id)).filter(Boolean);
+                const members = (task.members ?? []).map((id) => users.find((user) => user.id === id)).filter(Boolean);
+                const attachmentCount = Array.isArray(task.attachments) ? task.attachments.length : 0;
                 return (
-                  <button
-                    key={t.id}
-                    type="button"
-                    className="list-row"
-                    onClick={() => setViewingId(t.id)}
-                  >
-                    {/* Prioridad */}
-
-                    <span
-                      className="list-row__priority"
-                      style={{ background: priorityColor }}
-                    />
-
-                    {/* Título */}
-
-                    <span className="list-row__title">
-                      {t.title}
-                    </span>
-
-                    {/* Etiquetas */}
-
-                    {taskLabels.length > 0 && (
-                      <span className="list-row__labels">
-                        {taskLabels.map((l) => (
-                          <span
-                            key={l.id}
-                            className="label"
-                            style={colorChipStyle(l.color)}
-                          >
-                            {l.title || "·"}
-                          </span>
-                        ))}
-                      </span>
-                    )}
-
-                    {/* Miembros */}
-
-                    {taskMembers.length > 0 && (
-                      <span className="avatars list-row__avatars">
-                        {taskMembers.map((u) => (
-                          <span
-                            key={u.id}
-                            className="avatar avatar--sm"
-                            style={{
-                              background: "var(--color-green)",
-                            }}
-                            title={u.name}
-                          >
-                            {u.initials}
-                          </span>
-                        ))}
-                      </span>
-                    )}
-
-                    {/* Indicadores de descripción y archivos */}
-
-                    {(hasDescription || attachmentsCount > 0) && (
-                      <span className="list-row__indicators">
-
-                        {hasDescription && (
-                          <span
-                            className="list-row__indicator"
-                            title="Esta tarea tiene una descripción"
-                            aria-label="Tiene descripción"
-                          >
-                            <FiMenu />
-                          </span>
-                        )}
-
-                        {attachmentsCount > 0 && (
-                          <span
-                            className="list-row__indicator list-row__indicator--attachments"
-                            title={`${attachmentsCount} archivo(s) adjunto(s)`}
-                            aria-label={`${attachmentsCount} archivos adjuntos`}
-                          >
-                            <FiPaperclip />
-
-                            <span className="list-row__attachment-count">
-                              {attachmentsCount}
+                  <article key={task.id} className="list-row" onClick={() => setViewingId(task.id)}>
+                    <div className="list-row__task">
+                      <span className="list-row__priority" style={{ background: PRIORITIES[task.priority]?.color ?? PRIORITIES.medium.color }} />
+                      <div className="list-row__task-content">
+                        <button type="button" className="list-row__title" onClick={() => setViewingId(task.id)}>
+                          {task.title}
+                        </button>
+                        <span className="list-row__indicators">
+                          {hasRealDescription(task.description) && <span title="Esta tarea tiene una descripción" aria-label="Tiene descripción"><FiMenu /></span>}
+                          {attachmentCount > 0 && (
+                            <span title={`${attachmentCount} archivo(s) adjunto(s)`} aria-label={`${attachmentCount} archivos adjuntos`}>
+                              <FiPaperclip /> {attachmentCount}
                             </span>
-                          </span>
-                        )}
-
-                      </span>
-                    )}
-
-                    {/* Fecha límite */}
-
-                    <span className="list-row__due">
-                      {t.dueDate || "-/-/-"}
-                    </span>
-
-                  </button>
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="list-row__members" aria-label="Asignados">
+                      {members.length ? <AssignedUsersPreview members={members} /> : <span className="list-row__empty">—</span>}
+                    </div>
+                    <div className="list-row__labels" aria-label="Etiquetas">
+                      {taskLabels.length ? taskLabels.map((label) => (
+                        <span key={label.id} className="label" style={colorChipStyle(label.color)}>{label.title || "·"}</span>
+                      )) : <span className="list-row__empty">—</span>}
+                    </div>
+                    <span className="list-row__due" aria-label="Fecha límite">{task.dueDate || "—"}</span>
+                    <TaskQuickActions taskId={task.id} onEdit={setEditingId} />
+                  </article>
                 );
               })}
-            </div>
+            </section>
           );
         })}
       </div>
-
-      {/* Modal de detalle */}
-
       {viewingId && (
-        <TaskDetailModal
-          taskId={viewingId}
-          onClose={closeViewing}
-          onEdit={(id) => {
-            closeViewing();
-            setEditingId(id);
-          }}
-        />
+        <TaskDetailModal taskId={viewingId} onClose={closeViewing} onEdit={(id) => { closeViewing(); setEditingId(id); }} />
       )}
-
-      {/* Modal de acciones */}
-
       {editingId && (
-        <TaskActionsModal
-          taskId={editingId}
-          onClose={() => setEditingId(null)}
-          onView={(id) => {
-            setEditingId(null);
-            setViewingId(id);
-          }}
-        />
+        <TaskActionsModal taskId={editingId} onClose={() => setEditingId(null)} onView={(id) => { setEditingId(null); setViewingId(id); }} />
       )}
     </>
   );
