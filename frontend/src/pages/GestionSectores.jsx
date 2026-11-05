@@ -519,7 +519,7 @@ export default function GestionSectores() {
                       <IconoSector />
                     </div>
 
-                    <div>
+                    <div className="gs-sector-info">
                       <span
                         className="gs-sector-cat"
                         style={{
@@ -665,7 +665,7 @@ export default function GestionSectores() {
                   <adminSector.icon />
                 </div>
 
-                <div>
+                <div className="gs-sector-info">
                   <h2>{adminSector.nombre}</h2>
 
                   <span>

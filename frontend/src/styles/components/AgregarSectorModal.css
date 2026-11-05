@@ -204,6 +204,25 @@
 
 /* Preview del sector */
 
+.asm-sector-modal {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.asm-sector-modal .asm-header { flex-shrink: 0; }
+.asm-sector-modal .asm-form { min-height: 0; max-height: none; }
+.asm-sector-modal .asm-form > * { flex-shrink: 0; min-width: 0; }
+
+.asm-preview > div {
+  flex: 1;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  white-space: normal;
+}
+
 .asm-preview {
   background: var(--theme-surface-soft, #fffcf7);
   border: 1px dashed var(--theme-border, #e6dcbf);

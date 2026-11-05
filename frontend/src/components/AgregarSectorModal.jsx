@@ -71,7 +71,7 @@ export default function AgregarSectorModal({
 
   return (
     <div className="asm-overlay" onClick={handleOverlay}>
-      <div className="asm-modal" role="dialog" aria-modal="true">
+      <div className="asm-modal asm-sector-modal" role="dialog" aria-modal="true">
         <div className="asm-header">
           <div>
             <span className="asm-kicker">{isEditing ? "MODIFICAR" : "NUEVO SECTOR"}</span>
