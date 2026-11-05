@@ -11,7 +11,8 @@
 .avatar {
   display: inline-grid;
   place-items: center;
-  width: 34px;
+  min-width: 34px;
+  aspect-ratio: 1;
   height: 34px;
   border-radius: 50%;
   color: #fff;

@@ -1,4 +1,5 @@
 import { useApp, PRIORITIES } from "../context/AppContext";
+import { parseLocalDate } from "./dates";
 
 import {
   FiMenu,
@@ -151,7 +152,7 @@ export default function TaskCard({
 
         {task.dueDate && (
           <span className="task-card__due">
-            {new Date(task.dueDate).toLocaleDateString(
+{parseLocalDate(task.dueDate)?.toLocaleDateString(            
               "es-AR",
               {
                 day: "2-digit",

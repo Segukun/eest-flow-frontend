@@ -76,7 +76,10 @@ export default function Sidebar({
     >
       <button
         className="sidebar__collapse-btn"
-        onClick={() => setCollapsed((value) => !value)}
+        onClick={() => {
+        setMenuOpen(false);
+        setCollapsed((value) => !value);
+        }}
         title={collapsed ? "Expandir" : "Colapsar"}
         type="button"
       >
@@ -265,8 +268,17 @@ export default function Sidebar({
       <div className="sidebar__user" ref={ref}>
         <button
           className="user-card"
-          onClick={() => setMenuOpen((value) => !value)}
-          disabled={collapsed || !currentUser}
+          onClick={() => {
+          // Minimizado: expandir y abrir el menú de perfil
+          if (collapsed) {
+          setCollapsed(false);
+          setMenuOpen(true);
+          return;
+          }
+          setMenuOpen((value) => !value);
+          }}
+          title={collapsed ? "Perfil" : undefined}
+          disabled={!currentUser}
           type="button"
         >
           <span
