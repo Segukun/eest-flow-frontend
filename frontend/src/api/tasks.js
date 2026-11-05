@@ -63,8 +63,10 @@ export const deleteTaskAttachmentRequest = async (taskId, attachmentId) => {
 
 /* ---------------------------- archivero ---------------------------- */
 
-export const fetchArchivedTasks = async () => {
-  const { data } = await api.get("/api/tasks/archived");
+export const fetchArchivedTasks = async (categoryId) => {
+  const { data } = await api.get("/api/tasks/archived", {
+    params: categoryId ? { category: categoryId } : {},
+  });
   return data;
 };
 

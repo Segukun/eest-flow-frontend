@@ -17,6 +17,7 @@ import {
   IoClose,
   IoCheckmark,
   IoSearch,
+  IoTrashBinOutline
 } from "react-icons/io5";
 
 import {
