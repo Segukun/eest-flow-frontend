@@ -117,7 +117,7 @@ export default function BoardHeader() {
       </div>
 
       <div className="board-header__meta">
-        <span className="sync-dot" /> Tablero sincronizado · {visibleTasks.length} tareas
+        <span className="sync-dot" /> {visibleTasks.length} tareas
       </div>
 
       {filtersSheetOpen && <FiltersPanel onClose={() => setFiltersSheetOpen(false)} />}
