@@ -12,8 +12,7 @@
   display: inline-grid;
   place-items: center;
   min-width: 34px;
-  aspect-ratio: 1;
-  height: 34px;
+  min-height: 34px;
   border-radius: 50%;
   color: #fff;
   font-size: 12px;
