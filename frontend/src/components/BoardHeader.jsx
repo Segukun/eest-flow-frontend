@@ -2,8 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { useApp } from "../context/AppContext";
 import FiltersPanel from "./FiltersPanel";
 import FiltersDropdown from "./FiltersDropdown";
+import ArchivedTasksModal from "./ArchivedTasksModal";
 import "../styles/components/board-header.css";
 import { FiChevronDown } from "react-icons/fi";
+import { IoFileTrayFull } from "react-icons/io5";
 
 export default function BoardHeader() {
   const {
@@ -14,6 +16,7 @@ export default function BoardHeader() {
   const [catOpen, setCatOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filtersSheetOpen, setFiltersSheetOpen] = useState(false);
+  const [archiveOpen, setArchiveOpen] = useState(false);
   const ref = useRef(null);
   const filtersRef = useRef(null);
   const current = categories.find((c) => c.id === activeCategory);
@@ -100,6 +103,16 @@ export default function BoardHeader() {
 
             {filtersOpen && <FiltersDropdown />}
           </div>
+
+          <button
+            type="button"
+            className="archive-btn"
+            title="Archivero"
+            aria-label="Abrir archivero"
+            onClick={() => setArchiveOpen(true)}
+          >
+            <IoFileTrayFull />
+          </button>
         </div>
       </div>
 
@@ -108,6 +121,8 @@ export default function BoardHeader() {
       </div>
 
       {filtersSheetOpen && <FiltersPanel onClose={() => setFiltersSheetOpen(false)} />}
+
+      {archiveOpen && <ArchivedTasksModal onClose={() => setArchiveOpen(false)} />}
     </header>
   );
 }

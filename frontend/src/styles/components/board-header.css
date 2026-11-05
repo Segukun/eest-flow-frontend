@@ -203,3 +203,22 @@
     width: min(90vw, 340px);
   }
 }
+
+.archive-btn {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  font-size: 20px;
+  background: var(--theme-surface, #fff);
+  border: 1px solid var(--theme-border, var(--color-border));
+  color: var(--theme-text, var(--color-graphite));
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.archive-btn:hover {
+  border-color: var(--theme-green-text, var(--color-green));
+  color: var(--theme-green-text, var(--color-green));
+}

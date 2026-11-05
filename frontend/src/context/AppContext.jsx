@@ -15,6 +15,7 @@ import {
   deleteTaskRequest,
   uploadTaskAttachmentsRequest,
   deleteTaskAttachmentRequest,
+  restoreTaskRequest, // ARCHIVERO
 } from "../api/tasks";
 
 import {
@@ -34,6 +35,7 @@ import {
 import { fetchSectors } from "../api/sectors";
 import { fetchUsers } from "../api/users";
 import { fetchNotifications } from "../api/notifications";
+import { updateTaskDrafts } from "../taskDrafts.js";
 
 const AppContext = createContext(null);
 
@@ -48,7 +50,7 @@ export const COLUMNS = [
 
 export const PRIORITIES = {
   low: { id: "low", label: "Baja", color: "#15803D" },
-  medium: { id: "medium", label: "Media", color: "#FEF08A" },
+  medium: { id: "medium", label: "Media", color: "#FFAA00" },
   high: { id: "high", label: "Alta", color: "#DC2626" },
 };
 
@@ -236,17 +238,19 @@ function normalizeUser(raw) {
     .toUpperCase();
 
   return {
-    id: raw._id,
+    id: raw._id ?? raw.id,
     name: raw.name,
     email: raw.email,
     initials,
     accountType: raw.accountType,
+    sectors: raw.sectors,
+    active: raw.active,
   };
 }
 
 export function AppProvider({ children }) {
   // ---- sesión ----
-  const [sessionUser] = useState(() => {
+  const [sessionUser, setSessionUser] = useState(() => {
     try {
       const raw = localStorage.getItem("user");
       return raw ? JSON.parse(raw) : null;
@@ -264,6 +268,7 @@ export function AppProvider({ children }) {
   // ---- sectores / usuarios ----
   const [sectors, setSectors] = useState([]);
   const [users, setUsers] = useState([]);
+  const usersVersion = useRef(0);
 
   // ---- etiquetas ----
   const [labels, setLabels] = useState([]);
@@ -271,6 +276,10 @@ export function AppProvider({ children }) {
 
   // ---- tareas ----
   const [tasks, setTasks] = useState([]);
+  const [taskDrafts, setTaskDrafts] = useState({});
+  const setTaskDraft = useCallback((categoryId, columnId, title) => {
+    setTaskDrafts((prev) => updateTaskDrafts(prev, categoryId, columnId, title));
+  }, []);
   const [tasksLoading, setTasksLoading] = useState(true);
   const [tasksError, setTasksError] = useState(null);
 
@@ -291,6 +300,7 @@ export function AppProvider({ children }) {
     ? users.find((u) => u.id === sessionUser._id) ?? {
         id: sessionUser._id,
         name: sessionUser.name,
+        email: sessionUser.email,
         initials:
           (sessionUser.name || "")
             .split(" ")
@@ -308,12 +318,42 @@ export function AppProvider({ children }) {
   /* ---------- categorías ---------- */
 
   const reloadUsers = useCallback(async () => {
+    const version = usersVersion.current;
     const raw = await fetchUsers();
 
-    setUsers(raw.map(normalizeUser));
+    if (version === usersVersion.current) {
+      setUsers(raw.map(normalizeUser));
+    }
 
     return raw;
   }, []);
+
+  const updateCurrentUser = (updatedUser) => {
+    const id = updatedUser._id ?? updatedUser.id;
+    if (!sessionUser || id !== sessionUser._id) return;
+
+    // Solo datos públicos del usuario; nunca guardar el formulario de contraseña.
+    const normalized = normalizeUser({ ...currentUser, ...updatedUser });
+    usersVersion.current += 1;
+    setUsers((prev) => prev.some((user) => user.id === id)
+      ? prev.map((user) => user.id === id ? { ...user, ...normalized } : user)
+      : [...prev, normalized]);
+
+    const nextSession = {
+      _id: normalized.id,
+      name: normalized.name,
+      email: normalized.email,
+      accountType: normalized.accountType,
+      sectors: normalized.sectors,
+      active: normalized.active,
+    };
+    setSessionUser(nextSession);
+    try {
+      localStorage.setItem("user", JSON.stringify(nextSession));
+    } catch {
+      // La actualización visual funciona aunque el almacenamiento esté bloqueado.
+    }
+  };
 
   const loadCategories = useCallback(async () => {
     setCategoriesLoading(true);
@@ -665,7 +705,7 @@ export function AppProvider({ children }) {
 
       const created = await createTaskRequest({
         title,
-        description: "Sin descripción",
+        description: " ",
         priority: "medium",
         state: columnId,
         category: activeCategory,
@@ -743,6 +783,7 @@ export function AppProvider({ children }) {
       return normalized;
     });
 
+  // Archiva la tarea (soft delete): sale del tablero y pasa al archivero.
   const deleteTask = (id) =>
     track(async () => {
       await deleteTaskRequest(id);
@@ -750,6 +791,20 @@ export function AppProvider({ children }) {
       setTasks((prev) =>
         prev.filter((t) => t.id !== id)
       );
+    });
+
+  // ARCHIVERO: restaura una tarea archivada y la vuelve a mostrar en el tablero.
+  const restoreArchivedTask = (id) =>
+    track(async () => {
+      const restored = await restoreTaskRequest(id);
+      const normalized = normalizeTask(restored);
+
+      setTasks((prev) => [
+        ...prev.filter((task) => String(task.id) !== String(normalized.id)),
+        normalized,
+      ]);
+
+      return normalized;
     });
 
   /* ---------- acciones: adjuntos de tareas ---------- */
@@ -1060,6 +1115,7 @@ export function AppProvider({ children }) {
   const value = {
     currentUser,
     reloadUsers,
+    updateCurrentUser,
 
     categories,
     categoriesLoading,
@@ -1087,11 +1143,14 @@ export function AppProvider({ children }) {
     reloadTasks: () => loadTasks(),
 
     addTask,
+    taskDrafts,
+    setTaskDraft,
     updateTask,
     deleteTask,
+    restoreArchivedTask, // ARCHIVERO
     moveTask,
 
-    // Nuevas operaciones de adjuntos.
+    // Operaciones de adjuntos.
     uploadTaskAttachments,
     deleteTaskAttachment,
 

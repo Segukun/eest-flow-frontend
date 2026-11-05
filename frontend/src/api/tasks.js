@@ -35,10 +35,7 @@ export const deleteTaskRequest = async (id) => {
  *
  * Se utiliza multipart/form-data.
  */
-export const uploadTaskAttachmentsRequest = async (
-  taskId,
-  files = [],
-) => {
+export const uploadTaskAttachmentsRequest = async (taskId, files = []) => {
   const formData = new FormData();
 
   files.forEach((file) => {
@@ -56,13 +53,27 @@ export const uploadTaskAttachmentsRequest = async (
 /**
  * Elimina un archivo adjunto.
  */
-export const deleteTaskAttachmentRequest = async (
-  taskId,
-  attachmentId,
-) => {
+export const deleteTaskAttachmentRequest = async (taskId, attachmentId) => {
   const { data } = await api.delete(
     `/api/tasks/${taskId}/attachments/${attachmentId}`,
   );
 
   return data?.task ?? data;
+};
+
+/* ---------------------------- archivero ---------------------------- */
+
+export const fetchArchivedTasks = async () => {
+  const { data } = await api.get("/api/tasks/archived");
+  return data;
+};
+
+export const restoreTaskRequest = async (id) => {
+  const { data } = await api.patch(`/api/tasks/${id}/restore`);
+  return data;
+};
+
+export const permanentlyDeleteTaskRequest = async (id) => {
+  const { data } = await api.delete(`/api/tasks/${id}/permanent`);
+  return data;
 };

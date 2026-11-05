@@ -26,8 +26,7 @@
    HEADER Y FOOTER
 ===================================================== */
 
-.task-attachments__header,
-.task-attachments__footer {
+.task-attachments__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -710,15 +709,6 @@
   border-radius: var(--radius-sm);
 }
 
-.task-attachments__footer {
-  border-top: 1px solid var(--theme-border, var(--color-border));
-}
-
-.task-attachments__footer > span {
-  color: var(--theme-secondary, var(--color-muted));
-  font-size: 11px;
-}
-
 /* =====================================================
    RESPONSIVE
 ===================================================== */
@@ -737,8 +727,7 @@
     height: 270px;
   }
 
-  .task-attachments__header,
-  .task-attachments__footer {
+  .task-attachments__header {
     padding: 14px 16px;
   }
 }
@@ -755,11 +744,6 @@
 
   .task-attachments__file-info {
     align-items: flex-start;
-  }
-
-  .task-attachments__footer > span {
-    max-width: 190px;
-    line-height: 1.4;
   }
 }
 

@@ -286,6 +286,11 @@ export default function Topbar({
             <strong>
               {currentUser?.name ?? "Cargando…"}
             </strong>
+
+            <small title={currentUser?.email}>
+              {currentUser?.email}
+            </small>
+
             <span className="role-chip">
               {currentUser?.accountType === "admin"
                 ? "Administrador"

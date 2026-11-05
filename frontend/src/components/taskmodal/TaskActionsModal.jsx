@@ -12,15 +12,19 @@ import {
   IoList,
   IoPricetagOutline,
   IoCalendarClear,
-  IoTrashBinOutline,
+  IoFileTrayFull,
   IoPencil,
   IoClose,
   IoCheckmark,
   IoSearch,
 } from "react-icons/io5";
 
+import {
+  FiPaperclip,
+  FiMenu,
+} from "react-icons/fi";
+
 import { HiMiniArrowsRightLeft } from "react-icons/hi2";
-import { FiPaperclip } from "react-icons/fi";
 
 import TaskAttachmentsModal from "../TaskAttachmentsModal";
 
@@ -56,21 +60,21 @@ const OPTIONS = [
     tone: "neutral",
   },
   {
-    id: "move",
-    label: "Mover",
-    icon: <HiMiniArrowsRightLeft />,
-    tone: "orange",
-  },
-  {
     id: "attachments",
     label: "Archivos adjuntos",
     icon: <FiPaperclip />,
     tone: "neutral",
   },
   {
+    id: "move",
+    label: "Mover",
+    icon: <HiMiniArrowsRightLeft />,
+    tone: "orange",
+  },
+  {
     id: "delete",
-    label: "Borrar",
-    icon: <IoTrashBinOutline />,
+    label: "Archivar",
+    icon: <IoFileTrayFull />,
     tone: "danger",
   },
 ];
@@ -85,6 +89,34 @@ const LABEL_COLOR_PRESETS = [
   "#e0342b",
   "#2563eb",
 ];
+
+// Convierte los colores de las etiquetas en clases CSS.
+const LABEL_COLOR_VARIANTS = {
+  "var(--color-green)": "green",
+  "var(--color-orange)": "orange",
+  "var(--color-terracotta)": "terracotta",
+  "var(--color-graphite)": "graphite",
+  "#6c4ae0": "purple",
+  "#1f9fb8": "cyan",
+  "#e0342b": "red",
+  "#2563eb": "blue",
+};
+
+const getLabelColorVariant = (color) => {
+  return LABEL_COLOR_VARIANTS[color] ?? "default";
+};
+
+// Comprueba si existe una descripción real.
+const hasRealDescription = (description) => {
+  const value = String(description ?? "").trim();
+
+  const normalized = value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
+  return value.length > 0 && normalized !== "sin descripcion";
+};
 
 export default function TaskActionsModal({
   taskId,
@@ -133,26 +165,39 @@ export default function TaskActionsModal({
 
   const [savingEdit, setSavingEdit] = useState(false);
 
-  const task = tasks.find(
-    (t) => t.id === taskId
-  );
+  const task = tasks.find((t) => t.id === taskId);
 
   if (!task) return null;
 
-  const priority =
-    PRIORITIES[task.priority] ?? PRIORITIES.medium;
+  const priorityClass = PRIORITIES[task.priority]
+    ? task.priority
+    : "medium";
 
-  const members = (task.members ?? [])
-    .map((id) =>
-      users.find((u) => u.id === id)
-    )
+  const taskMemberIds = Array.isArray(task.members)
+    ? task.members
+    : [];
+
+  const taskLabelIds = Array.isArray(task.labelIds)
+    ? task.labelIds
+    : [];
+
+  const attachments = Array.isArray(task.attachments)
+    ? task.attachments
+    : [];
+
+  const members = taskMemberIds
+    .map((id) => users.find((u) => u.id === id))
     .filter(Boolean);
 
-  const taskLabels = (task.labelIds ?? [])
-    .map((id) =>
-      labels.find((l) => l.id === id)
-    )
+  const taskLabels = taskLabelIds
+    .map((id) => labels.find((l) => l.id === id))
     .filter(Boolean);
+
+  // ---- indicadores de la tarjeta ----
+
+  const hasDescription = hasRealDescription(task.description);
+
+  const attachmentsCount = attachments.length;
 
   // ---- usuarios filtrados por nombre o email ----
 
@@ -166,21 +211,23 @@ export default function TaskActionsModal({
       )
     : users;
 
-  const toggleMember = (userId) =>
+  const toggleMember = (userId) => {
     updateTask(task.id, {
-      members: task.members.includes(userId)
-        ? task.members.filter((v) => v !== userId)
-        : [...task.members, userId],
+      members: taskMemberIds.includes(userId)
+        ? taskMemberIds.filter((v) => v !== userId)
+        : [...taskMemberIds, userId],
     });
+  };
 
   // ---- etiquetas ----
 
-  const toggleLabel = (labelId) =>
+  const toggleLabel = (labelId) => {
     updateTask(task.id, {
-      labelIds: task.labelIds.includes(labelId)
-        ? task.labelIds.filter((v) => v !== labelId)
-        : [...task.labelIds, labelId],
+      labelIds: taskLabelIds.includes(labelId)
+        ? taskLabelIds.filter((v) => v !== labelId)
+        : [...taskLabelIds, labelId],
     });
+  };
 
   const canCreateLabel =
     newLabelTitle.trim().length > 0 &&
@@ -239,13 +286,10 @@ export default function TaskActionsModal({
     setLabelError(null);
 
     try {
-      await updateLabel(
-        editingLabelId,
-        {
-          title: editTitle.trim(),
-          color: editColor,
-        },
-      );
+      await updateLabel(editingLabelId, {
+        title: editTitle.trim(),
+        color: editColor,
+      });
 
       cancelEditLabel();
     } catch (err) {
@@ -326,56 +370,99 @@ export default function TaskActionsModal({
         className="actions-modal"
         onClick={(event) => event.stopPropagation()}
       >
-        {/* Vista previa */}
+        {/* Vista previa de la tarjeta */}
 
         <div className="actions-modal__preview">
+
           <span
-            className="task-card__priority"
-            style={{
-              background: priority.color,
-              position: "static",
-              height: 4,
-              borderRadius: 4,
-              marginBottom: 10,
-              display: "block",
-            }}
+            className={
+              `task-card__priority actions-modal__preview-priority
+              actions-modal__preview-priority--${priorityClass}`
+            }
           />
+
+          {/* Etiquetas */}
 
           {taskLabels.length > 0 && (
             <div className="task-card__labels">
               {taskLabels.map((l) => (
                 <span
                   key={l.id}
-                  className="label"
-                  style={{
-                    color: l.color,
-                    background: `color-mix(in srgb, ${l.color} 14%, transparent)`,
-                  }}
+                  className={
+                    `label actions-modal__preview-label
+                    actions-modal__preview-label--${getLabelColorVariant(l.color)}`
+                  }
                 >
-                  {l.title}
+                  {l.title || "·"}
                 </span>
               ))}
             </div>
           )}
 
-          <h4 className="actions-modal__preview-title">
+          {/* Título */}
+
+          <h4 className="task-card__title actions-modal__preview-title">
             {task.title}
           </h4>
 
-          <div className="task-card__foot">
-            <div className="avatars">
-              {members.slice(0, 4).map((m) => (
-                <span
-                  key={m.id}
-                  className="avatar avatar--sm"
-                  style={{
-                    background: "var(--color-green)",
-                  }}
-                >
-                  {m.initials}
-                </span>
-              ))}
+          {/* Pie de tarjeta */}
+
+          <div className="task-card__foot actions-modal__preview-foot">
+
+            <div className="actions-modal__preview-meta">
+
+              {/* Miembros */}
+
+              <div className="avatars">
+                {members.slice(0, 3).map((m) => (
+                  <span
+                    key={m.id}
+                    className="avatar avatar--sm actions-modal__preview-avatar"
+                    title={m.name}
+                  >
+                    {m.initials}
+                  </span>
+                ))}
+
+                {members.length > 3 && (
+                  <span className="avatar avatar--sm avatar--more">
+                    +{members.length - 3}
+                  </span>
+                )}
+              </div>
+
+              {/* Indicadores */}
+
+              {(hasDescription || attachmentsCount > 0) && (
+                <div className="actions-modal__preview-indicators">
+
+                  {hasDescription && (
+                    <span
+                      className="actions-modal__preview-indicator"
+                      title="Esta tarea tiene una descripción"
+                      aria-label="Tiene descripción"
+                    >
+                      <FiMenu />
+                    </span>
+                  )}
+
+                  {attachmentsCount > 0 && (
+                    <span
+                      className="actions-modal__preview-indicator actions-modal__preview-attachment"
+                      title={`${attachmentsCount} archivo(s) adjunto(s)`}
+                      aria-label={`${attachmentsCount} archivos adjuntos`}
+                    >
+                      <FiPaperclip />
+                      <span>{attachmentsCount}</span>
+                    </span>
+                  )}
+
+                </div>
+              )}
+
             </div>
+
+            {/* Fecha límite */}
 
             {task.dueDate && (
               <span className="task-card__due">
@@ -384,18 +471,21 @@ export default function TaskActionsModal({
                   {
                     day: "2-digit",
                     month: "short",
-                  },
+                  }
                 )}
               </span>
             )}
+
           </div>
         </div>
 
         {/* Menú de acciones */}
 
         <div className="actions-modal__bubble">
+
           <div className="actions-modal__bubble-head">
             <span className="sync-dot" />
+
             Acciones de tarjeta
 
             <button
@@ -464,7 +554,7 @@ export default function TaskActionsModal({
                   >
                     <span
                       className="pill__dot"
-                      style={{ background: p.color }}
+                      data-priority={p.id}
                     />
 
                     {p.label}
@@ -495,7 +585,7 @@ export default function TaskActionsModal({
 
                 {labels.map((l) => {
                   const isEditing = editingLabelId === l.id;
-                  const isOnTask = task.labelIds.includes(l.id);
+                  const isOnTask = taskLabelIds.includes(l.id);
 
                   if (isAdmin && isEditing) {
                     return (
@@ -521,7 +611,7 @@ export default function TaskActionsModal({
                                 "label-manager__swatch" +
                                 (editColor === c ? " is-selected" : "")
                               }
-                              style={{ background: c }}
+                              data-color={getLabelColorVariant(c)}
                               onClick={() => setEditColor(c)}
                             />
                           ))}
@@ -567,12 +657,7 @@ export default function TaskActionsModal({
                           "label-manager__chip" +
                           (isOnTask ? " is-on" : "")
                         }
-                        style={{
-                          background: isOnTask
-                            ? l.color
-                            : `color-mix(in srgb, ${l.color} 16%, transparent)`,
-                          color: isOnTask ? "#fff" : l.color,
-                        }}
+                        data-color={getLabelColorVariant(l.color)}
                         onClick={() => toggleLabel(l.id)}
                         title={
                           isOnTask
@@ -622,7 +707,7 @@ export default function TaskActionsModal({
                           "label-creator__swatch" +
                           (newLabelColor === c ? " is-selected" : "")
                         }
-                        style={{ background: c }}
+                        data-color={getLabelColorVariant(c)}
                         onClick={() => setNewLabelColor(c)}
                       />
                     ))}
@@ -675,7 +760,7 @@ export default function TaskActionsModal({
                   </p>
                 ) : (
                   filteredUsers.map((u) => {
-                    const selected = task.members.includes(u.id);
+                    const selected = taskMemberIds.includes(u.id);
 
                     return (
                       <button
@@ -732,6 +817,24 @@ export default function TaskActionsModal({
             </div>
           )}
 
+          {/* Modal independiente de adjuntos */}
+
+          {showAttachmentsModal && (
+            <TaskAttachmentsModal
+              task={task}
+              onClose={() => setShowAttachmentsModal(false)}
+              onUpload={(files) =>
+                uploadTaskAttachments(task.id, files)
+              }
+              onDelete={(attachment) =>
+                deleteTaskAttachment(
+                  task.id,
+                  attachment.id ?? attachment._id
+                )
+              }
+            />
+          )}
+
           {/* Mover tarea */}
 
           {panel === "move" && (
@@ -765,26 +868,9 @@ export default function TaskActionsModal({
               </div>
             </div>
           )}
+
         </div>
       </div>
-
-      {/* Modal independiente de adjuntos */}
-
-      {showAttachmentsModal && (
-        <TaskAttachmentsModal
-          task={task}
-          onClose={() => setShowAttachmentsModal(false)}
-          onUpload={(files) =>
-            uploadTaskAttachments(task.id, files)
-          }
-          onDelete={(attachment) =>
-            deleteTaskAttachment(
-              task.id,
-              attachment.id ?? attachment._id,
-            )
-          }
-        />
-      )}
     </div>
   );
 }
