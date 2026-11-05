@@ -1,3 +1,4 @@
+import { colorChipStyle } from "../colorPresets.js";
 import { useEffect, useState } from "react";
 import {
   FiPlus,
@@ -513,10 +514,7 @@ export default function GestionSectores() {
                   <div className="gs-sector-card-head">
                     <div
                       className="gs-sector-icon"
-                      style={{
-                        color: `var(--gs-accent, ${sec.color})`,
-                        borderColor: `var(--gs-accent, ${sec.color})`,
-                      }}
+                      style={colorChipStyle(sec.color)}
                     >
                       <IconoSector />
                     </div>
@@ -536,10 +534,7 @@ export default function GestionSectores() {
 
                     <span
                       className="gs-sector-badge"
-                      style={{
-                        background: `var(--theme-surface-soft, ${sec.color}15)`,
-                        color: `var(--theme-secondary, ${readableAccent(sec.color)})`,
-                      }}
+                      style={colorChipStyle(sec.color)}
                     >
                       {sec.miembros.length}{" "}
                       {sec.miembros.length === 1
@@ -665,10 +660,7 @@ export default function GestionSectores() {
               <div className="gsd-header-left">
                 <div
                   className="gs-sector-icon gs-sector-icon--large"
-                  style={{
-                    background: `${adminSector.color}15`,
-                    color: `var(--gs-accent, ${readableAccent(adminSector.color)})`,
-                  }}
+                  style={colorChipStyle(adminSector.color)}
                 >
                   <adminSector.icon />
                 </div>

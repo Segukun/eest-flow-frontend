@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { colorChipStyle } from "../colorPresets.js";
+import { useEffect, useId, useRef, useState } from "react";
 
 import { useApp, PRIORITIES } from "../context/AppContext";
 import { MAX_TASK_TITLE_LENGTH } from "../taskDrafts.js";
@@ -14,7 +15,6 @@ import {
   FiUsers,
   FiImage,
   FiFileText,
-  FiSliders,
   FiX,
   FiAlertCircle,
 } from "react-icons/fi";
@@ -58,6 +58,7 @@ export default function TaskDetailModal({
   const [savingTitle, setSavingTitle] = useState(false);
 
   const titleRef = useRef(null);
+  const titleCounterId = useId();
 
   const [editingDescription, setEditingDescription] = useState(false);
   const [descriptionDraft, setDescriptionDraft] = useState("");
@@ -228,7 +229,7 @@ export default function TaskDetailModal({
               title="Acciones de la tarjeta"
               onClick={() => onEdit(task.id)}
             >
-              <FiSliders />
+              ✎
             </button>
 
             <button
@@ -259,10 +260,7 @@ export default function TaskDetailModal({
                     <span
                       key={label.id}
                       className="label"
-                      style={{
-                        color: label.color,
-                        background: `color-mix(in srgb, ${label.color} 14%, transparent)`,
-                      }}
+                      style={colorChipStyle(label.color)}
                     >
                       {label.title}
                     </span>
@@ -279,6 +277,7 @@ export default function TaskDetailModal({
                     className="input task-detail__title-input"
                     value={titleDraft}
                     maxLength={MAX_TASK_TITLE_LENGTH}
+                    aria-describedby={titleCounterId}
                     rows={1}
                     autoFocus
                     onChange={(event) =>
@@ -299,6 +298,10 @@ export default function TaskDetailModal({
                   />
 
                   <div className="task-detail__editable-actions">
+                    <span id={titleCounterId} className="task-detail__counter">
+                      {titleDraft.length}/{MAX_TASK_TITLE_LENGTH}
+                    </span>
+
                     <button
                       type="button"
                       className="btn btn--ghost btn--sm"
@@ -537,7 +540,7 @@ export default function TaskDetailModal({
                 {dueDate ? (
                   <>
                     <span className="task-detail__value">
-{formatLongDate(task.dueDate)}
+                      {formatLongDate(task.dueDate)}
                     </span>
 
                     {isOverdue && (

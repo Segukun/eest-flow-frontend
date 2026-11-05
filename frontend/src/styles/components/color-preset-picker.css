@@ -1,0 +1,61 @@
+.color-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(44px, 1fr));
+  gap: 10px;
+  width: 100%;
+  max-width: 420px;
+  padding: 4px;
+  box-sizing: border-box;
+}
+
+.color-preset {
+  min-width: 0;
+  min-height: 44px;
+  border: 1px solid var(--theme-border, var(--color-muted));
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: box-shadow 0.15s ease;
+}
+
+.color-preset:hover:not(:disabled) {
+  box-shadow: 0 0 0 2px var(--theme-secondary, var(--color-muted));
+}
+
+.color-preset--selected {
+  outline: 2px solid var(--theme-text, var(--color-graphite));
+  outline-offset: 2px;
+}
+
+.color-preset:focus-visible {
+  outline: 3px dashed var(--theme-text, var(--color-graphite));
+  outline-offset: 3px;
+}
+
+.color-preset:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.color-preset__check {
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.color-preset--current {
+  grid-column: span 2;
+}
+
+.color-preset__legacy,
+.color-preset--current .color-preset__check {
+  /* También mantiene legible un color antiguo transparente o una variable CSS. */
+  background: var(--theme-surface, var(--color-white));
+  color: var(--theme-text, var(--color-graphite));
+  padding: 3px;
+  border-radius: 4px;
+  font-size: 11px;
+}

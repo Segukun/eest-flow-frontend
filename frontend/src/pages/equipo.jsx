@@ -451,8 +451,7 @@ const Equipo = () => {
             <h1>Equipo Institucional</h1>
 
             <p>
-              Gestión de profesores, directivos, personal
-              técnico de taller y preceptoría.
+              Gestion de los usuarios del sistema.
             </p>
           </div>
 
@@ -582,7 +581,6 @@ const Equipo = () => {
               <>
                 Mostrando {miembrosDeLaPagina.length} de{" "}
                 {miembros.length} miembros registrados
-
               </>
             )}
           </p>

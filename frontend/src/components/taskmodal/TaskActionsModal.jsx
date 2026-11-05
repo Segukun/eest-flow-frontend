@@ -1,4 +1,6 @@
 import { useState, useRef } from "react";
+import ColorPresetPicker from "../ColorPresetPicker";
+import { DEFAULT_COLOR, colorChipStyle } from "../../colorPresets.js";
 
 import {
   useApp,
@@ -204,33 +206,6 @@ const OPTIONS = [
   },
 ];
 
-const LABEL_COLOR_PRESETS = [
-  "var(--color-green)",
-  "var(--color-orange)",
-  "var(--color-terracotta)",
-  "var(--color-graphite)",
-  "#6c4ae0",
-  "#1f9fb8",
-  "#e0342b",
-  "#2563eb",
-];
-
-// Convierte los colores de las etiquetas en clases CSS.
-const LABEL_COLOR_VARIANTS = {
-  "var(--color-green)": "green",
-  "var(--color-orange)": "orange",
-  "var(--color-terracotta)": "terracotta",
-  "var(--color-graphite)": "graphite",
-  "#6c4ae0": "purple",
-  "#1f9fb8": "cyan",
-  "#e0342b": "red",
-  "#2563eb": "blue",
-};
-
-const getLabelColorVariant = (color) => {
-  return LABEL_COLOR_VARIANTS[color] ?? "default";
-};
-
 // Comprueba si existe una descripción real.
 const hasRealDescription = (description) => {
   const value = String(description ?? "").trim();
@@ -277,7 +252,7 @@ export default function TaskActionsModal({
   // ---- creación de etiqueta nueva ----
 
   const [newLabelTitle, setNewLabelTitle] = useState("");
-  const [newLabelColor, setNewLabelColor] = useState(null);
+  const [newLabelColor, setNewLabelColor] = useState(DEFAULT_COLOR);
 
   const [creatingLabel, setCreatingLabel] = useState(false);
   const [labelError, setLabelError] = useState(null);
@@ -371,7 +346,7 @@ export default function TaskActionsModal({
       });
 
       setNewLabelTitle("");
-      setNewLabelColor(null);
+      setNewLabelColor(DEFAULT_COLOR);
     } catch (err) {
       const message =
         err?.response?.status === 403
@@ -493,6 +468,9 @@ export default function TaskActionsModal({
     >
       <div
         className="actions-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Acciones de tarea"
         onClick={(event) => event.stopPropagation()}
       >
         {/* Vista previa de la tarjeta */}
@@ -513,10 +491,8 @@ export default function TaskActionsModal({
               {taskLabels.map((l) => (
                 <span
                   key={l.id}
-                  className={
-                    `label actions-modal__preview-label
-                    actions-modal__preview-label--${getLabelColorVariant(l.color)}`
-                  }
+                  className="label actions-modal__preview-label"
+                  style={colorChipStyle(l.color)}
                 >
                   {l.title || "·"}
                 </span>
@@ -612,6 +588,7 @@ export default function TaskActionsModal({
             <button
               className="icon-btn"
               onClick={onClose}
+              aria-label="Cerrar acciones de tarea"
             >
               ✕
             </button>
@@ -697,7 +674,12 @@ export default function TaskActionsModal({
                 }}
               />
 
-              <div className="label-manager__list">
+              <div
+                className="label-manager__list"
+                role="region"
+                aria-label="Etiquetas disponibles"
+                tabIndex={0}
+              >
                 {labels.length === 0 && (
                   <p className="actions-modal__empty-hint">
                     Esta categoría todavía no tiene etiquetas.
@@ -723,20 +705,15 @@ export default function TaskActionsModal({
                           autoFocus
                         />
 
-                        <div className="label-manager__colors">
-                          {LABEL_COLOR_PRESETS.map((c) => (
-                            <button
-                              key={c}
-                              type="button"
-                              className={
-                                "label-manager__swatch" +
-                                (editColor === c ? " is-selected" : "")
-                              }
-                              data-color={getLabelColorVariant(c)}
-                              onClick={() => setEditColor(c)}
-                            />
-                          ))}
-                        </div>
+                        <ColorPresetPicker
+                          value={editColor}
+                          onChange={setEditColor}
+                          currentColor={l.color}
+                          disabled={savingEdit}
+                        />
+                        <span className="label-manager__chip" style={colorChipStyle(editColor)}>
+                          {editTitle || l.title}
+                        </span>
 
                         <div className="label-manager__row-actions">
                           <button
@@ -778,7 +755,7 @@ export default function TaskActionsModal({
                           "label-manager__chip" +
                           (isOnTask ? " is-on" : "")
                         }
-                        data-color={getLabelColorVariant(l.color)}
+                        style={colorChipStyle(l.color)}
                         onClick={() => toggleLabel(l.id)}
                         title={
                           isOnTask
@@ -819,20 +796,14 @@ export default function TaskActionsModal({
                     maxLength={30}
                   />
 
-                  <div className="label-creator__colors">
-                    {LABEL_COLOR_PRESETS.map((c) => (
-                      <button
-                        key={c}
-                        type="button"
-                        className={
-                          "label-creator__swatch" +
-                          (newLabelColor === c ? " is-selected" : "")
-                        }
-                        data-color={getLabelColorVariant(c)}
-                        onClick={() => setNewLabelColor(c)}
-                      />
-                    ))}
-                  </div>
+                  <ColorPresetPicker
+                    value={newLabelColor}
+                    onChange={setNewLabelColor}
+                    disabled={creatingLabel}
+                  />
+                  <span className="label-manager__chip" style={colorChipStyle(newLabelColor)}>
+                    {newLabelTitle || "Etiqueta"}
+                  </span>
 
                   <button
                     className="btn btn--primary btn--sm"

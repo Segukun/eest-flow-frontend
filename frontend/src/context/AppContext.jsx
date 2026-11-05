@@ -15,7 +15,8 @@ import {
   deleteTaskRequest,
   uploadTaskAttachmentsRequest,
   deleteTaskAttachmentRequest,
-  restoreTaskRequest, // ARCHIVERO
+  restoreTaskRequest,
+  restoreArchivedTasksRequest,
 } from "../api/tasks";
 
 import {
@@ -83,108 +84,61 @@ function unwrapEntity(raw, key) {
  */
 function normalizeAttachments(values) {
   return (Array.isArray(values) ? values : []).map((file) => ({
-    id: String(
-      getId(file) ?? file.path ?? file.url ?? "",
-    ),
+    id: String(getId(file) ?? file.path ?? file.url ?? ""),
 
     originalName:
-      file.originalName ??
-      file.originalname ??
-      file.name ??
-      "Archivo adjunto",
+      file.originalName ?? file.originalname ?? file.name ?? "Archivo adjunto",
 
     name:
-      file.originalName ??
-      file.originalname ??
-      file.name ??
-      "Archivo adjunto",
+      file.originalName ?? file.originalname ?? file.name ?? "Archivo adjunto",
 
     path: file.path ?? "",
 
-    url:
-      file.url ??
-      file.signedUrl ??
-      file.publicUrl ??
-      "",
+    url: file.url ?? file.signedUrl ?? file.publicUrl ?? "",
 
-    mimeType:
-      file.mimeType ??
-      file.mimetype ??
-      file.type ??
-      "",
+    mimeType: file.mimeType ?? file.mimetype ?? file.type ?? "",
 
     size: Number(file.size ?? 0),
 
-    uploadedAt:
-      file.uploadedAt ??
-      file.createdAt ??
-      null,
+    uploadedAt: file.uploadedAt ?? file.createdAt ?? null,
   }));
 }
 
 function normalizeTask(raw, fallback = {}) {
   const source = unwrapEntity(raw, "task");
 
-  const dueDate =
-    source.dueDate ??
-    fallback.dueDate ??
-    "";
+  const dueDate = source.dueDate ?? fallback.dueDate ?? "";
 
   return {
     id: source._id ?? source.id ?? fallback.id,
 
-    title:
-      source.title ??
-      fallback.title ??
-      "",
+    title: source.title ?? fallback.title ?? "",
 
-    description:
-      source.description ??
-      fallback.description ??
-      "",
+    description: source.description ?? fallback.description ?? "",
 
-    priority:
-      source.priority ??
-      fallback.priority ??
-      "medium",
+    priority: source.priority ?? fallback.priority ?? "medium",
 
-    column:
-      source.state ??
-      source.column ??
-      fallback.column ??
-      "pending",
+    column: source.state ?? source.column ?? fallback.column ?? "pending",
 
     categoryId: getId(
-      source.category ??
-      source.categoryId ??
-      fallback.categoryId
+      source.category ?? source.categoryId ?? fallback.categoryId,
     ),
 
     members: normalizeIdList(
-      source.assignedUser ??
-      source.members ??
-      fallback.members
+      source.assignedUser ?? source.members ?? fallback.members,
     ),
 
     labelIds: normalizeIdList(
-      source.labels ??
-      source.labelIds ??
-      fallback.labelIds
+      source.labels ?? source.labelIds ?? fallback.labelIds,
     ),
 
-    dueDate: dueDate
-      ? String(dueDate).slice(0, 10)
-      : "",
+    dueDate: dueDate ? String(dueDate).slice(0, 10) : "",
 
-    order:
-      source.order ??
-      fallback.order ??
-      0,
+    order: source.order ?? fallback.order ?? 0,
 
     // Campo adicional para archivos adjuntos.
     attachments: normalizeAttachments(
-      source.attachments ??
-      fallback.attachments
+      source.attachments ?? fallback.attachments,
     ),
   };
 }
@@ -195,20 +149,11 @@ function normalizeCategory(raw, fallback = {}) {
   return {
     id: source._id ?? source.id ?? fallback.id,
 
-    name:
-      source.name ??
-      fallback.name ??
-      "",
+    name: source.name ?? fallback.name ?? "",
 
-    color:
-      source.color ??
-      fallback.color ??
-      "#05903e",
+    color: source.color ?? fallback.color ?? "#05903e",
 
-    sectors:
-      source.sectors ??
-      fallback.sectors ??
-      [],
+    sectors: source.sectors ?? fallback.sectors ?? [],
   };
 }
 
@@ -278,7 +223,9 @@ export function AppProvider({ children }) {
   const [tasks, setTasks] = useState([]);
   const [taskDrafts, setTaskDrafts] = useState({});
   const setTaskDraft = useCallback((categoryId, columnId, title) => {
-    setTaskDrafts((prev) => updateTaskDrafts(prev, categoryId, columnId, title));
+    setTaskDrafts((prev) =>
+      updateTaskDrafts(prev, categoryId, columnId, title),
+    );
   }, []);
   const [tasksLoading, setTasksLoading] = useState(true);
   const [tasksError, setTasksError] = useState(null);
@@ -297,7 +244,7 @@ export function AppProvider({ children }) {
   });
 
   const currentUser = sessionUser
-    ? users.find((u) => u.id === sessionUser._id) ?? {
+    ? (users.find((u) => u.id === sessionUser._id) ?? {
         id: sessionUser._id,
         name: sessionUser.name,
         email: sessionUser.email,
@@ -312,7 +259,7 @@ export function AppProvider({ children }) {
         // El rol guardado puede estar obsoleto.
         // Esperamos la consulta actual.
         accountType: undefined,
-      }
+      })
     : null;
 
   /* ---------- categorías ---------- */
@@ -335,9 +282,13 @@ export function AppProvider({ children }) {
     // Solo datos públicos del usuario; nunca guardar el formulario de contraseña.
     const normalized = normalizeUser({ ...currentUser, ...updatedUser });
     usersVersion.current += 1;
-    setUsers((prev) => prev.some((user) => user.id === id)
-      ? prev.map((user) => user.id === id ? { ...user, ...normalized } : user)
-      : [...prev, normalized]);
+    setUsers((prev) =>
+      prev.some((user) => user.id === id)
+        ? prev.map((user) =>
+            user.id === id ? { ...user, ...normalized } : user,
+          )
+        : [...prev, normalized],
+    );
 
     const nextSession = {
       _id: normalized.id,
@@ -362,19 +313,14 @@ export function AppProvider({ children }) {
     try {
       const raw = await fetchCategories();
 
-      const normalized = raw.map(
-        (category) => normalizeCategory(category),
-      );
+      const normalized = raw.map((category) => normalizeCategory(category));
 
       setCategories(normalized);
 
-      setActiveCategory(
-        (prev) => prev ?? normalized[0]?.id ?? null,
-      );
+      setActiveCategory((prev) => prev ?? normalized[0]?.id ?? null);
     } catch (err) {
       setCategoriesError(
-        err?.response?.data?.message ||
-          "No se pudieron cargar las categorías."
+        err?.response?.data?.message || "No se pudieron cargar las categorías.",
       );
     } finally {
       setCategoriesLoading(false);
@@ -398,16 +344,13 @@ export function AppProvider({ children }) {
 
       const count = response?.data?.unreadCount;
 
-      if (
-        typeof count === "number" &&
-        Number.isFinite(count)
-      ) {
+      if (typeof count === "number" && Number.isFinite(count)) {
         setUnreadCount(Math.max(0, count));
       }
     } catch (err) {
       console.error(
         "No se pudo actualizar el contador de notificaciones:",
-        err
+        err,
       );
     }
   }, [sessionUser]);
@@ -426,23 +369,14 @@ export function AppProvider({ children }) {
       }
     };
 
-    const intervalId = setInterval(
-      refreshNotifications,
-      POLL_INTERVAL_MS
-    );
+    const intervalId = setInterval(refreshNotifications, POLL_INTERVAL_MS);
 
-    document.addEventListener(
-      "visibilitychange",
-      refreshNotifications
-    );
+    document.addEventListener("visibilitychange", refreshNotifications);
 
     return () => {
       clearInterval(intervalId);
 
-      document.removeEventListener(
-        "visibilitychange",
-        refreshNotifications
-      );
+      document.removeEventListener("visibilitychange", refreshNotifications);
     };
   }, [sessionUser, reloadUnreadCount]);
 
@@ -463,66 +397,53 @@ export function AppProvider({ children }) {
     }
   };
 
-  const loadTasks = useCallback(
-    async ({ silent = false } = {}) => {
+  const loadTasks = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) {
+      setTasksLoading(true);
+      setTasksError(null);
+    }
+
+    const versionAtStart = mutationVersion.current;
+
+    try {
+      const raw = await fetchTasks();
+
+      if (
+        silent &&
+        (mutationsInFlight.current > 0 ||
+          mutationVersion.current !== versionAtStart)
+      ) {
+        return;
+      }
+
+      const signature = JSON.stringify(raw);
+
+      if (silent && signature === tasksSignature.current) {
+        return;
+      }
+
+      tasksSignature.current = signature;
+
+      setTasks(raw.map((task) => normalizeTask(task)));
+    } catch (err) {
       if (!silent) {
-        setTasksLoading(true);
-        setTasksError(null);
-      }
-
-      const versionAtStart = mutationVersion.current;
-
-      try {
-        const raw = await fetchTasks();
-
-        if (
-          silent &&
-          (
-            mutationsInFlight.current > 0 ||
-            mutationVersion.current !== versionAtStart
-          )
-        ) {
-          return;
-        }
-
-        const signature = JSON.stringify(raw);
-
-        if (
-          silent &&
-          signature === tasksSignature.current
-        ) {
-          return;
-        }
-
-        tasksSignature.current = signature;
-
-        setTasks(
-          raw.map((task) => normalizeTask(task)),
+        setTasksError(
+          err?.response?.data?.message || "No se pudieron cargar las tareas.",
         );
-      } catch (err) {
-        if (!silent) {
-          setTasksError(
-            err?.response?.data?.message ||
-              "No se pudieron cargar las tareas."
-          );
-        }
-      } finally {
-        if (!silent) {
-          setTasksLoading(false);
-        }
       }
-    },
-    [],
-  );
+    } finally {
+      if (!silent) {
+        setTasksLoading(false);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     loadCategories();
     loadTasks();
 
     fetchSectors()
-      .then((raw) =>
-        setSectors(raw.map(normalizeSector))
-      )
+      .then((raw) => setSectors(raw.map(normalizeSector)))
       .catch(() => setSectors([]));
 
     reloadUsers().catch(() => setUsers([]));
@@ -537,23 +458,14 @@ export function AppProvider({ children }) {
       }
     };
 
-    const intervalId = setInterval(
-      refresh,
-      POLL_INTERVAL_MS,
-    );
+    const intervalId = setInterval(refresh, POLL_INTERVAL_MS);
 
-    document.addEventListener(
-      "visibilitychange",
-      refresh,
-    );
+    document.addEventListener("visibilitychange", refresh);
 
     return () => {
       clearInterval(intervalId);
 
-      document.removeEventListener(
-        "visibilitychange",
-        refresh,
-      );
+      document.removeEventListener("visibilitychange", refresh);
     };
   }, [loadTasks]);
 
@@ -597,16 +509,12 @@ export function AppProvider({ children }) {
     return n;
   }, [filters]);
 
-  const sectorIdOf = (s) =>
-    s && typeof s === "object"
-      ? s._id ?? s.id
-      : s;
+  const sectorIdOf = (s) => (s && typeof s === "object" ? (s._id ?? s.id) : s);
 
   const visibleTasks = useMemo(() => {
     const now = new Date();
 
-    const diffDays = (d) =>
-      (new Date(d) - now) / 86400000;
+    const diffDays = (d) => (new Date(d) - now) / 86400000;
 
     return tasks
       .filter((t) => {
@@ -614,10 +522,7 @@ export function AppProvider({ children }) {
           return false;
         }
 
-        if (
-          search &&
-          !t.title.toLowerCase().includes(search.toLowerCase())
-        ) {
+        if (search && !t.title.toLowerCase().includes(search.toLowerCase())) {
           return false;
         }
 
@@ -637,13 +542,9 @@ export function AppProvider({ children }) {
         }
 
         if (filters.sector) {
-          const category = categories.find(
-            (c) => c.id === t.categoryId
-          );
+          const category = categories.find((c) => c.id === t.categoryId);
 
-          const ids = (category?.sectors ?? []).map(
-            sectorIdOf
-          );
+          const ids = (category?.sectors ?? []).map(sectorIdOf);
 
           if (!ids.includes(filters.sector)) {
             return false;
@@ -653,24 +554,15 @@ export function AppProvider({ children }) {
         if (filters.due && t.dueDate) {
           const d = diffDays(t.dueDate);
 
-          if (
-            filters.due === "hoy" &&
-            !(d >= -1 && d < 1)
-          ) {
+          if (filters.due === "hoy" && !(d >= -1 && d < 1)) {
             return false;
           }
 
-          if (
-            filters.due === "48" &&
-            !(d < 2)
-          ) {
+          if (filters.due === "48" && !(d < 2)) {
             return false;
           }
 
-          if (
-            filters.due === "7" &&
-            !(d < 7)
-          ) {
+          if (filters.due === "7" && !(d < 7)) {
             return false;
           }
         }
@@ -678,14 +570,7 @@ export function AppProvider({ children }) {
         return true;
       })
       .sort((a, b) => a.order - b.order);
-  }, [
-    tasks,
-    categories,
-    activeCategory,
-    search,
-    filters,
-    currentUser,
-  ]);
+  }, [tasks, categories, activeCategory, search, filters, currentUser]);
 
   /* ---------- acciones: tareas ---------- */
 
@@ -694,9 +579,7 @@ export function AppProvider({ children }) {
       if (!activeCategory) return;
 
       const sameColumn = tasks.filter(
-        (t) =>
-          t.column === columnId &&
-          t.categoryId === activeCategory
+        (t) => t.column === columnId && t.categoryId === activeCategory,
       );
 
       const nextOrder = sameColumn.length
@@ -712,10 +595,7 @@ export function AppProvider({ children }) {
         order: nextOrder,
       });
 
-      setTasks((prev) => [
-        ...prev,
-        normalizeTask(created),
-      ]);
+      setTasks((prev) => [...prev, normalizeTask(created)]);
     });
 
   const updateTask = (id, patch) =>
@@ -754,30 +634,20 @@ export function AppProvider({ children }) {
         payload.order = patch.order;
       }
 
-      const existing = tasks.find(
-        (task) => String(task.id) === String(id)
-      );
+      const existing = tasks.find((task) => String(task.id) === String(id));
 
-      const updated = await updateTaskRequest(
+      const updated = await updateTaskRequest(id, payload);
+
+      const normalized = normalizeTask(updated, {
+        ...existing,
+        ...patch,
         id,
-        payload,
-      );
-
-      const normalized = normalizeTask(
-        updated,
-        {
-          ...existing,
-          ...patch,
-          id,
-        },
-      );
+      });
 
       setTasks((prev) =>
         prev.map((task) =>
-          String(task.id) === String(id)
-            ? normalized
-            : task
-        )
+          String(task.id) === String(id) ? normalized : task,
+        ),
       );
 
       return normalized;
@@ -788,9 +658,7 @@ export function AppProvider({ children }) {
     track(async () => {
       await deleteTaskRequest(id);
 
-      setTasks((prev) =>
-        prev.filter((t) => t.id !== id)
-      );
+      setTasks((prev) => prev.filter((t) => t.id !== id));
     });
 
   // ARCHIVERO: restaura una tarea archivada y la vuelve a mostrar en el tablero.
@@ -807,6 +675,26 @@ export function AppProvider({ children }) {
       return normalized;
     });
 
+  // ARCHIVERO: restaura varias tareas y las vuelve a mostrar en el tablero.
+  const restoreArchivedTasks = (ids) =>
+    track(async () => {
+      const result = await restoreArchivedTasksRequest(ids);
+      const restored = (result?.restored ?? []).map((task) =>
+        normalizeTask(task),
+      );
+
+      if (restored.length > 0) {
+        const restoredIds = new Set(restored.map((task) => String(task.id)));
+
+        setTasks((prev) => [
+          ...prev.filter((task) => !restoredIds.has(String(task.id))),
+          ...restored,
+        ]);
+      }
+
+      return { restored, failed: result?.failed ?? [] };
+    });
+
   /* ---------- acciones: adjuntos de tareas ---------- */
 
   /**
@@ -814,29 +702,19 @@ export function AppProvider({ children }) {
    */
   const uploadTaskAttachments = (id, files) =>
     track(async () => {
-      const existing = tasks.find(
-        (task) => String(task.id) === String(id)
-      );
+      const existing = tasks.find((task) => String(task.id) === String(id));
 
-      const updated = await uploadTaskAttachmentsRequest(
+      const updated = await uploadTaskAttachmentsRequest(id, files);
+
+      const normalized = normalizeTask(updated, {
+        ...existing,
         id,
-        files,
-      );
-
-      const normalized = normalizeTask(
-        updated,
-        {
-          ...existing,
-          id,
-        },
-      );
+      });
 
       setTasks((prev) =>
         prev.map((task) =>
-          String(task.id) === String(id)
-            ? normalized
-            : task
-        )
+          String(task.id) === String(id) ? normalized : task,
+        ),
       );
 
       return normalized;
@@ -846,34 +724,21 @@ export function AppProvider({ children }) {
    * Elimina un adjunto específico sin reemplazar
    * el resto de la información de la tarea.
    */
-  const deleteTaskAttachment = (
-    taskId,
-    attachmentId,
-  ) =>
+  const deleteTaskAttachment = (taskId, attachmentId) =>
     track(async () => {
-      const existing = tasks.find(
-        (task) => String(task.id) === String(taskId)
-      );
+      const existing = tasks.find((task) => String(task.id) === String(taskId));
 
-      const updated = await deleteTaskAttachmentRequest(
-        taskId,
-        attachmentId,
-      );
+      const updated = await deleteTaskAttachmentRequest(taskId, attachmentId);
 
-      const normalized = normalizeTask(
-        updated,
-        {
-          ...existing,
-          id: taskId,
-        },
-      );
+      const normalized = normalizeTask(updated, {
+        ...existing,
+        id: taskId,
+      });
 
       setTasks((prev) =>
         prev.map((task) =>
-          String(task.id) === String(taskId)
-            ? normalized
-            : task
-        )
+          String(task.id) === String(taskId) ? normalized : task,
+        ),
       );
 
       return normalized;
@@ -883,9 +748,7 @@ export function AppProvider({ children }) {
     track(async () => {
       const previous = tasks;
 
-      const moving = tasks.find(
-        (t) => t.id === id
-      );
+      const moving = tasks.find((t) => t.id === id);
 
       if (!moving || id === beforeId) return;
 
@@ -894,22 +757,16 @@ export function AppProvider({ children }) {
           (t) =>
             t.column === columnId &&
             t.categoryId === moving.categoryId &&
-            t.id !== id
+            t.id !== id,
         )
         .sort((a, b) => a.order - b.order);
 
-      const index = beforeId
-        ? target.findIndex((t) => t.id === beforeId)
-        : -1;
+      const index = beforeId ? target.findIndex((t) => t.id === beforeId) : -1;
 
-      target.splice(
-        index === -1 ? target.length : index,
-        0,
-        {
-          ...moving,
-          column: columnId,
-        },
-      );
+      target.splice(index === -1 ? target.length : index, 0, {
+        ...moving,
+        column: columnId,
+      });
 
       const renumbered = target.map((t, i) => ({
         ...t,
@@ -917,24 +774,14 @@ export function AppProvider({ children }) {
       }));
 
       const changed = renumbered.filter((t) => {
-        const old = tasks.find(
-          (o) => o.id === t.id
-        );
+        const old = tasks.find((o) => o.id === t.id);
 
-        return (
-          !old ||
-          old.order !== t.order ||
-          old.column !== t.column
-        );
+        return !old || old.order !== t.order || old.column !== t.column;
       });
 
-      const byId = new Map(
-        renumbered.map((t) => [t.id, t])
-      );
+      const byId = new Map(renumbered.map((t) => [t.id, t]));
 
-      setTasks((prev) =>
-        prev.map((t) => byId.get(t.id) ?? t)
-      );
+      setTasks((prev) => prev.map((t) => byId.get(t.id) ?? t));
 
       try {
         await Promise.all(
@@ -942,8 +789,8 @@ export function AppProvider({ children }) {
             updateTaskRequest(t.id, {
               state: t.column,
               order: t.order,
-            })
-          )
+            }),
+          ),
         );
       } catch (err) {
         setTasks(previous);
@@ -953,73 +800,48 @@ export function AppProvider({ children }) {
 
   /* ---------- acciones: categorías ---------- */
 
-  const addCategory = async ({
-    name,
-    color,
-    sectors: sectorIds,
-  }) => {
+  const addCategory = async ({ name, color, sectors: sectorIds }) => {
     const created = await createCategoryRequest({
       name,
       color,
       sectors: sectorIds,
     });
 
-    const normalized = normalizeCategory(
-      created,
-      {
-        name,
-        color,
-        sectors: sectorIds,
-      },
-    );
+    const normalized = normalizeCategory(created, {
+      name,
+      color,
+      sectors: sectorIds,
+    });
 
-    setCategories((prev) => [
-      ...prev,
-      normalized,
-    ]);
+    setCategories((prev) => [...prev, normalized]);
 
     setActiveCategory(normalized.id);
 
     return normalized.id;
   };
 
-  const updateCategory = async (
-    id,
-    {
+  const updateCategory = async (id, { name, color, sectors: sectorIds }) => {
+    const existing = categories.find(
+      (category) => String(category.id) === String(id),
+    );
+
+    const updated = await updateCategoryRequest(id, {
       name,
       color,
       sectors: sectorIds,
-    },
-  ) => {
-    const existing = categories.find(
-      (category) => String(category.id) === String(id)
-    );
+    });
 
-    const updated = await updateCategoryRequest(
+    const normalized = normalizeCategory(updated, {
       id,
-      {
-        name,
-        color,
-        sectors: sectorIds,
-      },
-    );
-
-    const normalized = normalizeCategory(
-      updated,
-      {
-        id,
-        name: name ?? existing?.name,
-        color: color ?? existing?.color,
-        sectors: sectorIds ?? existing?.sectors,
-      },
-    );
+      name: name ?? existing?.name,
+      color: color ?? existing?.color,
+      sectors: sectorIds ?? existing?.sectors,
+    });
 
     setCategories((prev) =>
       prev.map((category) =>
-        String(category.id) === String(id)
-          ? normalized
-          : category
-      )
+        String(category.id) === String(id) ? normalized : category,
+      ),
     );
 
     return normalized.id;
@@ -1030,14 +852,10 @@ export function AppProvider({ children }) {
 
     await deleteCategoryRequest(id);
 
-    setCategories((prev) =>
-      prev.filter((c) => c.id !== id)
-    );
+    setCategories((prev) => prev.filter((c) => c.id !== id));
 
     if (activeCategory === id) {
-      const fallback = categories.find(
-        (c) => c.id !== id
-      );
+      const fallback = categories.find((c) => c.id !== id);
 
       setActiveCategory(fallback?.id ?? null);
     }
@@ -1058,33 +876,20 @@ export function AppProvider({ children }) {
 
     const normalized = normalizeLabel(created);
 
-    setLabels((prev) => [
-      ...prev,
-      normalized,
-    ]);
+    setLabels((prev) => [...prev, normalized]);
 
     return normalized;
   };
 
-  const updateLabel = async (
-    id,
-    { title, color },
-  ) => {
-    const updated = await updateLabelRequest(
-      id,
-      {
-        title,
-        color,
-      },
-    );
+  const updateLabel = async (id, { title, color }) => {
+    const updated = await updateLabelRequest(id, {
+      title,
+      color,
+    });
 
     const normalized = normalizeLabel(updated);
 
-    setLabels((prev) =>
-      prev.map((l) =>
-        l.id === id ? normalized : l
-      )
-    );
+    setLabels((prev) => prev.map((l) => (l.id === id ? normalized : l)));
 
     return normalized;
   };
@@ -1092,21 +897,17 @@ export function AppProvider({ children }) {
   const deleteLabel = async (id) => {
     await deleteLabelRequest(id);
 
-    setLabels((prev) =>
-      prev.filter((l) => l.id !== id)
-    );
+    setLabels((prev) => prev.filter((l) => l.id !== id));
 
     setTasks((prev) =>
       prev.map((t) =>
         t.labelIds.includes(id)
           ? {
               ...t,
-              labelIds: t.labelIds.filter(
-                (lid) => lid !== id
-              ),
+              labelIds: t.labelIds.filter((lid) => lid !== id),
             }
-          : t
-      )
+          : t,
+      ),
     );
   };
 
@@ -1147,7 +948,8 @@ export function AppProvider({ children }) {
     setTaskDraft,
     updateTask,
     deleteTask,
-    restoreArchivedTask, // ARCHIVERO
+    restoreArchivedTask,
+    restoreArchivedTasks,
     moveTask,
 
     // Operaciones de adjuntos.
@@ -1168,11 +970,7 @@ export function AppProvider({ children }) {
     reloadUnreadCount,
   };
 
-  return (
-    <AppContext.Provider value={value}>
-      {children}
-    </AppContext.Provider>
-  );
+  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }
 
 export const useApp = () => useContext(AppContext);

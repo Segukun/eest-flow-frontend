@@ -289,3 +289,20 @@
   background: rgba(224, 52, 43, 0.1);
   color: var(--theme-danger-text, var(--color-danger));
 }
+
+/* ===== Sidebar minimizado: icono de notificaciones centrado + globito chico ===== */
+.sidebar--collapsed .sidebar__nav .nav-item {
+  position: relative;
+}
+
+.sidebar--collapsed .sidebar__nav .nav-item__badge {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  margin-left: 0;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  font-size: 10px;
+  border: 2px solid var(--theme-surface, #fff);
+}

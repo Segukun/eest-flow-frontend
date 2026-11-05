@@ -1,14 +1,8 @@
 import { useState } from "react";
+import ColorPresetPicker from "./ColorPresetPicker";
+import { DEFAULT_COLOR } from "../colorPresets.js";
 import { useApp } from "../context/AppContext";
 import "../styles/components/category-modal.css";
-
-const PRESET_COLORS = [
-  "var(--color-green)",
-  "var(--color-orange)",
-  "var(--color-terracotta)",
-  "var(--color-graphite)",
-  "var(--color-bone)",
-];
 
 const ROL_ADMIN = "admin";
 
@@ -34,27 +28,8 @@ export default function AddCategoryModal({
   const categoryId = category?.id ?? category?._id;
   const isEditing = Boolean(categoryId);
 
-  const initialColor =
-    category?.color ?? PRESET_COLORS[0];
-
-  const isPresetColor =
-    PRESET_COLORS.includes(initialColor);
-
-  const [name, setName] = useState(
-    category?.name ?? ""
-  );
-
-  const [color, setColor] = useState(
-    isPresetColor
-      ? initialColor
-      : PRESET_COLORS[0]
-  );
-
-  const [customColor, setCustomColor] = useState(
-    category && !isPresetColor
-      ? initialColor
-      : null
-  );
+  const [name, setName] = useState(category?.name ?? "");
+  const [color, setColor] = useState(category?.color ?? DEFAULT_COLOR);
 
   const [sectorMode, setSectorMode] = useState(
     isEditing ? "custom" : "all"
@@ -77,8 +52,6 @@ export default function AddCategoryModal({
   const shownError = !isAdmin
     ? MSG_SOLO_ADMIN
     : error;
-
-  const finalColor = customColor || color;
 
   const toggleSector = (sectorId) => {
     const id = String(sectorId);
@@ -121,7 +94,7 @@ export default function AddCategoryModal({
     try {
       const payload = {
         name: trimmed,
-        color: finalColor,
+        color,
         sectors: sectorIds,
       };
 
@@ -188,7 +161,7 @@ export default function AddCategoryModal({
               Nombre
               <span
                 className="category-modal__name-dot"
-                style={{ background: finalColor }}
+                style={{ background: color }}
               />
             </span>
 
@@ -209,70 +182,12 @@ export default function AddCategoryModal({
               Color
             </span>
 
-            <div className="category-modal__colors">
-              {PRESET_COLORS.map((presetColor) => (
-                <button
-                  key={presetColor}
-                  type="button"
-                  className={
-                    "category-modal__swatch" +
-                    (!customColor && color === presetColor
-                      ? " is-selected"
-                      : "")
-                  }
-                  style={{ background: presetColor }}
-                  onClick={() => {
-                    setColor(presetColor);
-                    setCustomColor(null);
-                  }}
-                  disabled={!isAdmin || submitting}
-                  aria-label={`Seleccionar color ${presetColor}`}
-                >
-                  {!customColor &&
-                    color === presetColor && (
-                      <span className="category-modal__swatch-check">
-                        ✓
-                      </span>
-                    )}
-                </button>
-              ))}
-
-              <label
-                className={
-                  "category-modal__swatch category-modal__swatch--add" +
-                  (customColor ? " is-selected" : "")
-                }
-                style={
-                  customColor
-                    ? { background: customColor }
-                    : undefined
-                }
-                title="Elegir un color personalizado"
-              >
-                {customColor ? (
-                  <span className="category-modal__swatch-check">
-                    ✓
-                  </span>
-                ) : (
-                  "+"
-                )}
-
-                <input
-                  type="color"
-                  className="category-modal__color-input"
-                  value={
-                    customColor?.startsWith("#")
-                      ? customColor
-                      : "#05903e"
-                  }
-                  onChange={(event) =>
-                    setCustomColor(event.target.value)
-                  }
-                  disabled={!isAdmin || submitting}
-                  aria-label="Elegir color personalizado"
-                />
-              </label>
-            </div>
+            <ColorPresetPicker
+              value={color}
+              onChange={setColor}
+              currentColor={category?.color}
+              disabled={!isAdmin || submitting}
+            />
           </div>
 
           <div className="field">

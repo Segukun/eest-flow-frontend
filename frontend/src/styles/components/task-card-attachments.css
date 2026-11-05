@@ -26,3 +26,10 @@
   height: 14px;
   stroke-width: 1.9;
 }
+
+/* Fecha límite vencida: texto en rojo con un fondo rojizo suave */
+.task-card .task-card__due--overdue {
+  color: var(--theme-danger-text, var(--color-danger));
+  background: color-mix(in srgb, var(--color-danger) 12%, transparent);
+  font-weight: 700;
+}
