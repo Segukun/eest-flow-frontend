@@ -79,3 +79,13 @@ export const permanentlyDeleteTaskRequest = async (id) => {
   const { data } = await api.delete(`/api/tasks/${id}/permanent`);
   return data;
 };
+
+export const restoreArchivedTasksRequest = async (ids) => {
+  const { data } = await api.post("/api/tasks/archived/restore", { ids });
+  return data; // { restored, failed }
+};
+
+export const deleteArchivedTasksRequest = async (ids) => {
+  const { data } = await api.post("/api/tasks/archived/delete", { ids });
+  return data; // { deleted, failed }
+};

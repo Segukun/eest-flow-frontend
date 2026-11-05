@@ -1,3 +1,8 @@
+/* =========================================================
+   ARCHIVERO
+   Hoja completa: estilos base + modo de selección.
+========================================================= */
+
 .archive-modal {
   width: min(720px, 100%);
   max-height: 88vh;
@@ -70,12 +75,19 @@
   flex: none;
   width: 34px;
   height: 34px;
+  border: 0;
   border-radius: 50%;
   display: grid;
   place-items: center;
   font-size: 16px;
   background: var(--theme-hover, rgba(31, 21, 28, 0.06));
   color: var(--theme-text, var(--color-graphite));
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.archive-modal__close:hover {
+  background: var(--theme-border, var(--color-border));
 }
 
 .archive-modal__search {
@@ -147,15 +159,22 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 14px 14px 14px 20px;
+  min-width: 0;
+  padding: 14px 14px 14px 48px;
   overflow: hidden;
   border-radius: var(--radius-md);
   background: var(--theme-surface-soft, var(--color-bone));
   border: 1px solid var(--theme-border, var(--color-border));
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
 }
 
 .archive-item__bar {
   position: absolute;
+  z-index: 1;
   top: 0;
   bottom: 0;
   left: 0;
@@ -288,13 +307,383 @@
   gap: 8px;
 }
 
+/* =========================================================
+   BARRA DE HERRAMIENTAS Y SELECCIÓN MÚLTIPLE
+========================================================= */
+
+.archive-modal__toolbar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-height: 45px;
+  margin: 12px 22px 0;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  background: var(--theme-surface-soft, var(--color-bone));
+  border: 1px solid var(--theme-border, var(--color-border));
+  transition: background 180ms ease, border-color 180ms ease;
+}
+
+.archive-modal__toolbar--selecting {
+  border-color: var(--theme-green-text, var(--color-green));
+  background: var(--theme-green-soft, rgba(5, 144, 62, 0.055));
+}
+
+.archive-modal__toolbar-main {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.archive-modal__toolbar-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.archive-modal__toolbar-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.archive-modal__selected-count {
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: var(--theme-hover, rgba(31, 21, 28, 0.06));
+  color: var(--theme-text, var(--color-graphite));
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  animation: archive-selection-appear 180ms ease both;
+}
+
+.archive-modal__cancel-selection {
+  flex: none;
+  width: 27px;
+  height: 27px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--theme-secondary, var(--color-muted));
+  font-size: 15px;
+  cursor: pointer;
+  transition: color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.archive-modal__cancel-selection:hover:not(:disabled) {
+  background: var(--theme-hover, rgba(31, 21, 28, 0.06));
+  color: var(--theme-text, var(--color-graphite));
+  transform: rotate(90deg);
+}
+
+.archive-modal__cancel-selection:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.archive-modal__clear {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--theme-danger-text, var(--color-danger));
+}
+
+.archive-check {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 28px;
+  cursor: pointer;
+  color: var(--theme-text, var(--color-graphite));
+}
+
+/* Input accesible y enfocable: la caja visible se dibuja en el span siguiente. */
+.archive-check input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+  border: 0;
+  opacity: 0;
+}
+
+.archive-check__box {
+  flex: none;
+  width: 19px;
+  height: 19px;
+  display: inline-grid;
+  place-items: center;
+  border: 1.5px solid var(--theme-border, var(--color-border));
+  border-radius: 6px;
+  background: var(--theme-surface, #fff);
+  color: #fff;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.archive-check__box svg {
+  width: 13px;
+  height: 13px;
+  opacity: 0;
+  stroke-width: 3;
+  transform: scale(0.7);
+  transition: opacity 130ms ease, transform 130ms ease;
+}
+
+.archive-check input:checked + .archive-check__box {
+  border-color: var(--theme-green-fill, var(--color-green));
+  background: var(--theme-green-fill, var(--color-green));
+  box-shadow: 0 2px 5px rgba(5, 144, 62, 0.18);
+}
+
+.archive-check input:checked + .archive-check__box svg {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.archive-check input:indeterminate + .archive-check__box {
+  border-color: var(--theme-green-fill, var(--color-green));
+  background: var(--theme-green-fill, var(--color-green));
+}
+
+.archive-check input:indeterminate + .archive-check__box svg {
+  opacity: 0;
+}
+
+.archive-check input:indeterminate + .archive-check__box::after {
+  width: 9px;
+  height: 2px;
+  border-radius: 2px;
+  background: #fff;
+  content: "";
+}
+
+.archive-check input:focus-visible + .archive-check__box {
+  outline: 2px solid var(--theme-green-text, var(--color-green));
+  outline-offset: 3px;
+}
+
+.archive-check input:disabled + .archive-check__box {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.archive-check--master {
+  gap: 9px;
+  min-height: 26px;
+  color: var(--theme-secondary, var(--color-muted));
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.archive-check--master .archive-check__box {
+  width: 17px;
+  height: 17px;
+  border-radius: 5px;
+}
+
+.archive-check__label {
+  transition: color 150ms ease;
+}
+
+.archive-check--master:hover .archive-check__label {
+  color: var(--theme-text, var(--color-graphite));
+}
+
+.archive-check--item {
+  z-index: 3;
+  min-height: 30px;
+}
+
+.archive-check--item .archive-check__box {
+  width: 21px;
+  height: 21px;
+  border-radius: 7px;
+}
+
+.archive-item__check {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+}
+
+/* =========================================================
+   BOTÓN LATERAL DE SELECCIÓN
+   Solo se revela al pasar el cursor por el propio lateral,
+   no al pasar por cualquier parte de la tarjeta.
+========================================================= */
+
+.archive-item__select-trigger {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  bottom: 0;
+  left: 5px;
+  width: 35px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--theme-green-text, var(--color-green));
+  opacity: 0;
+  transform: translateX(-4px);
+  cursor: pointer;
+  transition:
+    opacity 170ms ease,
+    transform 170ms ease,
+    background 170ms ease;
+}
+
+/* El hover se aplica al área lateral del botón, no a toda la tarjeta. */
+.archive-item__select-trigger:hover,
+.archive-item__select-trigger:focus-visible {
+  opacity: 1;
+  transform: translateX(0);
+  background: var(--theme-hover, rgba(31, 21, 28, 0.045));
+}
+
+.archive-item__select-trigger:focus-visible {
+  outline: 2px solid var(--theme-green-text, var(--color-green));
+  outline-offset: -3px;
+}
+
+.archive-item__select-trigger:disabled {
+  cursor: not-allowed;
+}
+
+.archive-item__select-dot {
+  width: 19px;
+  height: 19px;
+  display: block;
+  border: 1.5px solid var(--theme-secondary, var(--color-muted));
+  border-radius: 50%;
+  background: var(--theme-surface, #fff);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    transform 150ms ease;
+}
+
+.archive-item__select-trigger:hover .archive-item__select-dot,
+.archive-item__select-trigger:focus-visible .archive-item__select-dot {
+  border-color: var(--theme-green-text, var(--color-green));
+  background: var(--theme-green-soft, rgba(5, 144, 62, 0.1));
+  transform: scale(1.08);
+}
+
+/* =========================================================
+   TARJETAS EN MODO SELECCIÓN
+========================================================= */
+
+.archive-modal__list--selecting {
+  gap: 9px;
+}
+
+.archive-item--selectable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.archive-item--selectable:hover {
+  border-color: var(--theme-green-text, var(--color-green));
+  background: var(--theme-hover, rgba(31, 21, 28, 0.045));
+}
+
+.archive-item--selected {
+  border-color: var(--theme-green-text, var(--color-green));
+  background: var(--theme-green-soft, rgba(5, 144, 62, 0.07));
+  box-shadow: 0 0 0 1px var(--theme-green-text, var(--color-green));
+}
+
+.archive-item--selected:hover {
+  background: var(--theme-green-soft, rgba(5, 144, 62, 0.1));
+}
+
+.archive-item--selectable:active {
+  transform: scale(0.997);
+}
+
+@keyframes archive-selection-appear {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------- responsive ---------- */
+
 @media (max-width: 640px) {
   .archive-item {
     flex-direction: column;
     align-items: stretch;
+    padding: 14px 14px 14px 48px;
   }
 
   .archive-item__actions {
     justify-content: flex-start;
+  }
+
+  .archive-modal__toolbar {
+    align-items: stretch;
+  }
+
+  .archive-modal__toolbar-main,
+  .archive-modal__toolbar-actions {
+    width: 100%;
+  }
+
+  .archive-modal__toolbar-actions {
+    justify-content: flex-start;
+  }
+}
+
+/* En dispositivos táctiles no existe hover: se deja una pista discreta
+   para que el acceso a selección siga siendo descubrible y utilizable. */
+@media (hover: none) {
+  .archive-item__select-trigger {
+    opacity: 0.42;
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .archive-item,
+  .archive-item__select-trigger,
+  .archive-item__select-dot,
+  .archive-check__box,
+  .archive-check__box svg,
+  .archive-modal__toolbar,
+  .archive-modal__cancel-selection,
+  .archive-modal__selected-count {
+    animation: none;
+    transition: none;
   }
 }
