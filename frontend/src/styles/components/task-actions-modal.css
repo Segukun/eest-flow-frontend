@@ -6,7 +6,6 @@
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior-y: contain;
-  scrollbar-gutter: stable;
   scrollbar-width: thin;
   scrollbar-color: var(--theme-secondary, var(--color-muted)) transparent;
   box-sizing: border-box;
@@ -156,15 +155,32 @@
    ========================================================= */
 
 .label-manager__list {
+  --label-row-height: 44px;
+  --label-row-gap: 6px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--label-row-gap);
+  /* Cinco filas y sus separaciones; el padding deja espacio para el foco. */
+  max-height: calc(5 * var(--label-row-height) + 4 * var(--label-row-gap) + 8px);
+  box-sizing: border-box;
+  padding: 4px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--theme-secondary, var(--color-muted)) transparent;
+}
+
+.label-manager__list:focus-visible {
+  outline: 2px solid var(--theme-green-text, var(--color-green));
+  outline-offset: 2px;
 }
 
 /* ---- fila de etiqueta ---- */
 
 .label-manager__row {
   display: flex;
+  flex-shrink: 0;
+  min-height: var(--label-row-height);
   align-items: center;
   gap: 8px;
 }
@@ -173,6 +189,8 @@
 
 .label-manager__chip {
   flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
   text-align: left;
   padding: 10px 14px;
   border-radius: var(--radius-md);

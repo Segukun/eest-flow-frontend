@@ -1,5 +1,5 @@
 import { colorChipStyle } from "../colorPresets.js";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import { useApp, PRIORITIES } from "../context/AppContext";
 import { MAX_TASK_TITLE_LENGTH } from "../taskDrafts.js";
@@ -15,7 +15,6 @@ import {
   FiUsers,
   FiImage,
   FiFileText,
-  FiSliders,
   FiX,
   FiAlertCircle,
 } from "react-icons/fi";
@@ -59,6 +58,7 @@ export default function TaskDetailModal({
   const [savingTitle, setSavingTitle] = useState(false);
 
   const titleRef = useRef(null);
+  const titleCounterId = useId();
 
   const [editingDescription, setEditingDescription] = useState(false);
   const [descriptionDraft, setDescriptionDraft] = useState("");
@@ -277,6 +277,7 @@ export default function TaskDetailModal({
                     className="input task-detail__title-input"
                     value={titleDraft}
                     maxLength={MAX_TASK_TITLE_LENGTH}
+                    aria-describedby={titleCounterId}
                     rows={1}
                     autoFocus
                     onChange={(event) =>
@@ -297,6 +298,10 @@ export default function TaskDetailModal({
                   />
 
                   <div className="task-detail__editable-actions">
+                    <span id={titleCounterId} className="task-detail__counter">
+                      {titleDraft.length}/{MAX_TASK_TITLE_LENGTH}
+                    </span>
+
                     <button
                       type="button"
                       className="btn btn--ghost btn--sm"
