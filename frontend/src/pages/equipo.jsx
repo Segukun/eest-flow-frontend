@@ -582,7 +582,6 @@ const Equipo = () => {
               <>
                 Mostrando {miembrosDeLaPagina.length} de{" "}
                 {miembros.length} miembros registrados
-
               </>
             )}
           </p>
