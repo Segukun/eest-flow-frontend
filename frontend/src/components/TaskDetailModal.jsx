@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { useApp, PRIORITIES } from "../context/AppContext";
 import { MAX_TASK_TITLE_LENGTH } from "../taskDrafts.js";
+import { formatLongDate } from "./dates";
 
 import { IoPencil } from "react-icons/io5";
 
@@ -536,11 +537,7 @@ export default function TaskDetailModal({
                 {dueDate ? (
                   <>
                     <span className="task-detail__value">
-                      {dueDate.toLocaleDateString("es-AR", {
-                        day: "2-digit",
-                        month: "long",
-                        year: "numeric",
-                      })}
+{formatLongDate(task.dueDate)}
                     </span>
 
                     {isOverdue && (

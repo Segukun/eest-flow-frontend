@@ -1,4 +1,5 @@
 import { useApp, PRIORITIES } from "../context/AppContext";
+import { parseLocalDate } from "./dates";
 
 import {
   FiMenu,
@@ -45,6 +46,18 @@ export default function TaskCard({
   const hasDescription = Boolean(
     description &&
     description.toLowerCase() !== ""
+  );
+
+  // Fecha límite y si la tarea está vencida (anterior al día de hoy)
+  const dueDate = task.dueDate
+    ? parseLocalDate(task.dueDate)
+    : null;
+
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+
+  const isOverdue = Boolean(
+    dueDate && dueDate.getTime() < startOfToday.getTime()
   );
 
   const markerStyle = dropMarker
@@ -149,15 +162,18 @@ export default function TaskCard({
           </div>
         </div>
 
-        {task.dueDate && (
-          <span className="task-card__due">
-            {new Date(task.dueDate).toLocaleDateString(
-              "es-AR",
-              {
-                day: "2-digit",
-                month: "short",
-              },
-            )}
+        {dueDate && (
+          <span
+            className={
+              "task-card__due" +
+              (isOverdue ? " task-card__due--overdue" : "")
+            }
+            title={isOverdue ? "Tarea vencida" : undefined}
+          >
+            {dueDate.toLocaleDateString("es-AR", {
+              day: "2-digit",
+              month: "short",
+            })}
           </span>
         )}
       </div>

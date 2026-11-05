@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 import {
   useApp,
@@ -29,6 +29,130 @@ import { HiMiniArrowsRightLeft } from "react-icons/hi2";
 
 import TaskAttachmentsModal from "../TaskAttachmentsModal";
 
+import {
+  parseLocalDate,
+  isoToDisplay,
+  displayToIso,
+  maskDisplayInput,
+} from "../dates";
+
+function DueDateField({ value, onSave }) {
+  const [text, setText] = useState(isoToDisplay(value));
+  const [error, setError] = useState("");
+  const pickerRef = useRef(null);
+
+  // Abre el selector nativo de fechas (input date oculto, sin ocupar lugar).
+  const openPicker = () => {
+    const picker = pickerRef.current;
+    if (!picker) return;
+    try {
+      picker.showPicker();
+    } catch {
+      picker.focus();
+      picker.click();
+    }
+  };
+
+  // Fecha elegida en el calendario: llega como "AAAA-MM-DD" (sin zona horaria).
+  const handlePickerChange = (e) => {
+    const iso = e.target.value;
+    if (!iso) return;
+    setText(isoToDisplay(iso));
+    setError("");
+    if (iso !== value) onSave(iso);
+  };
+
+  const handleChange = (e) => {
+    const masked = maskDisplayInput(e.target.value);
+    setText(masked);
+
+    if (masked === "") {
+      setError("");
+      if (value) onSave("");
+      return;
+    }
+
+    if (masked.length < 10) {
+      setError("");
+      return;
+    }
+
+    const iso = displayToIso(masked);
+
+    if (!iso) {
+      setError("Fecha inválida. Usá el formato DD-MM-AAAA.");
+      return;
+    }
+
+    setError("");
+    if (iso !== value) onSave(iso);
+  };
+
+  return (
+    <>
+      <div style={{ position: "relative" }}>
+        <input
+          type="text"
+          inputMode="numeric"
+          className="input"
+          placeholder="DD-MM-AAAA"
+          maxLength={10}
+          autoComplete="off"
+          value={text}
+          onChange={handleChange}
+          aria-invalid={Boolean(error)}
+          style={{ paddingRight: 42 }}
+        />
+
+        <button
+          type="button"
+          onClick={openPicker}
+          title="Abrir calendario"
+          aria-label="Abrir calendario"
+          style={{
+            position: "absolute",
+            top: 0,
+            right: 0,
+            bottom: 0,
+            width: 40,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "transparent",
+            border: "none",
+            color: "inherit",
+            cursor: "pointer",
+          }}
+        >
+          <IoCalendarClear aria-hidden="true" />
+        </button>
+
+        {/* Selector nativo oculto: solo aporta el calendario, no es un campo visible */}
+        <input
+          ref={pickerRef}
+          type="date"
+          tabIndex={-1}
+          aria-hidden="true"
+          value={parseLocalDate(value) ? value : ""}
+          onChange={handlePickerChange}
+          style={{
+            position: "absolute",
+            right: 0,
+            bottom: 0,
+            width: 1,
+            height: 1,
+            opacity: 0,
+            pointerEvents: "none",
+            border: 0,
+            padding: 0,
+          }}
+        />
+      </div>
+
+      {error && <small className="actions-modal__empty-hint">{error}</small>}
+    </>
+  );
+}
 const OPTIONS = [
   {
     id: "open",
@@ -467,7 +591,7 @@ export default function TaskActionsModal({
 
             {task.dueDate && (
               <span className="task-card__due">
-                {new Date(task.dueDate).toLocaleDateString(
+{parseLocalDate(task.dueDate)?.toLocaleDateString(
                   "es-AR",
                   {
                     day: "2-digit",
@@ -485,10 +609,6 @@ export default function TaskActionsModal({
         <div className="actions-modal__bubble">
 
           <div className="actions-modal__bubble-head">
-            <span className="sync-dot" />
-
-            Acciones de tarjeta
-
             <button
               className="icon-btn"
               onClick={onClose}
@@ -805,16 +925,12 @@ export default function TaskActionsModal({
                 onBack={() => setPanel(null)}
               />
 
-              <input
-                type="date"
-                className="input"
-                value={task.dueDate || ""}
-                onChange={(e) =>
-                  updateTask(task.id, {
-                    dueDate: e.target.value,
-                  })
-                }
-              />
+              <DueDateField
+  value={task.dueDate || ""}
+  onSave={(dueDate) =>
+    updateTask(task.id, { dueDate })
+  }
+/>
             </div>
           )}
 
