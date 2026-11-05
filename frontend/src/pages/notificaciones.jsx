@@ -11,6 +11,7 @@ import {
 } from "../api/notifications";
 
 import { formatRelativeDate } from "../components/ForoHelpers.js";
+import { notificationPresentation } from "../notificationPresentation.js";
 import "../styles/pages/notificaciones.css";
 
 const PAGE_SIZE = 20;
@@ -20,19 +21,12 @@ const FILTROS = [
   { id: "unread", label: "No leídas" },
   { id: "system", label: "Sistema" },
   { id: "forum", label: "Foro" },
+  { id: "task", label: "Tareas" },
 ];
-
-const TYPE_LABELS = {
-  post_like: "Me gusta",
-  post_comment: "Comentario",
-  comment_reply: "Respuesta",
-};
 
 const mapNotification = (notification) => ({
   id: notification._id,
-  tipo:
-    TYPE_LABELS[notification.type] ??
-    (notification.category === "forum" ? "Foro" : "Sistema"),
+  type: notification.type,
   titulo: notification.title,
   descripcion: [
     notification.actor?.name,
@@ -224,7 +218,6 @@ const Notificaciones = () => {
       <main id="paginaNotificaciones">
         <div className="encabezadoNotificaciones">
           <div>
-            <p className="marcaNotificaciones">EEST FLOW</p>
             <h1>Notificaciones</h1>
           </div>
 
@@ -279,18 +272,18 @@ const Notificaciones = () => {
             <>
               {notificaciones.map((notificacion) => (
                 <article
-                  className={
-                    `notificacion ${
-                      !notificacion.leida ? "noLeida" : ""
-                    }`
-                  }
+                  className={notificationPresentation(notificacion.categoria, notificacion.type, notificacion.leida).className}
                   key={notificacion.id}
                 >
                   <div className="contenidoNotificacion">
                     <div className="cabeceraNotificacion">
                       <span className="tipoNotificacion">
-                        {notificacion.tipo}
+                        {notificationPresentation(notificacion.categoria, notificacion.type, notificacion.leida).label}
                       </span>
+
+                      {!notificacion.leida && (
+                        <span className="indicadorNoLeida">No leída</span>
+                      )}
 
                       <span className="tiempoNotificacion">
                         {notificacion.tiempo}

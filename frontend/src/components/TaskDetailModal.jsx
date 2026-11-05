@@ -1,3 +1,4 @@
+import { colorChipStyle } from "../colorPresets.js";
 import { useEffect, useRef, useState } from "react";
 
 import { useApp, PRIORITIES } from "../context/AppContext";
@@ -228,7 +229,7 @@ export default function TaskDetailModal({
               title="Acciones de la tarjeta"
               onClick={() => onEdit(task.id)}
             >
-              <FiSliders />
+              ✎
             </button>
 
             <button
@@ -259,10 +260,7 @@ export default function TaskDetailModal({
                     <span
                       key={label.id}
                       className="label"
-                      style={{
-                        color: label.color,
-                        background: `color-mix(in srgb, ${label.color} 14%, transparent)`,
-                      }}
+                      style={colorChipStyle(label.color)}
                     >
                       {label.title}
                     </span>
@@ -537,7 +535,7 @@ export default function TaskDetailModal({
                 {dueDate ? (
                   <>
                     <span className="task-detail__value">
-{formatLongDate(task.dueDate)}
+                      {formatLongDate(task.dueDate)}
                     </span>
 
                     {isOverdue && (

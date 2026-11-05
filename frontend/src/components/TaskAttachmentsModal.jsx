@@ -1,11 +1,6 @@
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-
-import {
+  FiAlertCircle,
   FiChevronLeft,
   FiChevronRight,
   FiDownload,
@@ -45,10 +40,7 @@ const getAttachmentName = (file) =>
   "Archivo adjunto";
 
 const getAttachmentType = (file) =>
-  file?.mimeType ??
-  file?.mimetype ??
-  file?.type ??
-  "";
+  file?.mimeType ?? file?.mimetype ?? file?.type ?? "";
 
 const getAttachmentUrl = (file) =>
   file?.url ??
@@ -67,22 +59,14 @@ const isImageFile = (file) => {
 };
 
 const formatFileSize = (bytes) => {
-  if (
-    !Number.isFinite(Number(bytes)) ||
-    Number(bytes) < 0
-  ) {
+  if (!Number.isFinite(Number(bytes)) || Number(bytes) < 0) {
     return "Tamaño no disponible";
   }
 
   const size = Number(bytes);
 
-  if (size < 1024) {
-    return `${size} B`;
-  }
-
-  if (size < 1024 * 1024) {
-    return `${(size / 1024).toFixed(1)} KB`;
-  }
+  if (size < 1024) return `${size} B`;
+  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
 
   return `${(size / (1024 * 1024)).toFixed(1)} MB`;
 };
@@ -91,10 +75,7 @@ const formatDate = (value) => {
   if (!value) return "";
 
   const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
+  if (Number.isNaN(date.getTime())) return "";
 
   return date.toLocaleDateString("es-AR", {
     day: "2-digit",
@@ -127,19 +108,15 @@ export default function TaskAttachmentsModal({
   const fileInputRef = useRef(null);
 
   const [activeIndex, setActiveIndex] = useState(0);
-
   const [pendingFiles, setPendingFiles] = useState([]);
-
   const [uploading, setUploading] = useState(false);
-
   const [deletingId, setDeletingId] = useState(null);
-
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteError, setDeleteError] = useState("");
   const [draggingOver, setDraggingOver] = useState(false);
-
   const [error, setError] = useState("");
 
-  const currentAttachment =
-    attachments[activeIndex] ?? null;
+  const currentAttachment = attachments[activeIndex] ?? null;
 
   const currentUrl = currentAttachment
     ? getAttachmentUrl(currentAttachment)
@@ -149,26 +126,49 @@ export default function TaskAttachmentsModal({
     ? getAttachmentName(currentAttachment)
     : "";
 
-  const currentId = currentAttachment
-    ? getAttachmentId(currentAttachment)
+  const deleteTargetName = deleteTarget
+    ? getAttachmentName(deleteTarget)
+    : "";
+
+  const deleteTargetUrl = deleteTarget
+    ? getAttachmentUrl(deleteTarget)
+    : "";
+
+  const deleteTargetIsImage = deleteTarget
+    ? isImageFile(deleteTarget)
+    : false;
+
+  const deleteTargetId = deleteTarget
+    ? (getAttachmentId(deleteTarget) ?? getAttachmentName(deleteTarget))
     : null;
+
+  const isDeletingTarget = deletingId !== null;
 
   // Mantener el índice dentro del rango cuando se eliminan archivos.
   useEffect(() => {
     setActiveIndex((index) =>
-      Math.min(
-        index,
-        Math.max(attachments.length - 1, 0),
-      )
+      Math.min(index, Math.max(attachments.length - 1, 0)),
     );
   }, [attachments.length]);
 
+  // Escape cierra primero la confirmación de eliminación.
+  useEffect(() => {
+    if (!deleteTarget) return undefined;
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape" && deletingId === null) {
+        setDeleteTarget(null);
+        setDeleteError("");
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [deleteTarget, deletingId]);
+
   const pendingTotalSize = useMemo(
-    () =>
-      pendingFiles.reduce(
-        (total, file) => total + file.size,
-        0,
-      ),
+    () => pendingFiles.reduce((total, file) => total + file.size, 0),
     [pendingFiles],
   );
 
@@ -186,18 +186,12 @@ export default function TaskAttachmentsModal({
 
     for (const file of incoming) {
       if (!ALLOWED_TYPES.has(file.type)) {
-        errors.push(
-          `${file.name}: formato no permitido.`
-        );
-
+        errors.push(`${file.name}: formato no permitido.`);
         continue;
       }
 
       if (file.size > MAX_FILE_SIZE) {
-        errors.push(
-          `${file.name}: supera el máximo de 10 MB.`
-        );
-
+        errors.push(`${file.name}: supera el máximo de 10 MB.`);
         continue;
       }
 
@@ -205,31 +199,25 @@ export default function TaskAttachmentsModal({
         (existing) =>
           existing.name === file.name &&
           existing.size === file.size &&
-          existing.lastModified === file.lastModified
+          existing.lastModified === file.lastModified,
       );
 
-      if (alreadySelected) {
-        continue;
-      }
+      if (alreadySelected) continue;
 
       validFiles.push(file);
     }
 
-    const availableSlots =
-      MAX_FILES_PER_UPLOAD - pendingFiles.length;
+    const availableSlots = MAX_FILES_PER_UPLOAD - pendingFiles.length;
 
     if (validFiles.length > availableSlots) {
       errors.push(
-        `Podés seleccionar hasta ${MAX_FILES_PER_UPLOAD} archivos por subida.`
+        `Podés seleccionar hasta ${MAX_FILES_PER_UPLOAD} archivos por subida.`,
       );
     }
 
     setPendingFiles((previous) => [
       ...previous,
-      ...validFiles.slice(
-        0,
-        Math.max(availableSlots, 0),
-      ),
+      ...validFiles.slice(0, Math.max(availableSlots, 0)),
     ]);
 
     if (errors.length) {
@@ -254,9 +242,7 @@ export default function TaskAttachmentsModal({
 
   const removePendingFile = (index) => {
     setPendingFiles((previous) =>
-      previous.filter(
-        (_, fileIndex) => fileIndex !== index
-      )
+      previous.filter((_, fileIndex) => fileIndex !== index),
     );
 
     setError("");
@@ -265,10 +251,7 @@ export default function TaskAttachmentsModal({
   /* ---------- subir archivos ---------- */
 
   const handleUpload = async () => {
-    if (
-      !pendingFiles.length ||
-      typeof onUpload !== "function"
-    ) {
+    if (!pendingFiles.length || typeof onUpload !== "function") {
       return;
     }
 
@@ -283,7 +266,7 @@ export default function TaskAttachmentsModal({
       setError(
         uploadError?.response?.data?.message ||
           uploadError?.message ||
-          "No se pudieron subir los archivos. Volvé a intentarlo."
+          "No se pudieron subir los archivos. Volvé a intentarlo.",
       );
     } finally {
       setUploading(false);
@@ -292,34 +275,57 @@ export default function TaskAttachmentsModal({
 
   /* ---------- eliminar archivos ---------- */
 
-  const handleDelete = async () => {
+  // Abre la confirmación personalizada.
+  const openDeleteConfirmation = () => {
     if (
       !currentAttachment ||
-      typeof onDelete !== "function"
+      typeof onDelete !== "function" ||
+      deletingId !== null
     ) {
       return;
     }
 
-    const confirmed = window.confirm(
-      `¿Querés eliminar “${currentName}” de esta tarea?`
-    );
+    setDeleteError("");
+    setDeleteTarget(currentAttachment);
+  };
 
-    if (!confirmed) return;
+  // Cierra la confirmación.
+  const closeDeleteConfirmation = () => {
+    if (deletingId !== null) return;
 
-    setDeletingId(currentId);
+    setDeleteTarget(null);
+    setDeleteError("");
+  };
+
+  // Ejecuta la eliminación después de la confirmación.
+  const confirmDelete = async () => {
+    if (
+      !deleteTarget ||
+      typeof onDelete !== "function" ||
+      deletingId !== null
+    ) {
+      return;
+    }
+
+    const target = deleteTarget;
+    const targetId =
+      getAttachmentId(target) ?? getAttachmentName(target);
+
+    setDeletingId(targetId);
+    setDeleteError("");
     setError("");
 
     try {
-      await onDelete(currentAttachment);
+      await onDelete(target);
 
-      setActiveIndex((index) =>
-        Math.max(0, index - 1)
-      );
+      setDeleteTarget(null);
+
+      setActiveIndex((index) => Math.max(0, index - 1));
     } catch (deleteError) {
-      setError(
+      setDeleteError(
         deleteError?.response?.data?.message ||
           deleteError?.message ||
-          "No se pudo eliminar el archivo. Volvé a intentarlo."
+          "No se pudo eliminar el archivo. Volvé a intentarlo.",
       );
     } finally {
       setDeletingId(null);
@@ -329,17 +335,18 @@ export default function TaskAttachmentsModal({
   /* ---------- navegación del carrusel ---------- */
 
   const showPrevious = () => {
+    if (attachments.length < 2) return;
+
     setActiveIndex(
-      (index) =>
-        (index - 1 + attachments.length) %
-        attachments.length
+      (index) => (index - 1 + attachments.length) % attachments.length,
     );
   };
 
   const showNext = () => {
+    if (attachments.length < 2) return;
+
     setActiveIndex(
-      (index) =>
-        (index + 1) % attachments.length
+      (index) => (index + 1) % attachments.length,
     );
   };
 
@@ -482,11 +489,11 @@ export default function TaskAttachmentsModal({
 
                       {formatDate(
                         currentAttachment.createdAt ||
-                          currentAttachment.uploadedAt
+                          currentAttachment.uploadedAt,
                       ) &&
                         ` · ${formatDate(
                           currentAttachment.createdAt ||
-                            currentAttachment.uploadedAt
+                            currentAttachment.uploadedAt,
                         )}`}
                     </span>
                   </div>
@@ -509,7 +516,7 @@ export default function TaskAttachmentsModal({
                       <button
                         className="task-attachments__icon-action is-danger"
                         type="button"
-                        onClick={handleDelete}
+                        onClick={openDeleteConfirmation}
                         disabled={deletingId !== null}
                         title="Eliminar archivo"
                         aria-label="Eliminar archivo"
@@ -533,9 +540,7 @@ export default function TaskAttachmentsModal({
                           }
                           className={
                             "task-attachments__dot" +
-                            (index === activeIndex
-                              ? " is-active"
-                              : "")
+                            (index === activeIndex ? " is-active" : "")
                           }
                           type="button"
                           onClick={() => setActiveIndex(index)}
@@ -618,9 +623,7 @@ export default function TaskAttachmentsModal({
             <button
               className="task-attachments__select-button"
               type="button"
-              onClick={() =>
-                fileInputRef.current?.click()
-              }
+              onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
             >
               <FiPlus />
@@ -718,6 +721,108 @@ export default function TaskAttachmentsModal({
           )}
         </div>
       </section>
+
+      {/* Confirmación personalizada de eliminación */}
+
+      {deleteTarget && (
+        <div
+          className="task-attachments-delete-overlay"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
+              event.stopPropagation();
+              closeDeleteConfirmation();
+            }
+          }}
+        >
+          <section
+            className="task-attachments-delete-modal"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="task-attachments-delete-title"
+            aria-describedby="task-attachments-delete-description"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="task-attachments-delete__icon">
+              {deleteTargetIsImage ? <FiImage /> : <FiFileText />}
+            </div>
+
+            <span className="task-attachments-delete__eyebrow">
+              Confirmar eliminación
+            </span>
+
+            <h3 id="task-attachments-delete-title">
+              {deleteTargetIsImage
+                ? "¿Eliminar esta imagen?"
+                : "¿Eliminar este archivo?"}
+            </h3>
+
+            <p id="task-attachments-delete-description">
+              Se quitará permanentemente de esta tarea.
+              Esta acción no se puede deshacer.
+            </p>
+
+            <div className="task-attachments-delete__file">
+              {deleteTargetIsImage && deleteTargetUrl ? (
+                <img
+                  src={deleteTargetUrl}
+                  alt="Vista previa del archivo a eliminar"
+                />
+              ) : (
+                <span className="task-attachments-delete__file-icon">
+                  <FiFileText />
+                </span>
+              )}
+
+              <div className="task-attachments-delete__file-copy">
+                <strong title={deleteTargetName}>
+                  {deleteTargetName}
+                </strong>
+
+                <span>
+                  {deleteTargetIsImage ? "Imagen" : "Documento"}
+                  {deleteTarget?.size != null
+                    ? ` · ${formatFileSize(deleteTarget.size)}`
+                    : ""}
+                </span>
+              </div>
+            </div>
+
+            {deleteError && (
+              <p
+                className="task-attachments-delete__error"
+                role="alert"
+              >
+                <FiAlertCircle />
+                {deleteError}
+              </p>
+            )}
+
+            <div className="task-attachments-delete__actions">
+              <button
+                type="button"
+                className="task-attachments-delete__cancel"
+                onClick={closeDeleteConfirmation}
+                disabled={isDeletingTarget}
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                className="task-attachments-delete__confirm"
+                onClick={confirmDelete}
+                disabled={isDeletingTarget || !deleteTargetId}
+              >
+                <FiTrash2 />
+
+                {isDeletingTarget
+                  ? "Eliminando…"
+                  : "Eliminar"}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }

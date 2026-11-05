@@ -195,10 +195,16 @@
   .board-header__tools {
     width: 100%;
   }
+
+  /* La búsqueda pasa a su propia fila, de ancho completo,
+     debajo de los botones y arriba de "Tablero sincronizado" */
   .search {
-    flex: 1;
+    order: 10;
+    flex: 1 1 100%;
+    width: 100%;
     min-width: 0;
   }
+
   .cat-select__menu {
     width: min(90vw, 340px);
   }

@@ -1,3 +1,4 @@
+import { colorChipStyle } from "../colorPresets.js";
 import { useApp, PRIORITIES } from "../context/AppContext";
 import { parseLocalDate } from "./dates";
 
@@ -48,6 +49,18 @@ export default function TaskCard({
     description.toLowerCase() !== ""
   );
 
+  // Fecha límite y si la tarea está vencida (anterior al día de hoy)
+  const dueDate = task.dueDate
+    ? parseLocalDate(task.dueDate)
+    : null;
+
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+
+  const isOverdue = Boolean(
+    dueDate && dueDate.getTime() < startOfToday.getTime()
+  );
+
   const markerStyle = dropMarker
     ? {
         boxShadow: `0 ${
@@ -93,10 +106,7 @@ export default function TaskCard({
             <span
               key={label.id}
               className="label"
-              style={{
-                color: label.color,
-                background: `color-mix(in srgb, ${label.color} 14%, transparent)`,
-              }}
+              style={colorChipStyle(label.color)}
             >
               {label.title || "·"}
             </span>
@@ -150,15 +160,18 @@ export default function TaskCard({
           </div>
         </div>
 
-        {task.dueDate && (
-          <span className="task-card__due">
-{parseLocalDate(task.dueDate)?.toLocaleDateString(            
-              "es-AR",
-              {
-                day: "2-digit",
-                month: "short",
-              },
-            )}
+        {dueDate && (
+          <span
+            className={
+              "task-card__due" +
+              (isOverdue ? " task-card__due--overdue" : "")
+            }
+            title={isOverdue ? "Tarea vencida" : undefined}
+          >
+            {dueDate.toLocaleDateString("es-AR", {
+              day: "2-digit",
+              month: "short",
+            })}
           </span>
         )}
       </div>
