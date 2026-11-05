@@ -1,3 +1,4 @@
+import { colorChipStyle } from "../colorPresets.js";
 import { useState } from "react";
 
 import { FiMenu, FiPaperclip } from "react-icons/fi";
@@ -137,10 +138,7 @@ export default function ListView() {
                           <span
                             key={l.id}
                             className="label"
-                            style={{
-                              color: l.color,
-                              background: `color-mix(in srgb, ${l.color} 14%, transparent)`,
-                            }}
+                            style={colorChipStyle(l.color)}
                           >
                             {l.title || "·"}
                           </span>

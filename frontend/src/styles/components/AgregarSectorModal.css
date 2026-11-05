@@ -202,57 +202,6 @@
   gap: 16px;
 }
 
-/* Colores */
-
-.asm-colors {
-  display: flex;
-  gap: 10px;
-  padding-top: 4px;
-}
-
-.asm-color {
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border-radius: 9999px;
-  border: 2px solid var(--theme-surface, white);
-  background: transparent;
-  box-shadow: 0 0 0 1px var(--theme-border, #e6dcbf);
-  cursor: pointer;
-  transition: 0.2s;
-  position: relative;
-  display: grid;
-  place-items: center;
-}
-
-.asm-color:hover {
-  transform: scale(1.08);
-}
-
-.asm-color-selected {
-  box-shadow: 0 0 0 2px var(--theme-text, #1f151c);
-  transform: scale(1.1);
-}
-
-.asm-color-circle {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  display: block;
-}
-
-.asm-color-selected::after {
-  content: "✓";
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  color: white;
-  font-size: 12px;
-  font-weight: 700;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-}
-
 /* Preview del sector */
 
 .asm-preview {
@@ -612,25 +561,3 @@
     width: 100%;
   }
 }
-
-.asm-color-custom{border-style:dashed !important; background:#FFFCF7 !important;}
-.asm-wheel-wrap{
-  margin-top:14px; padding:14px; border:1px solid var(--theme-border,#E6DCBF);
-  border-radius:14px; background:var(--theme-surface-soft,#FFFCF7);
-  display:flex; gap:14px; align-items:center;
-  animation: asm-fade 0.2s ease;
-}
-.asm-wheel{
-  width:128px; height:128px; border-radius:50%;
-  background: conic-gradient(from 0deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
-  position:relative; cursor:pointer; flex-shrink:0;
-  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.08);
-}
-.asm-wheel-center{
-  position:absolute; inset:20px; border-radius:50%;
-  border:3px solid white; box-shadow:0 2px 8px rgba(0,0,0,0.2);
-  pointer-events:none; transition: background 0.1s;
-}
-.asm-wheel-controls{display:flex; flex-direction:column; gap:8px; flex:1;}
-.asm-native-color{width:100%; height:36px; border-radius:8px; padding:2px; cursor:pointer; border:1px solid var(--theme-border) !important; background:transparent !important;}
-.asm-hex-input{width:100%; font-family:monospace; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; text-align:center;}

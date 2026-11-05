@@ -2,9 +2,22 @@
   width: min(420px, 100%);
   max-width: 100%;
   min-width: 0;
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior-y: contain;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: var(--theme-secondary, var(--color-muted)) transparent;
+  box-sizing: border-box;
+  padding: 4px;
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+
+.actions-modal > * {
+  flex-shrink: 0;
 }
 
 .actions-modal__preview {
@@ -37,6 +50,11 @@
   padding: 6px;
 }
 .actions-modal__bubble-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--theme-surface, var(--color-white));
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -141,8 +159,6 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  max-height: 260px;
-  overflow-y: auto;
 }
 
 /* ---- fila de etiqueta ---- */
@@ -217,26 +233,6 @@
 
 /* ---- colores ---- */
 
-.label-manager__colors {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.label-manager__swatch {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  transition: transform 0.15s ease;
-}
-
-.label-manager__swatch.is-selected {
-  border-color: var(--theme-text, var(--color-graphite));
-
-  transform: scale(1.1);
-}
-
 /* ---- acciones ---- */
 
 .label-manager__row-actions {
@@ -285,26 +281,6 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-}
-
-.label-creator__colors {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.label-creator__swatch {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  transition: transform 0.15s ease;
-}
-
-.label-creator__swatch.is-selected {
-  border-color: var(--theme-text, var(--color-graphite));
-
-  transform: scale(1.1);
 }
 
 .label-creator__error {
@@ -571,51 +547,6 @@
   word-break: break-word;
 }
 
-.actions-modal__preview-label--green {
-  color: var(--color-green);
-  background: color-mix(in srgb, var(--color-green) 14%, transparent);
-}
-
-.actions-modal__preview-label--orange {
-  color: var(--color-orange);
-  background: color-mix(in srgb, var(--color-orange) 14%, transparent);
-}
-
-.actions-modal__preview-label--terracotta {
-  color: var(--color-terracotta);
-  background: color-mix(in srgb, var(--color-terracotta) 14%, transparent);
-}
-
-.actions-modal__preview-label--graphite {
-  color: var(--color-graphite);
-  background: color-mix(in srgb, var(--color-graphite) 14%, transparent);
-}
-
-.actions-modal__preview-label--purple {
-  color: #6c4ae0;
-  background: color-mix(in srgb, #6c4ae0 14%, transparent);
-}
-
-.actions-modal__preview-label--cyan {
-  color: #1f9fb8;
-  background: color-mix(in srgb, #1f9fb8 14%, transparent);
-}
-
-.actions-modal__preview-label--red {
-  color: #e0342b;
-  background: color-mix(in srgb, #e0342b 14%, transparent);
-}
-
-.actions-modal__preview-label--blue {
-  color: #2563eb;
-  background: color-mix(in srgb, #2563eb 14%, transparent);
-}
-
-.actions-modal__preview-label--default {
-  color: var(--theme-secondary);
-  background: var(--theme-hover);
-}
-
 /* =====================================================
    PIE DE TARJETA
 ===================================================== */
@@ -696,48 +627,4 @@
 
 .pill__dot[data-priority="high"] {
   background: #dc2626;
-}
-
-/* =====================================================
-   COLORES DE LAS ETIQUETAS EN LOS SELECTORES
-===================================================== */
-
-.label-manager__swatch[data-color="green"],
-.label-creator__swatch[data-color="green"] {
-  background: var(--color-green);
-}
-
-.label-manager__swatch[data-color="orange"],
-.label-creator__swatch[data-color="orange"] {
-  background: var(--color-orange);
-}
-
-.label-manager__swatch[data-color="terracotta"],
-.label-creator__swatch[data-color="terracotta"] {
-  background: var(--color-terracotta);
-}
-
-.label-manager__swatch[data-color="graphite"],
-.label-creator__swatch[data-color="graphite"] {
-  background: var(--color-graphite);
-}
-
-.label-manager__swatch[data-color="purple"],
-.label-creator__swatch[data-color="purple"] {
-  background: #6c4ae0;
-}
-
-.label-manager__swatch[data-color="cyan"],
-.label-creator__swatch[data-color="cyan"] {
-  background: #1f9fb8;
-}
-
-.label-manager__swatch[data-color="red"],
-.label-creator__swatch[data-color="red"] {
-  background: #e0342b;
-}
-
-.label-manager__swatch[data-color="blue"],
-.label-creator__swatch[data-color="blue"] {
-  background: #2563eb;
 }

@@ -1,3 +1,4 @@
+import { colorChipStyle } from "../colorPresets.js";
 import { useApp, PRIORITIES } from "../context/AppContext";
 import { parseLocalDate } from "./dates";
 
@@ -105,10 +106,7 @@ export default function TaskCard({
             <span
               key={label.id}
               className="label"
-              style={{
-                color: label.color,
-                background: `color-mix(in srgb, ${label.color} 14%, transparent)`,
-              }}
+              style={colorChipStyle(label.color)}
             >
               {label.title || "·"}
             </span>
