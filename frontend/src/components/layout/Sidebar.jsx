@@ -3,7 +3,8 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
 import "../../styles/layout/sidebar.css";
 import { BrowserRouter, Route, Routes, Link } from "react-router-dom";
-import { MdDelete } from "react-icons/md";
+import { MdDelete} from "react-icons/md";
+import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 const NAV = [
   { to: "/", label: "Inicio", icon: "/icons/home.svg", end: true },
   {
@@ -290,7 +291,11 @@ export default function Sidebar({
               </span>
 
               <span className="user-card__chevron">
-                ⌄
+                {menuOpen ? (
+                  <FaChevronDown />
+                ) : (
+                  <FaChevronUp />
+                )}
               </span>
             </>
           )}

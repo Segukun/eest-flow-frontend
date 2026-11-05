@@ -4,6 +4,8 @@ import { useApp } from "../../context/AppContext";
 import "../../styles/layout/topbar.css";
 import { MdDelete } from "react-icons/md";
 import { BrowserRouter, Route, Routes , Link } from "react-router-dom";
+import { FaChevronDown, FaChevronUp } from "react-icons/fa";
+
 const NAV = [
   { to: "/", label: "Inicio", icon: "/icons/home.svg", end: true },
   { to: "/sectores", label: "Sectores", icon: "/icons/teamsection.svg" },
@@ -17,6 +19,7 @@ export default function Topbar({
   onOpenAddCategory,
   onRequestEditCategory,
   onRequestDeleteCategory,
+  isDeployed,
 }) {
   const {
     categories,
@@ -33,6 +36,7 @@ export default function Topbar({
 
   const [open, setOpen] = useState(false);
   const [catsOpen, setCatsOpen] = useState(false);
+  const [actionsOpen, setActionsOpen] = useState(false);
 
   const handleCategoryClick = (categoryId) => {
     setActiveCategory(categoryId);
@@ -50,7 +54,6 @@ export default function Topbar({
             alt="EEST N°1"
             className="topbar__logo"
           />
-
           <span className="brand-name">
             EEST
             <span className="brand-name--accent">
@@ -90,7 +93,6 @@ export default function Topbar({
               alt=""
               className="topbar__logo"
             />
-
             <div className="sidebar__brand-text">
               <span className="brand-name">
                 EEST
@@ -98,7 +100,6 @@ export default function Topbar({
                   Flow
                 </span>
               </span>
-
               <span className="brand-sub">
                 Técnica Digital
               </span>
@@ -132,9 +133,7 @@ export default function Topbar({
                 alt=""
                 className="icon"
               />
-
               <span>{item.label}</span>
-
               {item.to === "/notificaciones" &&
                 unreadCount > 0 && (
                   <span
@@ -161,11 +160,13 @@ export default function Topbar({
               alt=""
               className="icon"
             />
-
             <span>Categorías</span>
-
             <span className="nav-item__chevron">
-              {catsOpen ? "⌃" : "⌄"}
+               {catsOpen ? (
+                  <FaChevronUp />
+                ) : (
+                  <FaChevronDown />
+                )}
             </span>
           </button>
 
@@ -204,7 +205,6 @@ export default function Topbar({
                           background: category.color,
                         }}
                       />
-
                       <span className="cat-name">
                         {category.name}
                       </span>
@@ -264,7 +264,6 @@ export default function Topbar({
                       <span className="cat-dot cat-dot--add">
                         +
                       </span>
-
                       <span className="cat-name">
                         Agregar categoría
                       </span>
@@ -287,42 +286,58 @@ export default function Topbar({
             <strong>
               {currentUser?.name ?? "Cargando…"}
             </strong>
-
             <span className="role-chip">
               {currentUser?.accountType === "admin"
                 ? "Administrador"
                 : "Colaborador"}
             </span>
           </div>
-        </div>
-
-        <div className="drawer__actions">
-          <button
-            className="user-menu__item"
-            onClick={() => {
-              onOpenConfiguracion();
-              setOpen(false);
-            }}
-            type="button"
-          >
-            <span
-              aria-hidden="true"
-              className="icon-sm themed-icon themed-icon--settings"
-            />
-            Configuración
-          </button>
 
           <button
-            className="user-menu__item user-menu__item--danger"
-            onClick={() => {
-              localStorage.removeItem("user");
-              window.location.href = "/login";
-            }}
+            className="drawer__user-toggle"
+            onClick={() => setActionsOpen((v) => !v)}
             type="button"
+            aria-label="Abrir opciones de usuario"
           >
-            Cerrar sesión
+            {actionsOpen ? <FaChevronDown /> : <FaChevronUp />}
           </button>
         </div>
+
+        {isDeployed ? (
+          <div className="drawer__version">
+            <span>Versión {process.env.REACT_APP_VERSION}</span>
+          </div>
+        ) : null}
+
+        {actionsOpen && (
+          <div className="drawer__actions">
+            <button
+              className="user-menu__item"
+              onClick={() => {
+                onOpenConfiguracion();
+                setOpen(false);
+              }}
+              type="button"
+            >
+              <span
+                aria-hidden="true"
+                className="icon-sm themed-icon themed-icon--settings"
+              />
+              Configuración
+            </button>
+
+            <button
+              className="user-menu__item user-menu__item--danger"
+              onClick={() => {
+                localStorage.removeItem("user");
+                window.location.href = "/login";
+              }}
+              type="button"
+            >
+              Cerrar sesión
+            </button>
+          </div>
+        )}
       </aside>
     </>
   );

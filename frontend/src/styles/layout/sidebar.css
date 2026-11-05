@@ -101,7 +101,8 @@
   color: var(--color-muted);
 }
 .user-card__chevron {
-  margin-left: auto;
+  height: 10px;
+  margin-left: 30%;
   color: var(--color-muted);
 }
 .role-chip {

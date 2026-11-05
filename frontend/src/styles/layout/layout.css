@@ -97,6 +97,7 @@
   padding: 2px 8px;
 }
 .nav-item__chevron {
+  height: 15px;
   margin-left: auto;
 }
 
@@ -251,4 +252,8 @@
   .app-shell:has(.sidebar--collapsed) .app-main {
     margin-left: 84px;
   }
+}
+
+.drawer__user-toggle{
+  margin-left: auto;
 }
