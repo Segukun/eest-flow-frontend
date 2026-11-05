@@ -224,7 +224,6 @@ const Notificaciones = () => {
       <main id="paginaNotificaciones">
         <div className="encabezadoNotificaciones">
           <div>
-            <p className="marcaNotificaciones">EEST FLOW</p>
             <h1>Notificaciones</h1>
           </div>
 
