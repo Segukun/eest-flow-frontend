@@ -485,10 +485,6 @@ export default function TaskActionsModal({
         <div className="actions-modal__bubble">
 
           <div className="actions-modal__bubble-head">
-            <span className="sync-dot" />
-
-            Acciones de tarjeta
-
             <button
               className="icon-btn"
               onClick={onClose}

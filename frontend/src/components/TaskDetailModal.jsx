@@ -223,8 +223,6 @@ export default function TaskDetailModal({
           <div className="task-detail__head-actions">
             <button
               type="button"
-              className="task-detail__round-btn"
-              title="Acciones de la tarjeta"
               onClick={() => onEdit(task.id)}
             >
               <FiSliders />

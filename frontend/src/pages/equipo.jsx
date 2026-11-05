@@ -582,10 +582,7 @@ const Equipo = () => {
               <>
                 Mostrando {miembrosDeLaPagina.length} de{" "}
                 {miembros.length} miembros registrados
-                <span className="team-pagination-dot"></span>
-                <span className="team-pagination-link">
-                  Todos los sectores activos
-                </span>
+
               </>
             )}
           </p>
