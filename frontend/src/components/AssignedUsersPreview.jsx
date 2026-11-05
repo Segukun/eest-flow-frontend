@@ -1,4 +1,4 @@
-const MAX_VISIBLE_USERS = 5;
+const MAX_VISIBLE_USERS = 3;
 
 export default function AssignedUsersPreview({ members }) {
   const remaining = members.slice(MAX_VISIBLE_USERS);
