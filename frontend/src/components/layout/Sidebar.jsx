@@ -5,6 +5,8 @@ import "../../styles/layout/sidebar.css";
 import { BrowserRouter, Route, Routes, Link } from "react-router-dom";
 import { MdDelete} from "react-icons/md";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
+import UserAvatar from "./UserAvatar";
+
 const NAV = [
   { to: "/", label: "Inicio", icon: "/icons/home.svg", end: true },
   {
@@ -281,12 +283,7 @@ export default function Sidebar({
           disabled={!currentUser}
           type="button"
         >
-          <span
-            className="avatar"
-            style={{ background: "var(--color-green)" }}
-          >
-            {currentUser?.initials ?? "…"}
-          </span>
+          <UserAvatar user={currentUser} />
 
           {!collapsed && (
             <>

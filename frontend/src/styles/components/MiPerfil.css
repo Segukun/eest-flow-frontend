@@ -1,3 +1,4 @@
+
 /* Fondo del modal */
 
 .perfil-modal-overlay {
@@ -111,6 +112,94 @@
   padding: 24px;
 }
 
+/* Fotografía de perfil */
+
+.perfil-foto {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  padding-bottom: 18px;
+
+  border-bottom: 1px solid var(--theme-border, var(--color-border));
+}
+
+.perfil-foto__avatar {
+  width: 76px;
+  height: 76px;
+  min-width: 76px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.perfil-foto__contenido {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+
+  min-width: 0;
+}
+
+.perfil-foto__contenido > strong {
+  color: var(--theme-text, var(--color-graphite));
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.perfil-foto__contenido p {
+  margin: 0;
+
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.perfil-foto__contenido > small {
+  color: var(--color-muted);
+  font-size: 11px;
+}
+
+.perfil-foto__input {
+  display: none;
+}
+
+.perfil-foto__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  margin: 5px 0;
+}
+
+.perfil-foto__acciones .perfil-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  padding: 9px 12px;
+
+  font-size: 12px;
+}
+
+.perfil-foto__acciones svg {
+  width: 15px;
+  height: 15px;
+}
+
+.perfil-foto__eliminar:hover {
+  color: var(--theme-danger-text, var(--color-danger));
+  border-color: var(--theme-border, var(--color-border));
+}
+
 /* Campos */
 
 .perfil-campo {
@@ -203,6 +292,11 @@
 }
 
 .perfil-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
   padding: 11px 18px;
 
   border-radius: var(--radius-sm);
@@ -210,13 +304,20 @@
   font-size: 14px;
   font-weight: 600;
 
+  cursor: pointer;
+
   transition:
     background 0.2s ease,
     transform 0.2s ease;
 }
 
-.perfil-btn:hover {
+.perfil-btn:hover:not(:disabled) {
   transform: translateY(-1px);
+}
+
+.perfil-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .perfil-btn.cancelar {
@@ -225,16 +326,17 @@
   color: var(--theme-text, var(--color-graphite));
 }
 
-.perfil-btn.cancelar:hover {
+.perfil-btn.cancelar:hover:not(:disabled) {
   background: var(--theme-background, var(--color-bone));
 }
 
 .perfil-btn.guardar {
+  border: 1px solid transparent;
   background: var(--color-orange);
   color: var(--color-white);
 }
 
-.perfil-btn.guardar:hover {
+.perfil-btn.guardar:hover:not(:disabled) {
   background: var(--color-terracotta);
 }
 
@@ -250,7 +352,29 @@
     flex-direction: column-reverse;
   }
 
-  .perfil-btn {
+  .perfil-modal-actions .perfil-btn {
+    width: 100%;
+  }
+
+  .perfil-foto {
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .perfil-foto__avatar {
+    width: 60px;
+    height: 60px;
+    min-width: 60px;
+
+    font-size: 20px;
+  }
+
+  .perfil-foto__acciones {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .perfil-foto__acciones .perfil-btn {
     width: 100%;
   }
 }

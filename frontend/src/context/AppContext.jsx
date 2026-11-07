@@ -34,7 +34,11 @@ import {
 } from "../api/labels";
 
 import { fetchSectors } from "../api/sectors";
-import { fetchUsers } from "../api/users";
+import {
+  fetchUsers,
+  uploadProfilePicture as uploadProfilePictureRequest,
+  deleteProfilePicture as deleteProfilePictureRequest,
+} from "../api/users";
 import { fetchNotifications } from "../api/notifications";
 import { updateTaskDrafts } from "../taskDrafts.js";
 
@@ -182,14 +186,23 @@ function normalizeUser(raw) {
     .slice(0, 2)
     .toUpperCase();
 
+  const profilePicture =
+    raw.profilePicture && typeof raw.profilePicture === "object"
+      ? {
+          path: raw.profilePicture.path ?? null,
+          url: raw.profilePicture.url ?? null,
+        }
+      : null;
+
   return {
     id: raw._id ?? raw.id,
     name: raw.name,
     email: raw.email,
     initials,
     accountType: raw.accountType,
-    sectors: raw.sectors,
+    sectors: raw.sectors ?? [],
     active: raw.active,
+    profilePicture,
   };
 }
 
@@ -244,7 +257,7 @@ export function AppProvider({ children }) {
   });
 
   const currentUser = sessionUser
-    ? (users.find((u) => u.id === sessionUser._id) ?? {
+    ? (users.find((u) => String(u.id) === String(sessionUser._id)) ?? {
         id: sessionUser._id,
         name: sessionUser.name,
         email: sessionUser.email,
@@ -256,9 +269,8 @@ export function AppProvider({ children }) {
             .slice(0, 2)
             .toUpperCase() || "?",
 
-        // El rol guardado puede estar obsoleto.
-        // Esperamos la consulta actual.
         accountType: undefined,
+        profilePicture: null,
       })
     : null;
 
@@ -275,35 +287,87 @@ export function AppProvider({ children }) {
     return raw;
   }, []);
 
-  const updateCurrentUser = (updatedUser) => {
-    const id = updatedUser._id ?? updatedUser.id;
-    if (!sessionUser || id !== sessionUser._id) return;
+  /**
+   * Sincroniza un usuario actualizado con el estado global.
+   *
+   * También actualiza la sesión local cuando se trata
+   * del usuario autenticado.
+   */
+  const syncUpdatedUser = (updatedUser) => {
+    const id = updatedUser?._id ?? updatedUser?.id;
 
-    // Solo datos públicos del usuario; nunca guardar el formulario de contraseña.
-    const normalized = normalizeUser({ ...currentUser, ...updatedUser });
+    if (!id) return null;
+
+    const normalized = normalizeUser(updatedUser);
+
     usersVersion.current += 1;
-    setUsers((prev) =>
-      prev.some((user) => user.id === id)
-        ? prev.map((user) =>
-            user.id === id ? { ...user, ...normalized } : user,
-          )
-        : [...prev, normalized],
-    );
 
-    const nextSession = {
-      _id: normalized.id,
-      name: normalized.name,
-      email: normalized.email,
-      accountType: normalized.accountType,
-      sectors: normalized.sectors,
-      active: normalized.active,
-    };
-    setSessionUser(nextSession);
-    try {
-      localStorage.setItem("user", JSON.stringify(nextSession));
-    } catch {
-      // La actualización visual funciona aunque el almacenamiento esté bloqueado.
+    setUsers((prev) => {
+      const exists = prev.some((user) => String(user.id) === String(id));
+
+      return exists
+        ? prev.map((user) =>
+            String(user.id) === String(id) ? { ...user, ...normalized } : user,
+          )
+        : [...prev, normalized];
+    });
+
+    // Si es el usuario autenticado, sincronizamos su sesión.
+    if (sessionUser && String(id) === String(sessionUser._id)) {
+      const nextSession = {
+        ...sessionUser,
+        _id: normalized.id,
+        name: normalized.name,
+        email: normalized.email,
+        accountType: normalized.accountType,
+        sectors: normalized.sectors,
+        active: normalized.active,
+      };
+
+      setSessionUser(nextSession);
+
+      try {
+        localStorage.setItem("user", JSON.stringify(nextSession));
+      } catch {
+        // La actualización visual funciona aunque localStorage falle.
+      }
     }
+
+    return normalized;
+  };
+
+  /**
+   * Actualiza los datos del usuario autenticado.
+   */
+  const updateCurrentUser = (updatedUser) => {
+    const id = updatedUser?._id ?? updatedUser?.id;
+
+    if (!sessionUser || String(id) !== String(sessionUser._id)) {
+      return;
+    }
+
+    return syncUpdatedUser({
+      ...currentUser,
+      ...updatedUser,
+    });
+  };
+
+  /**
+   * Sube o reemplaza la imagen de perfil de un usuario.
+   */
+  const uploadUserProfilePicture = async (userId, file) => {
+    const updatedUser = await uploadProfilePictureRequest(userId, file);
+
+    return syncUpdatedUser(updatedUser);
+  };
+
+  /**
+   * Elimina la imagen de perfil de un usuario.
+   */
+  const deleteUserProfilePicture = async (userId) => {
+    const updatedUser = await deleteProfilePictureRequest(userId);
+
+    return syncUpdatedUser(updatedUser);
   };
 
   const loadCategories = useCallback(async () => {
@@ -320,7 +384,7 @@ export function AppProvider({ children }) {
       setActiveCategory((prev) =>
         normalized.some((category) => category.id === prev)
           ? prev
-          : normalized[0]?.id ?? null,
+          : (normalized[0]?.id ?? null),
       );
     } catch (err) {
       setCategoriesError(
@@ -921,6 +985,8 @@ export function AppProvider({ children }) {
     currentUser,
     reloadUsers,
     updateCurrentUser,
+    uploadUserProfilePicture,
+    deleteUserProfilePicture,
 
     categories,
     categoriesLoading,

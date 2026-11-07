@@ -2,10 +2,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { FiPlus } from "react-icons/fi";
 import { useSearchParams } from "react-router-dom";
 
+import { useApp } from "../context/AppContext";
+
 import ComentariosModal from "../components/ComentariosModal.jsx";
 import PublicarModal from "../components/PublicarModal.jsx";
 import ConfirmPinModal from "../components/ConfirmPinModal.jsx";
-import DeleteForoPostModal from "../components/DeleteForoPostModal.jsx"; // NUEVO
+import DeleteForoPostModal from "../components/DeleteForoPostModal.jsx";
 import { useToast } from "../components/Toast.jsx";
 
 import {
@@ -28,25 +30,22 @@ import ForoFeed from "../components/ForoFeed.jsx";
 import ForoImageModal from "../components/ForoImageModal.jsx";
 import ForoPagination from "../components/ForoPagination.jsx";
 
-import {
-  getCurrentUser,
-  getCurrentUserId,
-  mapPostFromApi,
-} from "../components/ForoHelpers.js";
+import { mapPostFromApi } from "../components/ForoHelpers.js";
 
 import { CHAR_LIMIT, CHAR_STEP } from "../components/ForoConstants.js";
 import "../styles/pages/Foro.css";
 
 export default function Foro() {
   const toast = useToast();
-
   const publishGuard = useSubmitGuard(2000);
 
-  const currentUser = useMemo(() => getCurrentUser(), []);
-  const currentUserId = useMemo(
-    () => getCurrentUserId(currentUser),
-    [currentUser],
-  );
+  // Usuario actualizado desde AppContext, incluyendo el avatar.
+  const { currentUser } = useApp();
+
+  const currentUserId = useMemo(() => {
+    const id = currentUser?._id ?? currentUser?.id;
+    return id ? String(id) : "";
+  }, [currentUser]);
 
   // Solo los administradores pueden pinear publicaciones.
   const canPinPosts = currentUser?.accountType === "admin";
@@ -58,6 +57,7 @@ export default function Foro() {
   const [search, setSearch] = useState("");
 
   const [searchParams, setSearchParams] = useSearchParams();
+
   const [selectedPostId, setSelectedPostId] = useState(
     () => searchParams.get("post"),
   );
@@ -77,7 +77,7 @@ export default function Foro() {
   const [pinModal, setPinModal] = useState(null);
   const [pinLoading, setPinLoading] = useState(false);
 
-  // NUEVO: id de la publicación que se quiere eliminar (null = modal cerrado).
+  // ID de la publicación que se quiere eliminar.
   const [deletePostId, setDeletePostId] = useState(null);
 
   const POSTS_PER_PAGE = 10;
@@ -86,16 +86,24 @@ export default function Foro() {
   const createInputRef = useRef(null);
 
   const selectedPost = posts.find(
-    (p) => String(p.id) === String(selectedPostId),
+    (post) => String(post.id) === String(selectedPostId),
   );
+
+  /* ---------- cargar sectores ---------- */
 
   useEffect(() => {
     fetchSectors()
-      .then((r) =>
-        setSectors(Array.isArray(r) ? r : r?.data || []),
+      .then((response) =>
+        setSectors(
+          Array.isArray(response)
+            ? response
+            : response?.data || [],
+        ),
       )
       .catch(() => {});
   }, []);
+
+  /* ---------- cargar publicaciones ---------- */
 
   useEffect(() => {
     const load = async () => {
@@ -103,21 +111,24 @@ export default function Foro() {
         setLoading(true);
         setError("");
 
-        const res = await fetchPosts({
+        const response = await fetchPosts({
           page: 1,
           limit: 50,
         });
 
-        const apiPosts = res?.data?.posts ?? res?.posts ?? [];
+        const apiPosts =
+          response?.data?.posts ??
+          response?.posts ??
+          [];
 
         setPosts(
-          apiPosts.map((p) =>
-            mapPostFromApi(p, sectors, currentUserId),
+          apiPosts.map((post) =>
+            mapPostFromApi(post, sectors, currentUserId),
           ),
         );
-      } catch (e) {
+      } catch (error) {
         setError(
-          e.response?.data?.message ||
+          error.response?.data?.message ||
             "No se pudieron cargar las publicaciones.",
         );
       } finally {
@@ -128,14 +139,14 @@ export default function Foro() {
     load();
   }, [currentUserId, sectors]);
 
-  // Si el post del enlace directo no está entre los primeros cargados,
-  // lo traemos aparte.
+  /* ---------- cargar publicación desde enlace directo ---------- */
+
   useEffect(() => {
     if (loading || !selectedPostId) return;
 
     if (
       posts.some(
-        (p) => String(p.id) === String(selectedPostId),
+        (post) => String(post.id) === String(selectedPostId),
       )
     ) {
       return;
@@ -145,14 +156,14 @@ export default function Foro() {
 
     const loadPost = async () => {
       try {
-        const res = await fetchPostById(selectedPostId);
-        const raw = res?.data ?? res;
+        const response = await fetchPostById(selectedPostId);
+        const raw = response?.data ?? response;
 
         if (cancelled || !raw?._id) return;
 
-        setPosts((prev) => [
+        setPosts((previous) => [
           mapPostFromApi(raw, sectors, currentUserId),
-          ...prev,
+          ...previous,
         ]);
       } catch {
         if (!cancelled) {
@@ -166,7 +177,16 @@ export default function Foro() {
     return () => {
       cancelled = true;
     };
-  }, [loading, selectedPostId, posts, sectors, currentUserId, toast]);
+  }, [
+    loading,
+    selectedPostId,
+    posts,
+    sectors,
+    currentUserId,
+    toast,
+  ]);
+
+  /* ---------- cerrar comentarios ---------- */
 
   const closeComments = () => {
     setSelectedPostId(null);
@@ -175,21 +195,29 @@ export default function Foro() {
       const next = new URLSearchParams(searchParams);
       next.delete("post");
 
-      setSearchParams(next, { replace: true });
+      setSearchParams(next, {
+        replace: true,
+      });
     }
   };
 
+  /* ---------- cerrar menú al hacer clic afuera ---------- */
+
   useEffect(() => {
-    const handler = (e) => {
-      if (!e.target.closest(".foro-post-menu-wrapper")) {
+    const handler = (event) => {
+      if (!event.target.closest(".foro-post-menu-wrapper")) {
         setOpenMenuId(null);
       }
     };
 
     document.addEventListener("mousedown", handler);
 
-    return () => document.removeEventListener("mousedown", handler);
+    return () => {
+      document.removeEventListener("mousedown", handler);
+    };
   }, []);
+
+  /* ---------- ajustar altura del campo de publicación ---------- */
 
   useEffect(() => {
     if (!createInputRef.current) return;
@@ -202,9 +230,13 @@ export default function Foro() {
       `${Math.min(createInputRef.current.scrollHeight, max)}px`;
   }, [newPost, isCreateActive]);
 
+  /* ---------- reiniciar paginación al buscar ---------- */
+
   useEffect(() => {
     setCurrentPage(1);
   }, [search]);
+
+  /* ---------- crear publicación ---------- */
 
   const createPost = async (arg) => {
     let text = "";
@@ -221,20 +253,22 @@ export default function Foro() {
 
     const result = await publishGuard.run(async () => {
       try {
-        const res = await createPostRequest({
+        const response = await createPostRequest({
           content: [text.trim()],
-          files: files.map((i) => i.file || i).filter(Boolean),
+          files: files
+            .map((item) => item.file || item)
+            .filter(Boolean),
         });
 
-        const created = res?.data;
+        const created = response?.data;
 
         if (!created) {
           throw new Error("No devolvió post");
         }
 
-        setPosts((prev) => [
+        setPosts((previous) => [
           mapPostFromApi(created, sectors, currentUserId),
-          ...prev,
+          ...previous,
         ]);
 
         setNewPost("");
@@ -243,12 +277,14 @@ export default function Foro() {
 
         toast.success("Publicación creada");
         setCurrentPage(1);
+
         return true;
-      } catch (e) {
+      } catch (error) {
         toast.error(
-          e.response?.data?.message ||
+          error.response?.data?.message ||
             "No se pudo crear la publicación.",
         );
+
         return false;
       }
     });
@@ -256,7 +292,8 @@ export default function Foro() {
     return result === true;
   };
 
-  // Abre el modal de confirmación al pulsar el icono de pin.
+  /* ---------- pinear publicación ---------- */
+
   const handlePinClick = (post) => {
     if (!canPinPosts || pinLoading) return;
 
@@ -266,7 +303,6 @@ export default function Foro() {
     });
   };
 
-  // Ejecuta el pineado o desanclado después de confirmar.
   const handleConfirmPin = async () => {
     if (!pinModal || pinLoading) return;
 
@@ -277,7 +313,6 @@ export default function Foro() {
 
       const response = await pinPostRequest(postId, pinned);
 
-      // Axios devuelve el cuerpo en response.data.
       const body = response?.data ?? response;
       const updatedPost = body?.data ?? body;
 
@@ -286,9 +321,8 @@ export default function Foro() {
           ? updatedPost.pinned
           : pinned;
 
-      setPosts((prev) =>
-        prev.map((post) => {
-          // Actualizar la publicación elegida.
+      setPosts((previous) =>
+        previous.map((post) => {
           if (String(post.id) === String(postId)) {
             return {
               ...post,
@@ -296,8 +330,6 @@ export default function Foro() {
             };
           }
 
-          // Al pinear una nueva, desanclar todas las demás
-          // también en el estado local.
           if (savedPinned) {
             return {
               ...post,
@@ -316,9 +348,9 @@ export default function Foro() {
           ? "Publicación anclada"
           : "Se desancló la publicación",
       );
-    } catch (e) {
+    } catch (error) {
       toast.error(
-        e.response?.data?.message ||
+        error.response?.data?.message ||
           "No se pudo actualizar el estado de anclado.",
       );
     } finally {
@@ -326,68 +358,85 @@ export default function Foro() {
     }
   };
 
-  const handleInlineFiles = (e) => {
-    const mapped = Array.from(e.target.files || []).map((file) => {
-      const isImage = file.type.startsWith("image/");
+  /* ---------- archivos inline ---------- */
 
-      return {
-        id:
-          crypto.randomUUID?.() ||
-          `${Date.now()}-${Math.random()}`,
-        name: file.name,
-        size: `${(file.size / 1024).toFixed(1)} KB`,
-        type: file.type,
-        isImage,
-        isPdf:
-          file.type === "application/pdf" ||
-          file.name.toLowerCase().endsWith(".pdf"),
-        preview: isImage ? URL.createObjectURL(file) : null,
-        url: isImage ? URL.createObjectURL(file) : null,
-        file,
-      };
-    });
+  const handleInlineFiles = (event) => {
+    const mapped = Array.from(event.target.files || []).map(
+      (file) => {
+        const isImage = file.type.startsWith("image/");
 
-    setInlineFiles((prev) => [...prev, ...mapped]);
-    e.target.value = "";
+        const preview = isImage
+          ? URL.createObjectURL(file)
+          : null;
+
+        return {
+          id:
+            crypto.randomUUID?.() ||
+            `${Date.now()}-${Math.random()}`,
+          name: file.name,
+          size: `${(file.size / 1024).toFixed(1)} KB`,
+          type: file.type,
+          isImage,
+          isPdf:
+            file.type === "application/pdf" ||
+            file.name.toLowerCase().endsWith(".pdf"),
+          preview,
+          url: preview,
+          file,
+        };
+      },
+    );
+
+    setInlineFiles((previous) => [
+      ...previous,
+      ...mapped,
+    ]);
+
+    event.target.value = "";
   };
+
+  /* ---------- me gusta ---------- */
 
   const handleLike = async (postId) => {
     const post = posts.find(
-      (p) => String(p.id) === String(postId),
+      (item) => String(item.id) === String(postId),
     );
 
     if (!post) return;
 
     try {
       if (post.liked) {
-        const r = await unlikePostRequest(postId);
-        const res = r?.data || {};
+        const response = await unlikePostRequest(postId);
+        const result = response?.data || {};
 
-        setPosts((prev) =>
-          prev.map((i) =>
-            String(i.id) === String(postId)
+        setPosts((previous) =>
+          previous.map((item) =>
+            String(item.id) === String(postId)
               ? {
-                  ...i,
+                  ...item,
                   liked: false,
                   likes:
-                    res.likesCount ?? Math.max(0, i.likes - 1),
+                    result.likesCount ??
+                    Math.max(0, item.likes - 1),
                 }
-              : i,
+              : item,
           ),
         );
       } else {
-        const r = await likePostRequest(postId);
-        const res = r?.data || {};
+        const response = await likePostRequest(postId);
+        const result = response?.data || {};
 
-        setPosts((prev) =>
-          prev.map((i) =>
-            String(i.id) === String(postId)
+        setPosts((previous) =>
+          previous.map((item) =>
+            String(item.id) === String(postId)
               ? {
-                  ...i,
+                  ...item,
                   liked: true,
-                  likes: res.likesCount ?? i.likes + 1,
+                  likes:
+                    result.likesCount ??
+                    item.likes + 1,
                 }
-              : i,
+              : item,
           ),
         );
       }
@@ -396,36 +445,39 @@ export default function Foro() {
     }
   };
 
-  // NUEVO: ya no usa window.confirm. Solo cierra el menú y abre el modal.
+  /* ---------- eliminar publicación ---------- */
+
   const handleDelete = (postId) => {
     setOpenMenuId(null);
     setDeletePostId(postId);
   };
 
-  // NUEVO: se ejecuta al confirmar en el modal. Si falla, relanza el error
-  // para que el modal lo muestre y no se cierre.
   const handleConfirmDelete = async () => {
     if (!deletePostId) return;
 
     await deletePostRequest(deletePostId);
 
-    setPosts((prev) =>
-      prev.filter((p) => String(p.id) !== String(deletePostId)),
+    setPosts((previous) =>
+      previous.filter(
+        (post) => String(post.id) !== String(deletePostId),
+      ),
     );
 
     toast.success("Publicación eliminada");
   };
 
+  /* ---------- guardar edición ---------- */
+
   const handleSaveEdit = async () => {
     if (!editText.trim()) return;
 
     try {
-      const res = await updatePostRequest({
+      const response = await updatePostRequest({
         postId: editingId,
         content: [editText.trim()],
       });
 
-      const updated = res?.data;
+      const updated = response?.data;
 
       if (!updated) {
         throw new Error("No devolvió");
@@ -437,11 +489,11 @@ export default function Foro() {
         currentUserId,
       );
 
-      setPosts((prev) =>
-        prev.map((p) =>
-          String(p.id) === String(editingId)
-            ? { ...p, ...mapped }
-            : p,
+      setPosts((previous) =>
+        previous.map((post) =>
+          String(post.id) === String(editingId)
+            ? { ...post, ...mapped }
+            : post,
         ),
       );
 
@@ -449,81 +501,92 @@ export default function Foro() {
       setEditText("");
 
       toast.success("Publicación actualizada");
-    } catch (e) {
+    } catch (error) {
       toast.error(
-        e.response?.data?.message ||
+        error.response?.data?.message ||
           "No se pudo actualizar.",
       );
     }
   };
 
+  /* ---------- descargar archivos ---------- */
+
   const handleDownload = (attachment) => {
     try {
       if (attachment.file) {
         const url = URL.createObjectURL(attachment.file);
-        const a = document.createElement("a");
+        const anchor = document.createElement("a");
 
-        a.href = url;
-        a.download = attachment.name || "archivo";
+        anchor.href = url;
+        anchor.download = attachment.name || "archivo";
 
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        document.body.appendChild(anchor);
+        anchor.click();
+        document.body.removeChild(anchor);
 
         URL.revokeObjectURL(url);
         return;
       }
 
-      const dl = attachment.url || attachment.preview;
+      const downloadUrl =
+        attachment.url || attachment.preview;
 
-      if (!dl) {
-        return toast.info(`No hay archivo: ${attachment.name}`);
+      if (!downloadUrl) {
+        return toast.info(
+          `No hay archivo: ${attachment.name}`,
+        );
       }
 
-      const a = document.createElement("a");
+      const anchor = document.createElement("a");
 
-      a.href = dl;
-      a.download = attachment.name || "archivo";
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
+      anchor.href = downloadUrl;
+      anchor.download = attachment.name || "archivo";
+      anchor.target = "_blank";
+      anchor.rel = "noopener noreferrer";
 
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
     } catch {
       toast.error("No se pudo descargar.");
     }
   };
 
-  const handleVerMas = (post) => {
-    const cur = visibleChars[post.id] || CHAR_LIMIT;
+  /* ---------- ver más / ver menos ---------- */
 
-    setVisibleChars((prev) => ({
-      ...prev,
+  const handleVerMas = (post) => {
+    const current = visibleChars[post.id] || CHAR_LIMIT;
+
+    setVisibleChars((previous) => ({
+      ...previous,
       [post.id]: Math.min(
-        cur + CHAR_STEP,
+        current + CHAR_STEP,
         post.content.length,
       ),
     }));
   };
 
-  const handleVerMenos = (id) =>
-    setVisibleChars((prev) => ({
-      ...prev,
+  const handleVerMenos = (id) => {
+    setVisibleChars((previous) => ({
+      ...previous,
       [id]: CHAR_LIMIT,
     }));
+  };
 
-  const filtered = posts.filter((p) => {
-    const q = search.toLowerCase();
+  /* ---------- búsqueda ---------- */
+
+  const filtered = posts.filter((post) => {
+    const query = search.toLowerCase();
 
     return (
-      p.content.toLowerCase().includes(q) ||
-      p.author.toLowerCase().includes(q) ||
-      p.sectorName?.toLowerCase().includes(q)
+      post.content.toLowerCase().includes(query) ||
+      post.author.toLowerCase().includes(query) ||
+      post.sectorName?.toLowerCase().includes(query)
     );
   });
 
-  // Las publicaciones ancladas aparecen primero.
+  /* ---------- ordenar publicaciones ---------- */
+
   const sorted = [...filtered].sort((a, b) => {
     if (a.pinned && !b.pinned) return -1;
     if (!a.pinned && b.pinned) return 1;
@@ -534,6 +597,8 @@ export default function Foro() {
     );
   });
 
+  /* ---------- paginación ---------- */
+
   const totalPages = Math.ceil(
     sorted.length / POSTS_PER_PAGE,
   );
@@ -543,10 +608,15 @@ export default function Foro() {
     currentPage * POSTS_PER_PAGE,
   );
 
+  /* ---------- render ---------- */
+
   return (
     <div className="foro-layout">
       <div className="foro-container">
-        <ForoSearch value={search} onChange={setSearch} />
+        <ForoSearch
+          value={search}
+          onChange={setSearch}
+        />
 
         <ForoCreate
           currentUser={currentUser}
@@ -559,8 +629,8 @@ export default function Foro() {
           setIsCreateActive={setIsCreateActive}
           onFiles={handleInlineFiles}
           onRemoveFile={(id) =>
-            setInlineFiles((prev) =>
-              prev.filter((f) => f.id !== id),
+            setInlineFiles((previous) =>
+              previous.filter((file) => file.id !== id),
             )
           }
           onPublish={() => {
@@ -574,7 +644,11 @@ export default function Foro() {
           publishing={publishGuard.busy}
         />
 
-        {error && <div className="foro-empty">{error}</div>}
+        {error && (
+          <div className="foro-empty">
+            {error}
+          </div>
+        )}
 
         {loading ? (
           <div className="foro-empty">
@@ -595,9 +669,9 @@ export default function Foro() {
               CHAR_STEP={CHAR_STEP}
               openMenuId={openMenuId}
               setOpenMenuId={setOpenMenuId}
-              onStartEdit={(p) => {
-                setEditingId(p.id);
-                setEditText(p.content);
+              onStartEdit={(post) => {
+                setEditingId(post.id);
+                setEditText(post.content);
                 setOpenMenuId(null);
               }}
               onSaveEdit={handleSaveEdit}
@@ -615,11 +689,11 @@ export default function Foro() {
             />
 
             <ForoPagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            totalPosts={sorted.length}
-            visiblePosts={paginatedPosts.length}
-            onPageChange={setCurrentPage}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalPosts={sorted.length}
+              visiblePosts={paginatedPosts.length}
+              onPageChange={setCurrentPage}
             />
           </div>
         )}
@@ -644,14 +718,14 @@ export default function Foro() {
         post={selectedPost}
         onClose={closeComments}
         onCommentCreated={(id) =>
-          setPosts((prev) =>
-            prev.map((p) =>
-              String(p.id) === String(id)
+          setPosts((previous) =>
+            previous.map((post) =>
+              String(post.id) === String(id)
                 ? {
-                    ...p,
-                    commentsCount: p.commentsCount + 1,
+                    ...post,
+                    commentsCount: post.commentsCount + 1,
                   }
-                : p,
+                : post,
             ),
           )
         }
@@ -663,7 +737,6 @@ export default function Foro() {
         onPublish={createPost}
       />
 
-      {/* Modal de confirmación para pinear o desanclar. */}
       <ConfirmPinModal
         open={Boolean(pinModal)}
         pinned={Boolean(pinModal?.pinned)}
@@ -676,7 +749,6 @@ export default function Foro() {
         onConfirm={handleConfirmPin}
       />
 
-      {/* NUEVO: modal de confirmación para eliminar una publicación. */}
       <DeleteForoPostModal
         open={Boolean(deletePostId)}
         onClose={() => setDeletePostId(null)}

@@ -38,6 +38,8 @@ import {
   maskDisplayInput,
 } from "../dates";
 
+import UserAvatar from "../layout/UserAvatar.jsx";
+
 function DueDateField({ value, onSave }) {
   const [text, setText] = useState(isoToDisplay(value));
   const [error, setError] = useState("");
@@ -516,13 +518,12 @@ export default function TaskActionsModal({
 
               <div className="avatars">
                 {members.slice(0, 3).map((m) => (
-                  <span
+                  <UserAvatar
                     key={m.id}
+                    user={m}
                     className="avatar avatar--sm actions-modal__preview-avatar"
                     title={m.name}
-                  >
-                    {m.initials}
-                  </span>
+                  />
                 ))}
 
                 {members.length > 3 && (
@@ -864,9 +865,15 @@ export default function TaskActionsModal({
                         }
                         onClick={() => toggleMember(u.id)}
                       >
-                        <span className="member-option__avatar">
-                          {u.initials}
-                        </span>
+                        <UserAvatar
+                          user={u}
+                          className="member-option__avatar"
+                          title={u.name}
+                          style={{
+                            backgroundColor: "rgba(5, 144, 62, 0.12)",
+                            color: "var(--theme-green-text, #05903e)",
+                          }}
+                        />
 
                         <span className="member-option__info">
                           <strong>{u.name || "Sin nombre"}</strong>

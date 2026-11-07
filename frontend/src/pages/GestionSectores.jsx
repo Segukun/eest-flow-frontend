@@ -19,6 +19,8 @@ import api from "../api.js";
 import { useApp } from "../context/AppContext";
 import "../styles/pages/GestionSectores.css";
 
+import UserAvatar from "../components/layout/UserAvatar.jsx"
+
 const ICONOS = {
   FiUsers,
   FiClipboard,
@@ -68,27 +70,96 @@ const avatarStyle = (color) => ({
   border: `1px solid var(--theme-green-text, ${color || "#05903E"})`,
 });
 
-const convertirMiembro = (miembro) => ({
-  id: miembro._id,
-  nombre: miembro.name || "",
-  email: miembro.email || "",
-  accountType: miembro.accountType || "collaborator",
-  ini: obtenerIniciales(miembro.name),
-  color: "#05903E",
-  sectors: miembro.sectors || [],
-});
+const convertirMiembro = (miembro, usuarios = []) => {
+  const id = String(miembro._id || miembro.id || "");
 
-const convertirSector = (sector, miembros = []) => ({
+  // Buscamos el usuario completo, que contiene su URL firmada.
+  const usuarioCompleto = usuarios.find(
+    (usuario) =>
+      String(usuario._id ?? usuario.id) === id
+  );
+
+  const nombre =
+    miembro.name ||
+    miembro.nombre ||
+    usuarioCompleto?.name ||
+    "";
+
+  const esAdmin =
+    (miembro.accountType ||
+      usuarioCompleto?.accountType) === "admin";
+
+  const sectoresUsuario = Array.isArray(miembro.sectors)
+    ? miembro.sectors
+    : usuarioCompleto?.sectors ?? [];
+
+  const sectoresIds = sectoresUsuario
+    .map((sector) =>
+      typeof sector === "string"
+        ? sector
+        : sector?._id || sector?.id
+    )
+    .filter(Boolean)
+    .map(String);
+
+  const nombresSectores = sectoresUsuario
+    .map((sector) =>
+      typeof sector === "object" ? sector?.name : ""
+    )
+    .filter(Boolean);
+
+  const iniciales = obtenerIniciales(nombre);
+
+  return {
+    id,
+    nombre,
+
+    // Propiedades para UserAvatar.
+    name: nombre,
+    initials: usuarioCompleto?.initials || iniciales,
+    profilePicture:
+      usuarioCompleto?.profilePicture ??
+      (typeof miembro.profilePicture === "object"
+        ? miembro.profilePicture
+        : null),
+
+    email: miembro.email || usuarioCompleto?.email || "",
+    accountType: esAdmin ? "admin" : "collaborator",
+
+    ini: iniciales,
+    color: "#05903E",
+
+    sectors: sectoresIds,
+    sectoresNombres: nombresSectores,
+
+    rol: esAdmin ? "Administrador" : "Colaborador",
+    tipoRol: esAdmin ? "direccion" : "",
+    cuenta: esAdmin ? "Admin" : "Colaborador",
+
+    area: nombresSectores.length
+      ? nombresSectores.join(", ")
+      : "Sin sector asignado",
+  };
+};
+
+const convertirSector = (
+  sector,
+  miembros = [],
+  usuarios = []
+) => ({
   id: sector._id,
   nombre: sector.name || "",
   descripcion: sector.description || "",
   color: sector.color || "#05903E",
   icon: obtenerIcono(sector.icon),
-  miembros: miembros.map(convertirMiembro),
+
+  miembros: miembros.map((miembro) =>
+    convertirMiembro(miembro, usuarios)
+  ),
 });
 
 export default function GestionSectores() {
-  const { currentUser } = useApp();
+  const { currentUser, users, reloadUsers } = useApp();
   const toast = useToast();
   const isAdmin = currentUser?.accountType === "admin";
   const [sectores, setSectores] = useState([]);
@@ -118,6 +189,21 @@ export default function GestionSectores() {
     try {
       setCargando(true);
 
+      let usuariosConFotos = users;
+
+      try {
+        const usuariosActualizados = await reloadUsers();
+
+        if (Array.isArray(usuariosActualizados)) {
+          usuariosConFotos = usuariosActualizados;
+        }
+      } catch (error) {
+        console.warn(
+          "No se pudieron actualizar las fotografías de los usuarios:",
+          error
+        );
+      }
+
       const response = await api.get("/api/sectors");
 
       const listaSectores = Array.isArray(response.data)
@@ -135,7 +221,11 @@ export default function GestionSectores() {
               ? miembrosResponse.data
               : miembrosResponse.data.members || [];
 
-            return convertirSector(sector, miembros);
+            return convertirSector(
+              sector,
+              miembros,
+              usuariosConFotos
+            );
           } catch (error) {
             console.error(
               `Error al obtener miembros del sector ${sector._id}:`,
@@ -148,6 +238,7 @@ export default function GestionSectores() {
       );
 
       setSectores(sectoresConvertidos);
+      return usuariosConFotos;
     } catch (error) {
       console.error("Error al cargar sectores:", error);
 
@@ -250,6 +341,18 @@ export default function GestionSectores() {
     setIsAdminModalOpen(true);
 
     try {
+      let usuariosConFotos = users;
+
+      try {
+        const usuariosActualizados = await reloadUsers();
+
+        if (Array.isArray(usuariosActualizados)) {
+          usuariosConFotos = usuariosActualizados;
+        }
+      } catch (error) {
+        console.warn("No se pudieron actualizar los usuarios:", error);
+      }
+
       const response = await api.get(
         `/api/sectors/${id}/members`
       );
@@ -263,7 +366,9 @@ export default function GestionSectores() {
           sector.id === id
             ? {
                 ...sector,
-                miembros: miembros.map(convertirMiembro),
+                miembros: miembros.map((miembro) =>
+                  convertirMiembro(miembro, usuariosConFotos)
+                ),
               }
             : sector
         )
@@ -377,7 +482,7 @@ export default function GestionSectores() {
           : `Se ha agregado a ${nombreMiembro} al sector ${nombreSector}.`
       );
 
-      await cargarSectores();
+      const usuariosConFotos = await cargarSectores();
 
       const sectorActualizado = await api.get(
         `/api/sectors/${adminSectorId}/members`
@@ -394,8 +499,12 @@ export default function GestionSectores() {
           sector.id === adminSectorId
             ? {
                 ...sector,
-                miembros:
-                  miembrosActualizados.map(convertirMiembro),
+                miembros: miembrosActualizados.map((miembro) =>
+                  convertirMiembro(
+                    miembro,
+                    usuariosConFotos ?? users
+                  )
+                ),
               }
             : sector
         )
@@ -562,15 +671,12 @@ export default function GestionSectores() {
                               key={member.id}
                               className="gs-member-preview"
                             >
-                              <span
+                              <UserAvatar
+                                user={member}
                                 className="gs-member-avatar"
-                                style={{
-                                  background:
-                                    `var(--theme-green-fill, ${member.color})`,
-                                }}
-                              >
-                                {member.ini}
-                              </span>
+                                title={member.nombre}
+                                style={avatarStyle(member.color)}
+                              />
 
                               <span>
                                 {member.nombre}
@@ -712,14 +818,12 @@ export default function GestionSectores() {
                     className="gs-detail-member"
                   >
                     <div className="gs-detail-member-left">
-                      <span
+                      <UserAvatar
+                        user={member}
                         className="gs-member-avatar gs-member-avatar--lg"
-                        style={avatarStyle(
-                          member.color
-                        )}
-                      >
-                        {member.ini}
-                      </span>
+                        title={member.nombre}
+                        style={avatarStyle(member.color)}
+                      />
 
                       <div>
                         <p className="gs-dm-name">

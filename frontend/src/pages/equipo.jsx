@@ -16,6 +16,8 @@ import ModificarMiembro from "../components/ModificarMiembro.jsx";
 import ConfirmacionEliminarMiembroModal from "../components/ConfirmacionEliminarMiembroModal.jsx";
 import { useToast } from "../components/Toast.jsx"; // NUEVO
 
+import UserAvatar from "../components/layout/UserAvatar.jsx";
+
 const MIEMBROS_POR_PAGINA = 6;
 
 const obtenerIniciales = (nombre) => {
@@ -35,6 +37,7 @@ const obtenerIniciales = (nombre) => {
 
 const convertirMiembro = (usuario) => {
   const esAdmin = usuario.accountType === "admin";
+
   const sectoresUsuario = Array.isArray(usuario.sectors)
     ? usuario.sectors
     : [];
@@ -54,19 +57,32 @@ const convertirMiembro = (usuario) => {
     )
     .filter(Boolean);
 
+  const iniciales = obtenerIniciales(usuario.name);
+
   return {
     id: String(usuario._id || usuario.id || ""),
+
+    // Datos utilizados por la tarjeta.
     nombre: usuario.name || "",
-    iniciales: obtenerIniciales(usuario.name),
+    iniciales,
+
+    // Datos compatibles con UserAvatar.
+    name: usuario.name || "",
+    initials: usuario.initials || iniciales,
+    profilePicture: usuario.profilePicture ?? null,
+
     rol: esAdmin ? "Administrador" : "Colaborador",
     tipoRol: esAdmin ? "direccion" : "",
     cuenta: esAdmin ? "Admin" : "Colaborador",
     accountType: esAdmin ? "admin" : "collaborator",
+
     sectors: sectoresIds,
     sectoresNombres: nombresSectores,
+
     area: nombresSectores.length
       ? nombresSectores.join(", ")
       : "Sin sector asignado",
+
     correo: usuario.email || "",
   };
 };
@@ -149,15 +165,23 @@ const MemberCard = ({
       }`}
     >
       <div className="team-card-top">
-        <div
+        <UserAvatar
+          user={miembro}
           className={`team-avatar ${
             miembro.tipoRol
               ? `team-avatar-${miembro.tipoRol}`
               : ""
           }`}
-        >
-          {miembro.iniciales}
-        </div>
+          title={miembro.nombre}
+          style={{
+            backgroundColor:
+              miembro.tipoRol === "taller"
+                ? "var(--color-terracotta)"
+                : miembro.tipoRol === "preceptoria"
+                  ? "#7a8f85"
+                  : "var(--theme-green-fill, var(--color-primary))",
+          }}
+        />
 
         <div className="team-card-identity">
           <h3 className="team-card-name">

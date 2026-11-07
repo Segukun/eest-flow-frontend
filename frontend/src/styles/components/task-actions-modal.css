@@ -646,3 +646,57 @@
 .pill__dot[data-priority="high"] {
   background: #dc2626;
 }
+
+/* =====================================================
+   AVATARES DE USUARIOS
+===================================================== */
+
+/* Vista previa de la tarea */
+
+.actions-modal__preview-avatar {
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.actions-modal__preview-avatar .user-avatar__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+/* Selección de personal */
+
+.member-option__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 40px;
+
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  max-width: 40px;
+  max-height: 40px;
+
+  aspect-ratio: 1 / 1;
+
+  overflow: hidden;
+  box-sizing: border-box;
+  border-radius: 50%;
+
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.member-option__avatar .user-avatar__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}

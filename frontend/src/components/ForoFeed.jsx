@@ -1,6 +1,9 @@
 import ForoPost from "./ForoPost";
 
-export default function ForoFeed({ posts = [], ...props }) {
+export default function ForoFeed({
+  posts = [],
+  ...props
+}) {
   if (!posts.length) {
     return (
       <p className="foro-empty">

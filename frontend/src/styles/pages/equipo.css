@@ -602,3 +602,28 @@
   height: 13px;
   flex-shrink: 0;
 }
+
+/* =========================================================
+   AVATARES DE MI EQUIPO
+   ========================================================= */
+
+.team-avatar.user-avatar {
+  flex-shrink: 0;
+  overflow: hidden;
+  aspect-ratio: 1 / 1;
+  box-sizing: border-box;
+  border-radius: 50%;
+  padding: 0;
+}
+
+/* Fotografía */
+
+.team-avatar .user-avatar__image {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+  border-radius: inherit;
+}

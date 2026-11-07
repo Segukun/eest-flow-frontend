@@ -20,6 +20,7 @@ import {
 } from "react-icons/fi";
 
 import TaskAttachmentsModal from "./TaskAttachmentsModal";
+import UserAvatar from "./layout/UserAvatar.jsx";
 
 import "../styles/components/task-detail-modal.css";
 import "../styles/components/task-attachments-modal.css";
@@ -582,14 +583,11 @@ export default function TaskDetailModal({
                         key={member.id}
                         className="task-detail__member"
                       >
-                        <span
-                          className="avatar avatar--sm"
-                          style={{
-                            background: "var(--color-green)",
-                          }}
-                        >
-                          {member.initials}
-                        </span>
+                        <UserAvatar
+                          user={member}
+                          className="avatar avatar--sm task-detail__member-avatar"
+                          title={member.name}
+                        />
 
                         <span className="task-detail__member-name">
                           {member.name}

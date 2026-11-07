@@ -9,6 +9,8 @@ import {
 import api from "../api.js";
 import "../styles/components/AgregarSectorModal.css";
 
+import UserAvatar from "./layout/UserAvatar.jsx";
+
 const obtenerIniciales = (nombre = "") => {
   return nombre
     .trim()
@@ -70,10 +72,14 @@ export default function AgregarMiembroModal({
       setUsuarioSeleccionado({
         _id: initialData.id,
         name: initialData.nombre,
+        initials:
+          initialData.initials ||
+          initialData.ini ||
+          obtenerIniciales(initialData.nombre),
         email: initialData.email,
+        profilePicture: initialData.profilePicture ?? null,
         accountType:
-          initialData.accountType ||
-          "collaborator",
+          initialData.accountType || "collaborator",
         sectors: initialData.sectors || [],
       });
     } else {
@@ -120,6 +126,7 @@ export default function AgregarMiembroModal({
 
       const response = await api.get("/api/users");
 
+      // 1. Obtener la lista de usuarios según la respuesta del backend.
       let listaUsuarios = [];
 
       if (Array.isArray(response.data)) {
@@ -128,55 +135,55 @@ export default function AgregarMiembroModal({
         listaUsuarios = response.data.users;
       }
 
-      const usuariosDisponibles =
-        listaUsuarios.filter((usuario) => {
-          const idUsuario = usuario._id;
+      // 2. Normalizar los datos sin perder la fotografía de perfil.
+      listaUsuarios = listaUsuarios.map((usuario) => ({
+        ...usuario,
+        initials:
+          usuario.initials || obtenerIniciales(usuario.name),
+        profilePicture: usuario.profilePicture ?? null,
+      }));
 
-          if (!idUsuario) {
-            return false;
-          }
+      // 3. Filtrar usuarios que todavía no pertenecen al sector.
+      const usuariosDisponibles = listaUsuarios.filter((usuario) => {
+        const idUsuario = usuario._id ?? usuario.id;
 
-          if (
-            initialData &&
-            idUsuario === initialData.id
-          ) {
-            return true;
-          }
+        if (!idUsuario) {
+          return false;
+        }
 
-          const sectoresUsuario = Array.isArray(
-            usuario.sectors
-          )
-            ? usuario.sectors
-            : [];
+        if (
+          initialData &&
+          String(idUsuario) === String(initialData.id)
+        ) {
+          return true;
+        }
 
-          const yaPertenece = sectoresUsuario.some(
-            (sector) =>
-              obtenerIdSector(sector) === sectorId
-          );
+        const sectoresUsuario = Array.isArray(usuario.sectors)
+          ? usuario.sectors
+          : [];
 
-          return !yaPertenece;
-        });
+        const yaPertenece = sectoresUsuario.some(
+          (sector) =>
+            sectorId &&
+            String(obtenerIdSector(sector)) === String(sectorId)
+        );
 
+        return !yaPertenece;
+      });
+
+      // 4. Actualizar los estados.
       setUsuarios(usuariosDisponibles);
       setUsuariosFiltrados(usuariosDisponibles);
+
     } catch (error) {
-      console.error(
-        "Error al cargar usuarios:",
-        error
-      );
+      console.error("Error al cargar usuarios:", error);
 
       if (error.response?.status === 401) {
-        setError(
-          "La sesión expiró. Volvé a iniciar sesión."
-        );
+        setError("La sesión expiró. Volvé a iniciar sesión.");
       } else if (error.response?.status === 403) {
-        setError(
-          "No tenés permisos para consultar los miembros."
-        );
+        setError("No tenés permisos para consultar los miembros.");
       } else {
-        setError(
-          "No se pudieron cargar los miembros."
-        );
+        setError("No se pudieron cargar los miembros.");
       }
     } finally {
       setCargando(false);
@@ -337,11 +344,15 @@ export default function AgregarMiembroModal({
                     }
                     disabled={guardando}
                   >
-                    <span className="asm-user-avatar">
-                      {obtenerIniciales(
-                        usuario.name
-                      )}
-                    </span>
+                    <UserAvatar
+                      user={usuario}
+                      className="asm-user-avatar"
+                      title={usuario.name}
+                      style={{
+                        backgroundColor: "rgba(5, 144, 62, 0.12)",
+                        color: "var(--theme-green-text, #05903e)",
+                      }}
+                    />
 
                     <span className="asm-user-info">
                       <strong>
@@ -368,7 +379,15 @@ export default function AgregarMiembroModal({
 
           {usuarioSeleccionado && (
             <div className="asm-selected-user">
-              <FiUserPlus />
+              <UserAvatar
+                user={usuarioSeleccionado}
+                className="asm-selected-user__avatar"
+                title={usuarioSeleccionado.name}
+                style={{
+                  backgroundColor: "rgba(5, 144, 62, 0.12)",
+                  color: "var(--theme-green-text, #05903e)",
+                }}
+              />
 
               <div>
                 <strong>

@@ -210,9 +210,17 @@
   flex-direction: column;
 }
 
-.asm-sector-modal .asm-header { flex-shrink: 0; }
-.asm-sector-modal .asm-form { min-height: 0; max-height: none; }
-.asm-sector-modal .asm-form > * { flex-shrink: 0; min-width: 0; }
+.asm-sector-modal .asm-header {
+  flex-shrink: 0;
+}
+.asm-sector-modal .asm-form {
+  min-height: 0;
+  max-height: none;
+}
+.asm-sector-modal .asm-form > * {
+  flex-shrink: 0;
+  min-width: 0;
+}
 
 .asm-preview > div {
   flex: 1;
@@ -539,7 +547,8 @@
   text-overflow: ellipsis;
 }
 
-:root[data-theme="oscuro"] :is(.asm-button, .asm-close, .asm-user-option):disabled {
+:root[data-theme="oscuro"]
+  :is(.asm-button, .asm-close, .asm-user-option):disabled {
   background: var(--theme-surface-soft);
   color: var(--theme-secondary);
   border-color: var(--theme-border);
@@ -579,4 +588,75 @@
   .asm-button {
     width: 100%;
   }
+}
+
+/* =========================================================
+   AVATARES DE MIEMBROS
+   Selector de usuarios y usuario seleccionado
+========================================================= */
+
+/* Lista de selección */
+
+.asm-user-avatar.user-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 40px;
+
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  max-width: 40px;
+  max-height: 40px;
+
+  aspect-ratio: 1 / 1;
+
+  overflow: hidden;
+  box-sizing: border-box;
+  border-radius: 50%;
+
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Usuario seleccionado */
+
+.asm-selected-user__avatar.user-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 36px;
+
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  max-width: 36px;
+  max-height: 36px;
+
+  aspect-ratio: 1 / 1;
+
+  overflow: hidden;
+  box-sizing: border-box;
+  border-radius: 50%;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Imagen */
+
+.asm-user-avatar .user-avatar__image,
+.asm-selected-user__avatar .user-avatar__image {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+  border-radius: inherit;
 }

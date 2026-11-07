@@ -1,8 +1,10 @@
 import { avatarStyle } from "../theme";
+
 import {
   useEffect,
   useState,
 } from "react";
+
 import {
   FiX,
   FiSend,
@@ -12,6 +14,9 @@ import {
   fetchComments,
   createCommentRequest,
 } from "../api/comments";
+
+import { useApp } from "../context/AppContext";
+import UserAvatar from "./layout/UserAvatar";
 
 import "../styles/pages/Foro.css";
 
@@ -26,61 +31,44 @@ const AVATAR_COLORS = [
   "#EA580C",
 ];
 
-function getAvatarInitials(
-  name = "",
-) {
-  return name
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .map(
-      (part) => part[0],
-    )
-    .join("")
-    .slice(0, 2)
-    .toUpperCase() || "U";
+function getAvatarInitials(name = "") {
+  return (
+    name
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((part) => part[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() || "U"
+  );
 }
 
-function getAvatarColor(
-  name = "",
-) {
+function getAvatarColor(name = "") {
   let hash = 0;
 
-  for (
-    let i = 0;
-    i < name.length;
-    i += 1
-  ) {
+  for (let i = 0; i < name.length; i += 1) {
     hash =
       name.charCodeAt(i) +
       ((hash << 5) - hash);
   }
 
   return AVATAR_COLORS[
-    Math.abs(hash) %
-      AVATAR_COLORS.length
+    Math.abs(hash) % AVATAR_COLORS.length
   ];
 }
 
-function formatCommentTime(
-  createdAt,
-) {
-  if (!createdAt) {
-    return "";
-  }
+function formatCommentTime(createdAt) {
+  if (!createdAt) return "";
 
-  const date = new Date(
-    createdAt,
-  );
+  const date = new Date(createdAt);
 
   if (Number.isNaN(date.getTime())) {
     return "";
   }
 
   const diffMinutes = Math.floor(
-    (Date.now() -
-      date.getTime()) /
-      60000,
+    (Date.now() - date.getTime()) / 60000,
   );
 
   if (diffMinutes < 1) {
@@ -91,122 +79,126 @@ function formatCommentTime(
     return `hace ${diffMinutes}m`;
   }
 
-  const hours = Math.floor(
-    diffMinutes / 60,
-  );
+  const hours = Math.floor(diffMinutes / 60);
 
   if (hours < 24) {
     return `hace ${hours}h`;
   }
 
-  const days = Math.floor(
-    hours / 24,
-  );
+  const days = Math.floor(hours / 24);
 
   if (days < 7) {
     return `hace ${days}d`;
   }
 
-  return date.toLocaleDateString(
-    "es-AR",
-  );
+  return date.toLocaleDateString("es-AR");
 }
 
-function mapCommentFromApi(
-  comment,
-) {
+/* ---------- normalizar comentario de API ---------- */
+
+function mapCommentFromApi(comment) {
   const author =
     comment.author &&
-    typeof comment.author ===
-      "object"
+    typeof comment.author === "object"
       ? comment.author
       : null;
 
   const authorName =
     author?.name ||
+    comment.authorName ||
     "Usuario";
 
+  const authorId =
+    author?._id ??
+    author?.id ??
+    comment.authorId ??
+    comment.userId ??
+    (typeof comment.author === "string"
+      ? comment.author
+      : null);
+
   return {
-    id: comment._id,
+    id: comment._id ?? comment.id,
 
     author: authorName,
 
-    avatar:
-      getAvatarInitials(
-        authorName,
-      ),
+    authorId,
 
-    color:
-      getAvatarColor(
-        authorName,
-      ),
+    profilePicture:
+      author?.profilePicture ??
+      comment.profilePicture ??
+      null,
 
-    text:
-      comment.content || "",
+    avatar: getAvatarInitials(authorName),
 
-    time:
-      formatCommentTime(
-        comment.createdAt,
-      ),
+    color: getAvatarColor(authorName),
 
-    createdAt:
-      comment.createdAt,
+    text: comment.content || "",
+
+    time: formatCommentTime(comment.createdAt),
+
+    createdAt: comment.createdAt,
 
     parentComment:
-      comment.parentComment ||
-      null,
+      comment.parentComment || null,
   };
 }
 
+/* ---------- encontrar usuario del comentario ---------- */
+
+function findCommentAuthor(comment, users) {
+  if (!comment.authorId) return null;
+
+  return users.find(
+    (user) =>
+      String(user?._id ?? user?.id) ===
+      String(comment.authorId),
+  );
+}
+
+/* ---------- comentario individual ---------- */
+
 function CommentItem({
   comment,
+  users = [],
 }) {
-  const [
-    visibleCount,
-    setVisibleCount,
-  ] = useState(
+  const [visibleCount, setVisibleCount] = useState(
     CHAR_LIMIT,
   );
 
-  const isLong =
-    comment.text.length >
-    CHAR_LIMIT;
+  const isLong = comment.text.length > CHAR_LIMIT;
 
   const isFullyExpanded =
-    visibleCount >=
-    comment.text.length;
+    visibleCount >= comment.text.length;
 
   const displayText =
-    isLong &&
-    !isFullyExpanded
+    isLong && !isFullyExpanded
       ? comment.text
-          .slice(
-            0,
-            visibleCount,
-          )
+          .slice(0, visibleCount)
           .trim() + "..."
       : comment.text;
 
+  const authorUser =
+    findCommentAuthor(comment, users) || {
+      name: comment.author,
+      initials: comment.avatar,
+      profilePicture: comment.profilePicture,
+    };
+
   return (
     <div className="foro-comment">
-      <div
+      <UserAvatar
+        user={authorUser}
         className="foro-comment-avatar"
-        style={avatarStyle(
-          comment.color,
-        )}
-      >
-        {comment.avatar}
-      </div>
+        title={comment.author}
+        style={avatarStyle(comment.color)}
+      />
 
       <div className="foro-comment-body">
         <div className="foro-comment-head">
-          <strong>
-            {comment.author}
-          </strong>
+          <strong>{comment.author}</strong>
 
-          <span>
-            {comment.time}
-          </span>
+          <span>{comment.time}</span>
         </div>
 
         <p className="foro-comment-text">
@@ -216,26 +208,20 @@ function CommentItem({
         {isLong && (
           <div
             className={`foro-ver-mas-wrapper ${
-              visibleCount >
-              CHAR_LIMIT
+              visibleCount > CHAR_LIMIT
                 ? "foro-ver-mas-wrapper--expanded foro-ver-mas-wrapper--comment-expanded"
                 : ""
             }`}
           >
-            {visibleCount <=
-            CHAR_LIMIT ? (
+            {visibleCount <= CHAR_LIMIT ? (
               <button
                 className="foro-ver-mas foro-ver-mas--comment"
                 onClick={() =>
-                  setVisibleCount(
-                    (current) =>
-                      Math.min(
-                        current +
-                          CHAR_STEP,
-                        comment
-                          .text
-                          .length,
-                      ),
+                  setVisibleCount((current) =>
+                    Math.min(
+                      current + CHAR_STEP,
+                      comment.text.length,
+                    ),
                   )
                 }
                 type="button"
@@ -251,25 +237,17 @@ function CommentItem({
                       : "foro-ver-mas--disabled"
                   }`}
                   onClick={() => {
-                    if (
-                      !isFullyExpanded
-                    ) {
-                      setVisibleCount(
-                        (current) =>
-                          Math.min(
-                            current +
-                              CHAR_STEP,
-                            comment
-                              .text
-                              .length,
-                          ),
+                    if (!isFullyExpanded) {
+                      setVisibleCount((current) =>
+                        Math.min(
+                          current + CHAR_STEP,
+                          comment.text.length,
+                        ),
                       );
                     }
                   }}
                   type="button"
-                  disabled={
-                    isFullyExpanded
-                  }
+                  disabled={isFullyExpanded}
                 >
                   Ver más
                 </button>
@@ -281,9 +259,7 @@ function CommentItem({
                 <button
                   className="foro-ver-mas foro-ver-mas--comment foro-ver-mas--menos"
                   onClick={() =>
-                    setVisibleCount(
-                      CHAR_LIMIT,
-                    )
+                    setVisibleCount(CHAR_LIMIT)
                   }
                   type="button"
                 >
@@ -298,89 +274,79 @@ function CommentItem({
   );
 }
 
+/* ---------- modal de comentarios ---------- */
+
 export default function ComentariosModal({
   isOpen,
   post,
   onClose,
   onCommentCreated,
 }) {
-  const [
-    newComment,
-    setNewComment,
-  ] = useState("");
+  const { users = [] } = useApp();
 
-  const [
-    comments,
-    setComments,
-  ] = useState([]);
+  const [newComment, setNewComment] = useState("");
+  const [comments, setComments] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState("");
 
-  const [
-    loading,
-    setLoading,
-  ] = useState(false);
-
-  const [
-    sending,
-    setSending,
-  ] = useState(false);
-
-  const [
-    error,
-    setError,
-  ] = useState("");
+  /* ---------- cargar comentarios ---------- */
 
   useEffect(() => {
-    if (!isOpen || !post) {
-      return;
-    }
+    if (!isOpen || !post) return;
 
-    const loadComments =
-      async () => {
-        try {
-          setLoading(true);
-          setError("");
+    let cancelled = false;
 
-          const response =
-            await fetchComments(
-              post.id,
-              {
-                page: 1,
-                limit: 50,
-              },
-            );
+    const loadComments = async () => {
+      try {
+        setLoading(true);
+        setError("");
 
-          const apiComments =
-            response?.data
-              ?.comments ??
-            response?.comments ??
-            [];
+        const response = await fetchComments(
+          post.id,
+          {
+            page: 1,
+            limit: 50,
+          },
+        );
 
+        const apiComments =
+          response?.data?.comments ??
+          response?.comments ??
+          [];
+
+        if (!cancelled) {
           setComments(
-            apiComments.map(
-              mapCommentFromApi,
-            ),
+            apiComments.map(mapCommentFromApi),
           );
-        } catch (error) {
-          console.error(
-            "Error loading comments:",
-            error,
-          );
+        }
+      } catch (error) {
+        console.error(
+          "Error loading comments:",
+          error,
+        );
 
+        if (!cancelled) {
           setError(
-            error.response?.data
-              ?.message ||
+            error.response?.data?.message ||
               "No se pudieron cargar los comentarios.",
           );
-        } finally {
+        }
+      } finally {
+        if (!cancelled) {
           setLoading(false);
         }
-      };
+      }
+    };
 
     loadComments();
-  }, [
-    isOpen,
-    post,
-  ]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, post]);
+
+  /* ---------- limpiar al cerrar ---------- */
 
   useEffect(() => {
     if (!isOpen) {
@@ -393,63 +359,54 @@ export default function ComentariosModal({
     return null;
   }
 
-  const handleSubmit =
-    async (event) => {
-      event.preventDefault();
+  /* ---------- publicar comentario ---------- */
 
-      if (
-        !newComment.trim() ||
-        sending
-      ) {
-        return;
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    if (!newComment.trim() || sending) {
+      return;
+    }
+
+    try {
+      setSending(true);
+      setError("");
+
+      const response = await createCommentRequest(
+        post.id,
+        newComment.trim(),
+      );
+
+      const createdComment = response?.data;
+
+      if (!createdComment) {
+        throw new Error(
+          "La API no devolvió el comentario creado.",
+        );
       }
 
-      try {
-        setSending(true);
-        setError("");
+      setComments((previous) => [
+        ...previous,
+        mapCommentFromApi(createdComment),
+      ]);
 
-        const response =
-          await createCommentRequest(
-            post.id,
-            newComment.trim(),
-          );
+      setNewComment("");
 
-        const createdComment =
-          response?.data;
+      onCommentCreated?.(post.id);
+    } catch (error) {
+      console.error(
+        "Error creating comment:",
+        error,
+      );
 
-        if (!createdComment) {
-          throw new Error(
-            "La API no devolvió el comentario creado.",
-          );
-        }
-
-        setComments((prev) => [
-          ...prev,
-          mapCommentFromApi(
-            createdComment,
-          ),
-        ]);
-
-        setNewComment("");
-
-        onCommentCreated?.(
-          post.id,
-        );
-      } catch (error) {
-        console.error(
-          "Error creating comment:",
-          error,
-        );
-
-        setError(
-          error.response?.data
-            ?.message ||
-            "No se pudo publicar el comentario.",
-        );
-      } finally {
-        setSending(false);
-      }
-    };
+      setError(
+        error.response?.data?.message ||
+          "No se pudo publicar el comentario.",
+      );
+    } finally {
+      setSending(false);
+    }
+  };
 
   return (
     <div
@@ -458,19 +415,17 @@ export default function ComentariosModal({
     >
       <div
         className="foro-modal"
-        onClick={(event) =>
-          event.stopPropagation()
-        }
+        onClick={(event) => event.stopPropagation()}
       >
         <div className="foro-modal-head">
           <h3>
-            Comentarios ·{" "}
-            {post.author}
+            Comentarios · {post.author}
           </h3>
 
           <button
             onClick={onClose}
             type="button"
+            aria-label="Cerrar comentarios"
           >
             <FiX />
           </button>
@@ -478,15 +433,8 @@ export default function ComentariosModal({
 
         <div className="foro-modal-post-preview">
           <p>
-            {post.content.slice(
-              0,
-              200,
-            )}
-
-            {post.content
-              .length > 200
-              ? "..."
-              : ""}
+            {post.content.slice(0, 200)}
+            {post.content.length > 200 ? "..." : ""}
           </p>
         </div>
 
@@ -499,30 +447,26 @@ export default function ComentariosModal({
             <p className="foro-empty">
               {error}
             </p>
-          ) : comments.length ===
-            0 ? (
+          ) : comments.length === 0 ? (
             <p className="foro-empty">
-              No hay comentarios
-              aún. ¡Sé el primero!
+              No hay comentarios aún. ¡Sé el primero!
             </p>
           ) : (
-            comments.map(
-              (comment) => (
-                <CommentItem
-                  key={comment.id}
-                  comment={comment}
-                />
-              ),
-            )
+            comments.map((comment) => (
+              <CommentItem
+                key={comment.id}
+                comment={comment}
+                users={users}
+              />
+            ))
           )}
         </div>
 
-        {error &&
-          !loading && (
-            <p className="foro-empty">
-              {error}
-            </p>
-          )}
+        {error && !loading && (
+          <p className="foro-empty">
+            {error}
+          </p>
+        )}
 
         <form
           className="foro-modal-input"
@@ -532,19 +476,15 @@ export default function ComentariosModal({
             placeholder="Escribe un comentario..."
             value={newComment}
             onChange={(event) =>
-              setNewComment(
-                event.target.value,
-              )
+              setNewComment(event.target.value)
             }
             disabled={sending}
           />
 
           <button
             type="submit"
-            disabled={
-              !newComment.trim() ||
-              sending
-            }
+            disabled={!newComment.trim() || sending}
+            aria-label="Enviar comentario"
           >
             <FiSend />
           </button>

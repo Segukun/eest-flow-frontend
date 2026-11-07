@@ -1,33 +1,20 @@
+
 import { useEffect, useRef, useState } from "react";
 
-import { FiX, FiFileText, FiTrash2, FiPaperclip } from "react-icons/fi";
+import {
+  FiX,
+  FiFileText,
+  FiTrash2,
+  FiPaperclip,
+} from "react-icons/fi";
 
 import { useToast } from "./Toast.jsx";
+import { useApp } from "../context/AppContext";
+import UserAvatar from "./layout/UserAvatar";
 
 import "../styles/components/PublicarModal.css";
 
 const MAX_FILES = 10;
-
-function getCurrentUser() {
-  try {
-    return JSON.parse(localStorage.getItem("user") || "null");
-  } catch {
-    return null;
-  }
-}
-
-function getInitials(name = "") {
-  return (
-    name
-      .trim()
-      .split(/\s+/)
-      .filter(Boolean)
-      .map((part) => part[0])
-      .join("")
-      .slice(0, 2)
-      .toUpperCase() || "U"
-  );
-}
 
 function formatSize(bytes) {
   if (bytes < 1024 * 1024) {
@@ -37,8 +24,15 @@ function formatSize(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export default function PublicarModal({ isOpen, onClose, onPublish }) {
+export default function PublicarModal({
+  isOpen,
+  onClose,
+  onPublish,
+}) {
   const toast = useToast();
+
+  // Usuario actualizado desde AppContext, incluyendo profilePicture.url.
+  const { currentUser } = useApp();
 
   const [text, setText] = useState("");
   const [files, setFiles] = useState([]);
@@ -50,8 +44,6 @@ export default function PublicarModal({ isOpen, onClose, onPublish }) {
 
   filesRef.current = files;
 
-  const user = getCurrentUser();
-
   const revokePreviews = (list) => {
     list.forEach((file) => {
       if (file.preview) {
@@ -61,8 +53,14 @@ export default function PublicarModal({ isOpen, onClose, onPublish }) {
   };
 
   /*
-   * Al abrir: limpia el estado y bloquea el scroll del fondo.
-   * Al cerrar/desmontar: libera las previews.
+   * Al abrir:
+   * - Limpia el estado.
+   * - Bloquea el scroll del fondo.
+   * - En escritorio enfoca el textarea.
+   *
+   * Al cerrar o desmontar:
+   * - Restaura el scroll.
+   * - Libera las previews de los archivos.
    */
   useEffect(() => {
     if (!isOpen) {
@@ -87,7 +85,8 @@ export default function PublicarModal({ isOpen, onClose, onPublish }) {
     };
   }, [isOpen]);
 
-  /* Cerrar con Escape */
+  /* ---------- cerrar con Escape ---------- */
+
   useEffect(() => {
     if (!isOpen) {
       return undefined;
@@ -101,63 +100,98 @@ export default function PublicarModal({ isOpen, onClose, onPublish }) {
 
     document.addEventListener("keydown", handleKeyDown);
 
-    return () => document.removeEventListener("keydown", handleKeyDown);
+    return () =>
+      document.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, submitting, onClose]);
 
   if (!isOpen) {
     return null;
   }
 
-  const canSubmit = (text.trim() || files.length > 0) && !submitting;
+  const canSubmit =
+    (text.trim() || files.length > 0) &&
+    !submitting;
+
+  /* ---------- cerrar al hacer clic en el fondo ---------- */
 
   const handleOverlay = (event) => {
-    if (event.target === event.currentTarget && !submitting) {
+    if (
+      event.target === event.currentTarget &&
+      !submitting
+    ) {
       onClose();
     }
   };
 
+  /* ---------- seleccionar archivos ---------- */
+
   const handleFiles = (event) => {
-    const selected = Array.from(event.target.files || []);
+    const selected = Array.from(
+      event.target.files || [],
+    );
 
     const remaining = MAX_FILES - files.length;
 
     if (selected.length > remaining) {
-      toast.info(`Podés adjuntar hasta ${MAX_FILES} archivos.`);
+      toast.info(
+        `Podés adjuntar hasta ${MAX_FILES} archivos.`,
+      );
     }
 
-    const mapped = selected.slice(0, Math.max(remaining, 0)).map((file) => {
-      const isImage = file.type.startsWith("image/");
+    const mapped = selected
+      .slice(0, Math.max(remaining, 0))
+      .map((file) => {
+        const isImage = file.type.startsWith("image/");
 
-      return {
-        id: window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`,
-        name: file.name,
-        size: formatSize(file.size),
-        type: file.type,
-        isImage,
-        isPdf:
-          file.type === "application/pdf" ||
-          file.name.toLowerCase().endsWith(".pdf"),
-        preview: isImage ? URL.createObjectURL(file) : null,
-        file,
-      };
-    });
+        return {
+          id:
+            window.crypto?.randomUUID?.() ||
+            `${Date.now()}-${Math.random()}`,
 
-    setFiles((prev) => [...prev, ...mapped]);
+          name: file.name,
+          size: formatSize(file.size),
+          type: file.type,
+          isImage,
+
+          isPdf:
+            file.type === "application/pdf" ||
+            file.name.toLowerCase().endsWith(".pdf"),
+
+          preview: isImage
+            ? URL.createObjectURL(file)
+            : null,
+
+          file,
+        };
+      });
+
+    setFiles((previous) => [
+      ...previous,
+      ...mapped,
+    ]);
 
     event.target.value = "";
   };
 
+  /* ---------- eliminar archivo seleccionado ---------- */
+
   const removeFile = (id) => {
-    setFiles((prev) => {
-      const target = prev.find((file) => file.id === id);
+    setFiles((previous) => {
+      const target = previous.find(
+        (file) => file.id === id,
+      );
 
       if (target?.preview) {
         URL.revokeObjectURL(target.preview);
       }
 
-      return prev.filter((file) => file.id !== id);
+      return previous.filter(
+        (file) => file.id !== id,
+      );
     });
   };
+
+  /* ---------- publicar ---------- */
 
   const handleSubmit = async () => {
     if (!canSubmit) {
@@ -167,9 +201,12 @@ export default function PublicarModal({ isOpen, onClose, onPublish }) {
     setSubmitting(true);
 
     try {
-      const ok = await onPublish({ text, files });
+      const ok = await onPublish({
+        text,
+        files,
+      });
 
-      // Foro.createPost devuelve false si falló (ya muestra el toast de error).
+      // Foro.createPost devuelve false si la operación falla.
       if (ok !== false) {
         onClose();
       }
@@ -182,17 +219,27 @@ export default function PublicarModal({ isOpen, onClose, onPublish }) {
   };
 
   return (
-    <div className="pm-overlay" onClick={handleOverlay}>
+    <div
+      className="pm-overlay"
+      onClick={handleOverlay}
+    >
       <div
         className="pm-modal"
         role="dialog"
         aria-modal="true"
         aria-labelledby="pm-title"
       >
+        {/* ---------- HEADER ---------- */}
+
         <div className="pm-header">
           <div>
-            <h2 id="pm-title">Crear publicación</h2>
-            <span>Compartí algo con la comunidad EEST</span>
+            <h2 id="pm-title">
+              Crear publicación
+            </h2>
+
+            <span>
+              Compartí algo con la comunidad EEST
+            </span>
           </div>
 
           <button
@@ -206,13 +253,27 @@ export default function PublicarModal({ isOpen, onClose, onPublish }) {
           </button>
         </div>
 
+        {/* ---------- BODY ---------- */}
+
         <div className="pm-body">
           <div className="pm-user">
-            <div className="pm-avatar">{getInitials(user?.name || "Tú")}</div>
+            <UserAvatar
+              user={currentUser}
+              className="pm-avatar"
+              title={currentUser?.name || "Tu perfil"}
+              style={{
+                backgroundColor: "var(--color-graphite, #1F151C)",
+              }}
+            />
 
             <div>
-              <strong>{user?.name || "Tú"}</strong>
-              <span>Se publica en tu sector</span>
+              <strong>
+                {currentUser?.name || "Tú"}
+              </strong>
+
+              <span>
+                Se publica en tu sector
+              </span>
             </div>
           </div>
 
@@ -220,9 +281,13 @@ export default function PublicarModal({ isOpen, onClose, onPublish }) {
             ref={textareaRef}
             placeholder="Escribe algo..."
             value={text}
-            onChange={(event) => setText(event.target.value)}
+            onChange={(event) =>
+              setText(event.target.value)
+            }
             rows={5}
           />
+
+          {/* ---------- ARCHIVOS SELECCIONADOS ---------- */}
 
           {files.length > 0 && (
             <div className="pm-files-preview">
@@ -230,11 +295,16 @@ export default function PublicarModal({ isOpen, onClose, onPublish }) {
                 <div
                   key={file.id}
                   className={`pm-file-chip ${
-                    file.isImage ? "pm-file-chip--image" : ""
+                    file.isImage
+                      ? "pm-file-chip--image"
+                      : ""
                   }`}
                 >
                   {file.isImage ? (
-                    <img src={file.preview} alt={file.name} />
+                    <img
+                      src={file.preview}
+                      alt={file.name}
+                    />
                   ) : (
                     <div className="pm-file-icon">
                       <FiFileText />
@@ -259,6 +329,8 @@ export default function PublicarModal({ isOpen, onClose, onPublish }) {
           )}
         </div>
 
+        {/* ---------- FOOTER ---------- */}
+
         <div className="pm-footer">
           <div className="pm-actions-left">
             <button
@@ -268,7 +340,9 @@ export default function PublicarModal({ isOpen, onClose, onPublish }) {
               type="button"
             >
               <FiPaperclip />
-              <span className="pm-attach-label">Adjuntar</span>
+              <span className="pm-attach-label">
+                Adjuntar
+              </span>
             </button>
 
             <input
@@ -301,7 +375,9 @@ export default function PublicarModal({ isOpen, onClose, onPublish }) {
               disabled={!canSubmit}
               type="button"
             >
-              {submitting ? "Publicando..." : "Publicar"}
+              {submitting
+                ? "Publicando..."
+                : "Publicar"}
             </button>
           </div>
         </div>

@@ -1,10 +1,14 @@
+
 import { useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, Link } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
+
 import "../../styles/layout/topbar.css";
+
 import { MdDelete } from "react-icons/md";
-import { BrowserRouter, Route, Routes , Link } from "react-router-dom";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
+
+import UserAvatar from "./UserAvatar";
 
 const NAV = [
   { to: "/", label: "Inicio", icon: "/icons/home.svg", end: true },
@@ -31,8 +35,8 @@ export default function Topbar({
   } = useApp();
 
   const navigate = useNavigate();
-  const isAdmin =
-    currentUser?.accountType === "admin";
+
+  const isAdmin = currentUser?.accountType === "admin";
 
   const [open, setOpen] = useState(false);
   const [catsOpen, setCatsOpen] = useState(false);
@@ -48,20 +52,20 @@ export default function Topbar({
     <>
       <header className="topbar">
         <Link to="/" className="topbar__brand-link">
-        <div className="topbar__brand">
-          <img
-            src="/eestn1logo.png"
-            alt="EEST N°1"
-            className="topbar__logo"
-          />
-          <span className="brand-name">
-            EEST
-            <span className="brand-name--accent">
-              Flow
+          <div className="topbar__brand">
+            <img
+              src="/eestn1logo.png"
+              alt="EEST N°1"
+              className="topbar__logo"
+            />
+
+            <span className="brand-name">
+              EEST
+              <span className="brand-name--accent">Flow</span>
             </span>
-          </span>
-        </div>
+          </div>
         </Link>
+
         <button
           className="topbar__burger"
           onClick={() => setOpen(true)}
@@ -82,9 +86,7 @@ export default function Topbar({
       )}
 
       <aside
-        className={
-          "drawer" + (open ? " drawer--open" : "")
-        }
+        className={"drawer" + (open ? " drawer--open" : "")}
       >
         <div className="drawer__head">
           <div className="topbar__brand">
@@ -93,13 +95,13 @@ export default function Topbar({
               alt=""
               className="topbar__logo"
             />
+
             <div className="sidebar__brand-text">
               <span className="brand-name">
                 EEST
-                <span className="brand-name--accent">
-                  Flow
-                </span>
+                <span className="brand-name--accent">Flow</span>
               </span>
+
               <span className="brand-sub">
                 Técnica Digital
               </span>
@@ -133,16 +135,16 @@ export default function Topbar({
                 alt=""
                 className="icon"
               />
+
               <span>{item.label}</span>
+
               {item.to === "/notificaciones" &&
                 unreadCount > 0 && (
                   <span
                     className="nav-item__badge"
                     aria-label={`${unreadCount} notificaciones sin leer`}
                   >
-                    {unreadCount > 99
-                      ? "99+"
-                      : unreadCount}
+                    {unreadCount > 99 ? "99+" : unreadCount}
                   </span>
                 )}
             </NavLink>
@@ -150,9 +152,7 @@ export default function Topbar({
 
           <button
             className="nav-item"
-            onClick={() =>
-              setCatsOpen((value) => !value)
-            }
+            onClick={() => setCatsOpen((value) => !value)}
             type="button"
           >
             <img
@@ -160,13 +160,11 @@ export default function Topbar({
               alt=""
               className="icon"
             />
+
             <span>Categorías</span>
+
             <span className="nav-item__chevron">
-               {catsOpen ? (
-                  <FaChevronUp />
-                ) : (
-                  <FaChevronDown />
-                )}
+              {catsOpen ? <FaChevronUp /> : <FaChevronDown />}
             </span>
           </button>
 
@@ -182,9 +180,7 @@ export default function Topbar({
                     key={category.id}
                     className={
                       "cat-item-row" +
-                      (isAdmin
-                        ? " cat-item-row--admin"
-                        : "")
+                      (isAdmin ? " cat-item-row--admin" : "")
                     }
                   >
                     <button
@@ -201,10 +197,9 @@ export default function Topbar({
                     >
                       <span
                         className="cat-dot"
-                        style={{
-                          background: category.color,
-                        }}
+                        style={{ background: category.color }}
                       />
+
                       <span className="cat-name">
                         {category.name}
                       </span>
@@ -264,6 +259,7 @@ export default function Topbar({
                       <span className="cat-dot cat-dot--add">
                         +
                       </span>
+
                       <span className="cat-name">
                         Agregar categoría
                       </span>
@@ -274,13 +270,12 @@ export default function Topbar({
             ))}
         </nav>
 
+        {/* Usuario autenticado */}
         <div className="drawer__user">
-          <span
-            className="avatar"
-            style={{ background: "var(--color-green)" }}
-          >
-            {currentUser?.initials ?? "…"}
-          </span>
+          <UserAvatar
+            user={currentUser}
+            className="avatar drawer__user-avatar"
+          />
 
           <div className="user-card__info">
             <strong>
@@ -300,7 +295,7 @@ export default function Topbar({
 
           <button
             className="drawer__user-toggle"
-            onClick={() => setActionsOpen((v) => !v)}
+            onClick={() => setActionsOpen((value) => !value)}
             type="button"
             aria-label="Abrir opciones de usuario"
           >
@@ -310,7 +305,9 @@ export default function Topbar({
 
         {isDeployed ? (
           <div className="drawer__version">
-            <span>Versión {process.env.REACT_APP_VERSION}</span>
+            <span>
+              Versión {process.env.REACT_APP_VERSION}
+            </span>
           </div>
         ) : null}
 
