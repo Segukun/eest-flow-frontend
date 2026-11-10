@@ -1,0 +1,114 @@
+/* ===== colores de estado ===== */
+:root {
+  --due-overdue: #dc2626;
+  --due-imminent: #ea580c;
+  --due-soon: #d97706;
+  --due-done: #16a34a;
+  --task-review: #eab308;
+}
+
+/* ===== chip de fecha límite ===== */
+.task-card__due[data-due-tone] {
+  --tone: var(--due-done);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 9px;
+  font-weight: 700;
+  color: color-mix(in srgb, var(--tone) 78%, #000);
+  background: color-mix(in srgb, var(--tone) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tone) 42%, transparent);
+}
+
+.task-card__due[data-due-tone="overdue"] {
+  --tone: var(--due-overdue);
+}
+.task-card__due[data-due-tone="imminent"] {
+  --tone: var(--due-imminent);
+}
+.task-card__due[data-due-tone="soon"] {
+  --tone: var(--due-soon);
+}
+.task-card__due[data-due-tone="done"] {
+  --tone: var(--due-done);
+}
+
+.task-card__due[data-due-tone] svg {
+  flex: none;
+  width: 13px;
+  height: 13px;
+  color: var(--tone);
+}
+
+/* modo oscuro: texto más claro y tinte más marcado */
+:root[data-theme="oscuro"] .task-card__due[data-due-tone] {
+  color: color-mix(in srgb, var(--tone) 55%, #fff);
+  background: color-mix(in srgb, var(--tone) 22%, transparent);
+  border-color: color-mix(in srgb, var(--tone) 55%, transparent);
+}
+
+/* texto solo para lectores de pantalla */
+.task-card__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ===== columna TERMINADO: tarjeta verde, suave ===== */
+.task-card.task-card--completed {
+  background: color-mix(
+    in srgb,
+    var(--due-done) 8%,
+    var(--theme-surface, #fff)
+  );
+  border-color: color-mix(
+    in srgb,
+    var(--due-done) 38%,
+    var(--theme-border, var(--color-border))
+  );
+}
+
+.task-card.task-card--completed .task-card__title {
+  color: color-mix(in srgb, var(--due-done) 72%, #000);
+}
+
+:root[data-theme="oscuro"] .task-card.task-card--completed {
+  background: color-mix(
+    in srgb,
+    var(--due-done) 12%,
+    var(--theme-surface, #2b2229)
+  );
+  border-color: color-mix(
+    in srgb,
+    var(--due-done) 45%,
+    var(--theme-border, #65545f)
+  );
+}
+
+:root[data-theme="oscuro"] .task-card.task-card--completed .task-card__title {
+  color: color-mix(in srgb, var(--due-done) 55%, #fff);
+}
+
+/* ===== columna EN REVISIÓN: reloj y título amarillos ===== */
+.task-card__review-icon {
+  display: inline-flex;
+  vertical-align: -3px;
+  margin-right: 6px;
+  color: var(--task-review);
+}
+
+.task-card__review-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.task-card.task-card--review .task-card__title {
+  color: color-mix(in srgb, var(--task-review) 68%, #000);
+}
+
+:root[data-theme="oscuro"] .task-card.task-card--review .task-card__title {
+  color: color-mix(in srgb, var(--task-review) 88%, #fff);
+}
