@@ -1003,6 +1003,7 @@ export function AppProvider({ children }) {
     tasksLoading,
     tasksError,
     reloadTasks: () => loadTasks(),
+    reloadCategories: loadCategories,
 
     addTask,
     taskDrafts,
