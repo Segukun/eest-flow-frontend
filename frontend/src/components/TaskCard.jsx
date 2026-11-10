@@ -1,5 +1,6 @@
 import AssignedUsersPreview from "./AssignedUsersPreview";
 import TaskQuickActions from "./TaskQuickActions";
+import useTaskSelection from "../hooks/useTaskSelection";
 import { colorChipStyle } from "../colorPresets.js";
 import { useApp, PRIORITIES } from "../context/AppContext";
 import { parseLocalDate } from "./dates";
@@ -23,6 +24,7 @@ export default function TaskCard({
   onEdit,
 }) {
   const { users, labels } = useApp();
+  const selection = useTaskSelection();
 
   const priority =
     PRIORITIES[task.priority] ?? PRIORITIES.medium;
@@ -75,16 +77,17 @@ export default function TaskCard({
     <article
       className={
         "task-card" +
-        (isDragging ? " task-card--dragging" : "")
+        (isDragging ? " task-card--dragging" : "") +
+        (selection?.selectedTaskIds.has(task.id) ? " task-card--selected" : "")
       }
       style={markerStyle}
-      draggable
+      draggable={!selection?.busy}
       onDragStart={(event) => {
         event.dataTransfer.effectAllowed = "move";
         onDragStart(task.id);
       }}
       onDragEnd={onDragEnd}
-      onClick={() => onView(task.id)}
+      onClick={() => { if (!selection?.busy) onView(task.id); }}
     >
       <span
         className="task-card__priority"
@@ -107,7 +110,7 @@ export default function TaskCard({
         ) : (
           <h4 className="task-card__title">{task.title}</h4>
         )}
-        <TaskQuickActions taskId={task.id} onEdit={onEdit} />
+        <TaskQuickActions taskId={task.id} onEdit={onEdit} selection={selection} taskTitle={task.title} />
       </div>
 
       {taskLabels.length > 0 && (

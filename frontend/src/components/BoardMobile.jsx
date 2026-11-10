@@ -8,7 +8,7 @@ import TaskActionsModal from "./taskmodal/TaskActionsModal.jsx";
 import "../styles/components/board-mobile.css";
 
 export default function BoardMobile() {
-  const { columns, visibleTasks, moveTask, tasksLoading, categoriesLoading } = useApp();
+  const { columns, visibleTasks, moveTask, taskBatchBusy, tasksLoading, categoriesLoading } = useApp();
   const [dragging, setDragging] = useState(null);
   const [viewingId, setViewingId] = useState(null);
   const [editingId, setEditingId] = useState(null);
@@ -34,13 +34,13 @@ export default function BoardMobile() {
   }, [emblaApi, onSelect]);
 
   const handleDrop = async (columnId, beforeId = null) => {
-    if (!dragging) return;
+    if (!dragging || taskBatchBusy) return;
     const id = dragging;
     setDragging(null);
     try {
       await moveTask(id, columnId, beforeId);
     } catch {
-      // moveTask revierte internamente
+      // El estado local solo cambia después de la confirmación del servidor.
     }
   };
 
