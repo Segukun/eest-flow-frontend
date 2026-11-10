@@ -1,30 +1,65 @@
+
 import { useEffect, useState } from "react";
+
 import BoardHeader from "../components/BoardHeader";
 import Board from "../components/Board";
 import BoardMobile from "../components/BoardMobile";
 import ListView from "../components/ListView";
 import TaskSelection from "../components/TaskSelection";
+
 import { useApp } from "../context/AppContext";
+
 import "../styles/pages/home.css";
 
 export default function Home() {
-  const { view, activeCategory, filters, currentUser } = useApp();
-  const [isMobile, setIsMobile] = useState(window.matchMedia("(max-width: 700px)").matches);
+  const {
+    view,
+    activeCategory,
+    filters,
+    currentUser,
+  } = useApp();
+
+  const [isMobile, setIsMobile] = useState(
+    window.matchMedia("(max-width: 700px)").matches,
+  );
 
   useEffect(() => {
-    const mq = window.matchMedia("(max-width: 700px)");
-    const handler = (e) => setIsMobile(e.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
+    const mediaQuery = window.matchMedia(
+      "(max-width: 700px)",
+    );
+
+    const handler = (event) => {
+      setIsMobile(event.matches);
+    };
+
+    mediaQuery.addEventListener("change", handler);
+
+    return () => {
+      mediaQuery.removeEventListener("change", handler);
+    };
   }, []);
 
   return (
     <div className="home">
       <BoardHeader />
+
       <div className="home__board-wrap">
-        {view === "lista" ? <ListView /> : (
-          <TaskSelection key={JSON.stringify([activeCategory, filters.sector, currentUser?.id, currentUser?.accountType])}>
-            {isMobile ? <BoardMobile /> : <Board />}
+        {view === "lista" ? (
+          <ListView />
+        ) : (
+          <TaskSelection
+            key={JSON.stringify([
+              activeCategory,
+              filters,
+              currentUser?.id,
+              currentUser?.accountType,
+            ])}
+          >
+            {isMobile ? (
+              <BoardMobile />
+            ) : (
+              <Board />
+            )}
           </TaskSelection>
         )}
       </div>

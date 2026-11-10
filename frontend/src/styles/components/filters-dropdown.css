@@ -1,6 +1,13 @@
+
+/* =========================================================
+   EESTFLOW · FILTROS DESKTOP
+   ========================================================= */
+
 .filters-anchor {
   position: relative;
 }
+
+/* ---------- DROPDOWN PRINCIPAL ---------- */
 
 .filters-dd {
   position: absolute;
@@ -8,32 +15,54 @@
   right: 0;
   z-index: 45;
   width: 280px;
-  background: var(--theme-surface, #fff);
+  box-sizing: border-box;
+  padding: 10px;
   border: 1px solid var(--theme-border, var(--color-border));
   border-radius: var(--radius-lg);
+  background: var(--theme-surface, #fff);
   box-shadow: var(--shadow-md);
-  padding: 10px;
+  transform-origin: top right;
+  animation: filters-dd-enter 0.2s ease-out;
 }
+
+@keyframes filters-dd-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-9px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ---------- ENCABEZADO ---------- */
 
 .filters-dd__head {
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
   padding: 6px 8px 10px;
+  color: var(--color-muted);
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--color-muted);
 }
 
 .filters-dd__clear {
+  border: 0;
+  background: transparent;
+  color: var(--theme-warm-text, var(--color-orange));
   font-size: 12px;
+  font-weight: 700;
   letter-spacing: 0;
   text-transform: none;
-  font-weight: 700;
-  color: var(--theme-warm-text, var(--color-orange));
+  cursor: pointer;
+  transition: opacity 0.2s ease;
 }
+
 .filters-dd__clear:disabled {
   opacity: 0.4;
   cursor: default;
@@ -41,47 +70,69 @@
 
 :root[data-theme="oscuro"] .filters-dd__clear:disabled {
   color: var(--theme-secondary);
-  opacity: 1;
+  opacity: 0.65;
 }
 
-:root[data-theme="oscuro"] .filters-dd :is(.themed-icon, .filters-dd__chevron) {
-  color: var(--theme-green-text);
-}
+/* ---------- FILAS ---------- */
 
 .filters-dd__branch {
   position: relative;
 }
 
 .filters-dd__row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
   width: 100%;
-  padding: 13px 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 10px;
+  border: 0;
   border-radius: var(--radius-md);
-  font-size: 15px;
+  background: transparent;
+  color: var(--theme-text, var(--color-graphite));
+  font-size: 14px;
   font-weight: 600;
   text-align: left;
   cursor: pointer;
-  color: var(--theme-text, var(--color-graphite));
+  transition:
+    background 0.18s ease,
+    color 0.18s ease;
 }
+
 .filters-dd__row:hover {
   background: var(--theme-hover, rgba(31, 21, 28, 0.04));
 }
+
 .filters-dd__row.is-open {
   background: rgba(5, 144, 62, 0.07);
 }
+
 .filters-dd__row.is-active {
   border-left: 3px solid var(--theme-green-text, var(--color-green));
   padding-left: 7px;
 }
 
 .filters-dd__row-left {
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 10px;
 }
+
+.filters-dd__icon {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  color: var(--theme-secondary, var(--color-muted));
+}
+
+.filters-dd__icon svg {
+  width: 16px;
+  height: 16px;
+}
+
 .filters-dd__row-right {
   display: flex;
   align-items: center;
@@ -89,29 +140,86 @@
 }
 
 .filters-dd__chevron {
+  width: 14px;
+  height: 14px;
   color: var(--color-muted);
-  font-size: 13px;
-}
-.filters-dd__check {
-  color: var(--theme-green-text, var(--color-green));
-  font-weight: 800;
-  font-size: 13px;
 }
 
-/* rama hacia la IZQUIERDA del dropdown principal */
+.filters-dd__count {
+  min-width: 19px;
+  height: 19px;
+  display: grid;
+  place-items: center;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: rgba(5, 144, 62, 0.1);
+  color: var(--theme-green-text, var(--color-green));
+  font-size: 10px;
+  font-weight: 800;
+}
+
+:root[data-theme="oscuro"] .filters-dd :is(
+  .filters-dd__icon,
+  .filters-dd__chevron
+) {
+  color: var(--theme-green-text);
+}
+
+/* ---------- SWITCH ---------- */
+
+.switch--sm {
+  width: 42px;
+  height: 24px;
+  flex-shrink: 0;
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--theme-hover, rgba(31, 21, 28, 0.15));
+  transition: background 0.2s ease;
+}
+
+.switch--sm.switch--on {
+  justify-content: flex-end;
+  background: var(--theme-green-fill, var(--color-green));
+}
+
+.switch--sm .switch__knob {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--theme-surface, #fff);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+/* ---------- SUBMENÚ ---------- */
+
 .filters-dd__panel {
   position: absolute;
   top: -6px;
   right: calc(100% + 10px);
   z-index: 46;
   width: 240px;
-  background: var(--theme-surface, #fff);
+  box-sizing: border-box;
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 8px;
   border: 1px solid var(--theme-border, var(--color-border));
   border-radius: var(--radius-lg);
+  background: var(--theme-surface, #fff);
   box-shadow: var(--shadow-md);
-  padding: 8px;
-  max-height: 260px;
-  overflow-y: auto;
+  animation: filters-panel-enter 0.16s ease-out;
+}
+
+@keyframes filters-panel-enter {
+  from {
+    opacity: 0;
+    transform: translateX(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .filters-dd__list {
@@ -120,54 +228,126 @@
   gap: 2px;
 }
 
+/* ---------- OPCIONES ---------- */
+
 .filters-dd__opt {
+  width: 100%;
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 8px;
-  width: 100%;
-  padding: 11px 10px;
+  padding: 10px;
+  border: 0;
   border-radius: var(--radius-sm);
-  font-size: 14px;
-  text-align: left;
+  background: transparent;
   color: var(--theme-text, var(--color-graphite));
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease;
 }
+
 .filters-dd__opt:hover {
   background: var(--theme-hover, rgba(31, 21, 28, 0.05));
 }
+
 .filters-dd__opt.is-on {
   background: rgba(5, 144, 62, 0.08);
-  font-weight: 700;
   color: var(--theme-green-text, var(--color-green));
+  font-weight: 700;
 }
+
 .filters-dd__opt-dot {
   width: 8px;
   height: 8px;
-  border-radius: 50%;
   flex: none;
+  border-radius: 50%;
 }
 
-.switch--sm {
-  width: 42px;
-  height: 24px;
+.filters-dd__check {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  margin-left: auto;
+  color: var(--theme-green-text, var(--color-green));
+  font-weight: 800;
+}
+
+/* ---------- ETIQUETAS ---------- */
+
+.filters-dd__panel--labels {
+  display: flex;
+  flex-direction: column;
+  max-height: 310px;
+  overflow: hidden;
+}
+
+.filters-dd__panel--labels > .filters-dd__list {
+  flex-shrink: 0;
+}
+
+.filters-label-list {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 4px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--theme-border, #d6d3d1) transparent;
+}
+
+.filters-label-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.filters-label-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.filters-label-list::-webkit-scrollbar-thumb {
   border-radius: 999px;
-  background: var(--theme-hover, rgba(31, 21, 28, 0.15));
-  padding: 3px;
-  display: inline-flex;
-  flex: none;
+  background: var(--theme-border, #d6d3d1);
 }
-.switch--sm.switch--on {
-  background: var(--theme-green-fill, var(--color-green));
-  justify-content: flex-end;
+
+.filters-dd__label-opt {
+  min-height: 36px;
 }
-.switch--sm .switch__knob {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: var(--theme-surface, #fff);
+
+.filters-dd__label-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
+
+.filters-dd__empty {
+  margin: 7px 5px;
+  padding: 10px 6px;
+  color: var(--theme-secondary, var(--color-muted));
+  font-size: 12px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* ---------- RESPONSIVE ---------- */
 
 @media (max-width: 700px) {
   .filters-dd {
-    display: none; /* en mobile solo se usa el bottom-sheet (FiltersPanel) */
+    display: none;
+  }
+}
+
+/* ---------- MOVIMIENTO REDUCIDO ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .filters-dd,
+  .filters-dd__panel {
+    animation-duration: 0.01ms;
   }
 }

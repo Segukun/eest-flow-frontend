@@ -208,6 +208,131 @@ function normalizeUser(raw) {
   };
 }
 
+
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Interpreta una fecha sin convertirla a UTC.
+ * Las fechas de vencimiento son fechas de calendario,
+ * por lo que deben compararse en la zona horaria local.
+ */
+function parseTaskDate(value) {
+  if (!value) return null;
+
+  const raw = String(value);
+  const match = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+
+  if (match) {
+    const year = Number(match[1]);
+    const month = Number(match[2]);
+    const day = Number(match[3]);
+
+    const date = new Date(year, month - 1, day);
+
+    // Evitar aceptar fechas inválidas como 2026-02-31.
+    if (
+      date.getFullYear() !== year ||
+      date.getMonth() !== month - 1 ||
+      date.getDate() !== day
+    ) {
+      return null;
+    }
+
+    return date;
+  }
+
+  const parsed = new Date(value);
+
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+
+  return new Date(
+    parsed.getFullYear(),
+    parsed.getMonth(),
+    parsed.getDate(),
+  );
+}
+
+/**
+ * Compatibilidad con los valores anteriores:
+ * "hoy", "48" y "7".
+ */
+function normalizeDueFilters(value) {
+  const values = Array.isArray(value)
+    ? value
+    : value
+      ? [value]
+      : [];
+
+  const legacyValues = {
+    hoy: "today",
+    "48": "48h",
+    "7": "week",
+  };
+
+  return values.map(
+    (item) => legacyValues[item] ?? item,
+  );
+}
+
+/**
+ * Comprueba si una tarea coincide con alguno de los
+ * vencimientos seleccionados.
+ *
+ * Las opciones funcionan como rangos acumulativos:
+ * - Menos de 48 h: próximos 2 días.
+ * - Una semana: próximos 7 días.
+ * - Un mes: próximos 30 días.
+ *
+ * Si se eligen varias, se aplica una unión (OR).
+ */
+function matchesDueFilters(
+  dueDate,
+  selectedFilters,
+  today,
+) {
+  if (!selectedFilters.length) {
+    return true;
+  }
+
+  const due = parseTaskDate(dueDate);
+
+  if (!due) {
+    return selectedFilters.includes("noDate");
+  }
+
+  const daysUntil = Math.round(
+    (due.getTime() - today.getTime()) / DAY_MS,
+  );
+
+  return selectedFilters.some((filter) => {
+    switch (filter) {
+      case "overdue":
+        return daysUntil < 0;
+
+      case "today":
+        return daysUntil === 0;
+
+      case "48h":
+        return daysUntil > 0 && daysUntil <= 2;
+
+      case "week":
+        return daysUntil > 0 && daysUntil <= 7;
+
+      case "month":
+        return daysUntil > 0 && daysUntil <= 30;
+
+      case "noDate":
+        return false;
+
+      default:
+        return false;
+    }
+  });
+}
+
 export function AppProvider({ children }) {
   // ---- sesión ----
   const [sessionUser, setSessionUser] = useState(() => {
@@ -254,9 +379,27 @@ export function AppProvider({ children }) {
   const [filters, setFilters] = useState({
     onlyMine: false,
     priorities: [],
-    sector: "",
-    due: "",
+    due: [],
+    labels: [],
   });
+
+  const previousActiveCategory = useRef(activeCategory);
+
+  useEffect(() => {
+    if (
+      String(previousActiveCategory.current ?? "") ===
+      String(activeCategory ?? "")
+    ) {
+      return;
+    }
+
+    previousActiveCategory.current = activeCategory;
+
+    setFilters((previous) => ({
+      ...previous,
+      labels: [],
+    }));
+  }, [activeCategory]);
 
   const currentUser = sessionUser
     ? (users.find((u) => String(u.id) === String(sessionUser._id)) ?? {
@@ -569,16 +712,12 @@ export function AppProvider({ children }) {
   /* ---------- filtros ---------- */
 
   const activeFiltersCount = useMemo(() => {
-    let n = 0;
-
-    if (filters.onlyMine) n++;
-
-    n += filters.priorities.length;
-
-    if (filters.sector) n++;
-    if (filters.due) n++;
-
-    return n;
+    return (
+      Number(filters.onlyMine) +
+      (filters.priorities?.length ?? 0) +
+      (filters.due?.length ?? 0) +
+      (filters.labels?.length ?? 0)
+    );
   }, [filters]);
 
   const sectorIdOf = (s) => (s && typeof s === "object" ? (s._id ?? s.id) : s);
@@ -586,64 +725,105 @@ export function AppProvider({ children }) {
   const visibleTasks = useMemo(() => {
     const now = new Date();
 
-    const diffDays = (d) => (new Date(d) - now) / 86400000;
+    const today = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+    );
+
+    const selectedPriorities = Array.isArray(filters.priorities)
+      ? filters.priorities
+      : [];
+
+    const selectedDue = normalizeDueFilters(filters.due);
+
+    const selectedLabels = new Set(
+      (Array.isArray(filters.labels) ? filters.labels : [])
+        .map(String),
+    );
 
     return tasks
-      .filter((t) => {
-        if (t.categoryId !== activeCategory) {
-          return false;
-        }
-
-        if (search && !t.title.toLowerCase().includes(search.toLowerCase())) {
-          return false;
-        }
-
+      .filter((task) => {
+        // Categoría activa.
         if (
-          filters.priorities.length &&
-          !filters.priorities.includes(t.priority)
+          String(task.categoryId) !== String(activeCategory)
         ) {
           return false;
         }
 
+        // Búsqueda por título.
         if (
-          filters.onlyMine &&
-          currentUser &&
-          !t.members.includes(currentUser.id)
+          search &&
+          !String(task.title || "")
+            .toLowerCase()
+            .includes(search.toLowerCase())
         ) {
           return false;
         }
 
-        if (filters.sector) {
-          const category = categories.find((c) => c.id === t.categoryId);
+        // Prioridades: coincidencia con cualquiera seleccionada.
+        if (
+          selectedPriorities.length > 0 &&
+          !selectedPriorities.includes(task.priority)
+        ) {
+          return false;
+        }
 
-          const ids = (category?.sectors ?? []).map(sectorIdOf);
+        // Mis tareas: comprobar IDs como strings para evitar
+        // diferencias entre ObjectId y string.
+        if (filters.onlyMine) {
+          if (!currentUser?.id) {
+            return false;
+          }
 
-          if (!ids.includes(filters.sector)) {
+          const assignedToCurrentUser = (
+            task.members || []
+          ).some(
+            (memberId) =>
+              String(memberId) === String(currentUser.id),
+          );
+
+          if (!assignedToCurrentUser) {
             return false;
           }
         }
 
-        if (filters.due && t.dueDate) {
-          const d = diffDays(t.dueDate);
+        // Etiquetas: una tarea debe tener al menos una
+        // de las etiquetas seleccionadas.
+        if (selectedLabels.size > 0) {
+          const taskLabels = (task.labelIds || []).map(String);
 
-          if (filters.due === "hoy" && !(d >= -1 && d < 1)) {
+          const matchesLabel = taskLabels.some(
+            (labelId) => selectedLabels.has(labelId),
+          );
+
+          if (!matchesLabel) {
             return false;
           }
+        }
 
-          if (filters.due === "48" && !(d < 2)) {
-            return false;
-          }
-
-          if (filters.due === "7" && !(d < 7)) {
-            return false;
-          }
+        // Vencimientos.
+        if (
+          selectedDue.length > 0 &&
+          !matchesDueFilters(
+            task.dueDate,
+            selectedDue,
+            today,
+          )
+        ) {
+          return false;
         }
 
         return true;
       })
       .sort((a, b) => a.order - b.order);
-  }, [tasks, categories, activeCategory, search, filters, currentUser]);
-
+  }, [
+    tasks,
+    activeCategory,
+    search,
+    filters,
+    currentUser,
+  ]);
   /* ---------- acciones: tareas ---------- */
 
   const addTask = (columnId, title) =>
