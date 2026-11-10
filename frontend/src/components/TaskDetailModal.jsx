@@ -388,7 +388,7 @@ export default function TaskDetailModal({
                         type="button"
                         className="btn btn--primary btn--sm"
                         onClick={saveDescription}
-                        disabled={savingDescription || descriptionDraft == ""}
+                        disabled={savingDescription}
                       >
                         {savingDescription
                           ? "Guardando…"

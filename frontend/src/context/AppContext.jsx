@@ -660,7 +660,7 @@ export function AppProvider({ children }) {
 
       const created = await createTaskRequest({
         title,
-        description: " ",
+        description: "",
         priority: "medium",
         state: columnId,
         category: activeCategory,
