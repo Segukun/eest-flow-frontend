@@ -1,19 +1,21 @@
 import { useRef, useState } from "react";
-import { FiEdit2 } from "react-icons/fi";
+import { FiEdit2, FiCheck } from "react-icons/fi";
 import { IoFileTrayFull } from "react-icons/io5";
 import { useApp } from "../context/AppContext";
 import { useToast } from "./Toast";
 import "../styles/components/task-quick-actions.css";
 
-export default function TaskQuickActions({ taskId, onEdit }) {
+export default function TaskQuickActions({ taskId, onEdit, selection, taskTitle }) {
   const { currentUser, deleteTask } = useApp();
   const toast = useToast();
   const pending = useRef(false);
   const [archiving, setArchiving] = useState(false);
   const canArchive = ["admin", "collaborator"].includes(currentUser?.accountType);
+  const disabled = archiving || selection?.busy;
+  const selected = selection?.selectedTaskIds.has(taskId);
 
   const archive = async () => {
-    if (!canArchive || pending.current) return;
+    if (!canArchive || pending.current || selection?.busy) return;
     pending.current = true;
     setArchiving(true);
     try {
@@ -32,12 +34,18 @@ export default function TaskQuickActions({ taskId, onEdit }) {
       onClick={(event) => event.stopPropagation()}
       onDragStart={(event) => { event.preventDefault(); event.stopPropagation(); }}
     >
-      <button type="button" title="Editar tarea" aria-label="Editar tarea" onClick={() => onEdit(taskId)} disabled={archiving}>
+      <button type="button" title="Editar tarea" aria-label="Editar tarea" onClick={() => onEdit(taskId)} disabled={disabled}>
         <FiEdit2 aria-hidden="true" />
       </button>
       {canArchive && (
-        <button type="button" title="Archivar tarea" aria-label="Archivar tarea" onClick={archive} disabled={archiving} aria-busy={archiving}>
+        <button type="button" title="Archivar tarea" aria-label="Archivar tarea" onClick={archive} disabled={disabled} aria-busy={archiving}>
           <IoFileTrayFull aria-hidden="true" />
+        </button>
+      )}
+      {selection?.canSelect && (
+        <button type="button" className="task-selection-toggle" aria-label={`Seleccionar tarea ${taskTitle}`}
+          aria-pressed={selected} disabled={disabled} onClick={() => selection.toggle(taskId)}>
+          <span className="task-selection-toggle__circle">{selected && <FiCheck aria-hidden="true" />}</span>
         </button>
       )}
     </span>

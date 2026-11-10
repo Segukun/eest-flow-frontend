@@ -38,11 +38,8 @@ export default function AgregarMiembroModal({
   isOpen,
   onClose,
   onSave,
-  initialData = null,
   sectorId = null,
 }) {
-  const isEditing = !!initialData;
-
   const [usuarios, setUsuarios] = useState([]);
   const [usuariosFiltrados, setUsuariosFiltrados] =
     useState([]);
@@ -68,30 +65,14 @@ export default function AgregarMiembroModal({
     setBusqueda("");
     setError("");
 
-    if (initialData) {
-      setUsuarioSeleccionado({
-        _id: initialData.id,
-        name: initialData.nombre,
-        initials:
-          initialData.initials ||
-          initialData.ini ||
-          obtenerIniciales(initialData.nombre),
-        email: initialData.email,
-        profilePicture: initialData.profilePicture ?? null,
-        accountType:
-          initialData.accountType || "collaborator",
-        sectors: initialData.sectors || [],
-      });
-    } else {
-      setUsuarioSeleccionado(null);
-    }
+    setUsuarioSeleccionado(null);
 
     cargarUsuarios();
 
     return () => {
       document.body.style.overflow = "";
     };
-  }, [isOpen, initialData, sectorId]);
+  }, [isOpen, sectorId]);
 
   useEffect(() => {
     const texto = busqueda.trim().toLowerCase();
@@ -149,13 +130,6 @@ export default function AgregarMiembroModal({
 
         if (!idUsuario) {
           return false;
-        }
-
-        if (
-          initialData &&
-          String(idUsuario) === String(initialData.id)
-        ) {
-          return true;
         }
 
         const sectoresUsuario = Array.isArray(usuario.sectors)
@@ -257,15 +231,11 @@ export default function AgregarMiembroModal({
         <div className="asm-header">
           <div>
             <span className="asm-kicker">
-              {isEditing
-                ? "CAMBIAR MIEMBRO"
-                : "MIEMBRO EXISTENTE"}
+              MIEMBRO EXISTENTE
             </span>
 
             <h2>
-              {isEditing
-                ? "Cambiar miembro"
-                : "Agregar miembro"}
+              Agregar miembro
             </h2>
           </div>
 
@@ -421,8 +391,6 @@ export default function AgregarMiembroModal({
             >
               {guardando
                 ? "Guardando..."
-                : isEditing
-                ? "Cambiar miembro"
                 : "Asignar miembro"}
             </button>
           </div>

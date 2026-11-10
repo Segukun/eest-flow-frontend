@@ -14,7 +14,7 @@ import "../styles/pages/equipo.css";
 import AgregarMiembro from "../components/AgregarMiembro.jsx";
 import ModificarMiembro from "../components/ModificarMiembro.jsx";
 import ConfirmacionEliminarMiembroModal from "../components/ConfirmacionEliminarMiembroModal.jsx";
-import { useToast } from "../components/Toast.jsx"; // NUEVO
+import { useToast } from "../components/Toast.jsx"; 
 
 import UserAvatar from "../components/layout/UserAvatar.jsx";
 
@@ -393,8 +393,9 @@ const Equipo = () => {
 
       const pasaBusqueda =
         termino === "" ||
-        miembro.nombre.toLowerCase().includes(termino) ||
-        miembro.area.toLowerCase().includes(termino);
+        (miembro.nombre || "").toLowerCase().includes(termino) ||
+        (miembro.area || "").toLowerCase().includes(termino) ||
+        (miembro.correo || "").toLowerCase().includes(termino);
 
       return pasaRol && pasaSector && pasaBusqueda;
     });
@@ -498,7 +499,7 @@ const Equipo = () => {
 
               <input
                 type="search"
-                placeholder="Buscar por nombre, apellido, especialidad (ej. Juan Smoes)"
+                placeholder="Buscar por nombre, apellido, email (ej. Juan Smoes)"
                 aria-label="Buscar integrantes"
                 value={busqueda}
                 onChange={(e) =>

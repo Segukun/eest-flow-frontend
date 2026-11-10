@@ -8,7 +8,7 @@ import "../styles/components/board.css";
 
 export default function Board() {
   const {
-    columns, visibleTasks, moveTask,
+    columns, visibleTasks, moveTask, taskBatchBusy,
     tasksLoading, tasksError, reloadTasks,
     categoriesLoading, categoriesError,
   } = useApp();
@@ -26,13 +26,13 @@ export default function Board() {
   };
 
   const handleDrop = async (columnId, beforeId = null) => {
-    if (!dragging) return;
+    if (!dragging || taskBatchBusy) return;
     const id = dragging;
     setDragging(null);
     try {
       await moveTask(id, columnId, beforeId);
     } catch {
-      // moveTask ya revierte
+      // El estado local solo cambia después de la confirmación del servidor.
     }
   };
 

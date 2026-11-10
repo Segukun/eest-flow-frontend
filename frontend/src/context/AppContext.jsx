@@ -12,6 +12,7 @@ import {
   fetchTasks,
   createTaskRequest,
   updateTaskRequest,
+  moveTaskRequest,
   deleteTaskRequest,
   uploadTaskAttachmentsRequest,
   deleteTaskAttachmentRequest,
@@ -41,6 +42,7 @@ import {
 } from "../api/users";
 import { fetchNotifications } from "../api/notifications";
 import { updateTaskDrafts } from "../taskDrafts.js";
+import { applyTaskMove, executeTaskBatch } from "../taskSelection.js";
 
 const AppContext = createContext(null);
 
@@ -138,7 +140,7 @@ function normalizeTask(raw, fallback = {}) {
 
     dueDate: dueDate ? String(dueDate).slice(0, 10) : "",
 
-    order: source.order ?? fallback.order ?? 0,
+    order: source.position ?? source.order ?? fallback.order ?? 0,
 
     // Campo adicional para archivos adjuntos.
     attachments: normalizeAttachments(
@@ -451,6 +453,8 @@ export function AppProvider({ children }) {
   /* ---------- actualización de tareas ---------- */
 
   const mutationsInFlight = useRef(0);
+  const taskBatchLock = useRef(false);
+  const [taskBatchBusy, setTaskBatchBusy] = useState(false);
   const mutationVersion = useRef(0);
   const tasksSignature = useRef("");
 
@@ -814,57 +818,44 @@ export function AppProvider({ children }) {
 
   const moveTask = (id, columnId, beforeId = null) =>
     track(async () => {
-      const previous = tasks;
-
-      const moving = tasks.find((t) => t.id === id);
-
-      if (!moving || id === beforeId) return;
-
-      const target = tasks
-        .filter(
-          (t) =>
-            t.column === columnId &&
-            t.categoryId === moving.categoryId &&
-            t.id !== id,
-        )
-        .sort((a, b) => a.order - b.order);
-
-      const index = beforeId ? target.findIndex((t) => t.id === beforeId) : -1;
-
-      target.splice(index === -1 ? target.length : index, 0, {
-        ...moving,
-        column: columnId,
-      });
-
-      const renumbered = target.map((t, i) => ({
-        ...t,
-        order: i,
-      }));
-
-      const changed = renumbered.filter((t) => {
-        const old = tasks.find((o) => o.id === t.id);
-
-        return !old || old.order !== t.order || old.column !== t.column;
-      });
-
-      const byId = new Map(renumbered.map((t) => [t.id, t]));
-
-      setTasks((prev) => prev.map((t) => byId.get(t.id) ?? t));
-
-      try {
-        await Promise.all(
-          changed.map((t) =>
-            updateTaskRequest(t.id, {
-              state: t.column,
-              order: t.order,
-            }),
-          ),
-        );
-      } catch (err) {
-        setTasks(previous);
-        throw err;
-      }
+      if (id === beforeId) return;
+      const updated = await moveTaskRequest(id, { state: columnId, beforeId });
+      setTasks((prev) => applyTaskMove(prev, id, columnId, beforeId));
+      return updated;
     });
+
+  const runTaskBatch = async (ids, action, destination) => {
+    if (taskBatchLock.current || mutationsInFlight.current > 0) throw new Error("Ya hay una operación en curso. Intentá nuevamente cuando termine.");
+    if (!currentUser || (action === "archive" &&
+      !["admin", "collaborator"].includes(currentUser.accountType))) {
+      throw new Error("No tenés permisos para esta acción.");
+    }
+    if (!["move", "archive"].includes(action) ||
+      (action === "move" && !COLUMNS.some((column) => column.id === destination))) {
+      throw new Error("Acción o destino no válido.");
+    }
+    taskBatchLock.current = true;
+    setTaskBatchBusy(true);
+    try {
+      return await track(async () => {
+        const result = await executeTaskBatch({
+          ids, tasks, action, destination, move: moveTask, archive: deleteTask,
+        });
+        // Reconcile positions and ambiguous network failures with server state.
+        try {
+          const raw = await fetchTasks();
+          setTasks(raw.map((task) => normalizeTask(task)));
+          tasksSignature.current = JSON.stringify(raw);
+        } catch {
+          result.syncError = "No se pudo actualizar el tablero. Se conservan los cambios confirmados; reintentá la sincronización.";
+        }
+        return result;
+      });
+    } finally {
+      taskBatchLock.current = false;
+      setTaskBatchBusy(false);
+    }
+  };
 
   /* ---------- acciones: categorías ---------- */
 
@@ -1021,6 +1012,8 @@ export function AppProvider({ children }) {
     restoreArchivedTask,
     restoreArchivedTasks,
     moveTask,
+    runTaskBatch,
+    taskBatchBusy,
 
     // Operaciones de adjuntos.
     uploadTaskAttachments,

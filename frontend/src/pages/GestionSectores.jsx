@@ -172,7 +172,6 @@ export default function GestionSectores() {
   const [adminSectorId, setAdminSectorId] = useState(null);
 
   const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
-  const [editingMember, setEditingMember] = useState(null);
 
   const [memberToRemove, setMemberToRemove] = useState(null);
   const [sectorToDelete, setSectorToDelete] = useState(null);
@@ -384,18 +383,10 @@ export default function GestionSectores() {
   const closeAdminModal = () => {
     setIsAdminModalOpen(false);
     setAdminSectorId(null);
-    setEditingMember(null);
   };
 
   const openCreateMember = () => {
     if (!isAdmin) return;
-    setEditingMember(null);
-    setIsMemberModalOpen(true);
-  };
-
-  const openEditMember = (member) => {
-    if (!isAdmin) return;
-    setEditingMember(member);
     setIsMemberModalOpen(true);
   };
 
@@ -414,7 +405,6 @@ export default function GestionSectores() {
     const userId = usuario._id || usuario.id;
     const nombreMiembro = usuario.name || usuario.nombre || "el miembro";
     const nombreSector = adminSector?.nombre || "";
-    const eraEdicion = !!editingMember;
 
     try {
       const userResponse = await api.get(
@@ -437,32 +427,7 @@ export default function GestionSectores() {
         return sector?._id || sector?.id;
       });
 
-      let nuevosSectores = [...sectoresIds];
-
-      if (editingMember) {
-        const sectorAnterior = editingMember.sectors?.find?.(
-          (sector) => {
-            if (typeof sector === "string") {
-              return sector !== adminSectorId;
-            }
-
-            return (
-              (sector?._id || sector?.id) !== adminSectorId
-            );
-          }
-        );
-
-        if (sectorAnterior) {
-          const sectorAnteriorId =
-            typeof sectorAnterior === "string"
-              ? sectorAnterior
-              : sectorAnterior._id || sectorAnterior.id;
-
-          nuevosSectores = nuevosSectores.filter(
-            (id) => id !== sectorAnteriorId
-          );
-        }
-      }
+      const nuevosSectores = [...sectoresIds];
 
       if (!nuevosSectores.includes(adminSectorId)) {
         nuevosSectores.push(adminSectorId);
@@ -473,13 +438,10 @@ export default function GestionSectores() {
       });
 
       setIsMemberModalOpen(false);
-      setEditingMember(null);
 
       // El guardado ya salió bien: avisamos con el toast
       toast.success(
-        eraEdicion
-          ? `Se ha actualizado a ${nombreMiembro} en el sector ${nombreSector}.`
-          : `Se ha agregado a ${nombreMiembro} al sector ${nombreSector}.`
+        `Se ha agregado a ${nombreMiembro} al sector ${nombreSector}.`
       );
 
       const usuariosConFotos = await cargarSectores();
@@ -744,10 +706,8 @@ export default function GestionSectores() {
           isOpen={isMemberModalOpen}
           onClose={() => {
             setIsMemberModalOpen(false);
-            setEditingMember(null);
           }}
           onSave={handleSaveMember}
-          initialData={editingMember}
           sectorId={adminSectorId}
         />
       )}
@@ -838,15 +798,6 @@ export default function GestionSectores() {
 
                     {isAdmin && (
                       <div className="gs-dm-actions">
-                        <button
-                          onClick={() =>
-                            openEditMember(member)
-                          }
-                          title="Cambiar sector"
-                        >
-                          <FiEdit2 />
-                        </button>
-
                         <button
                           onClick={() =>
                             handleDeleteMember(member)
