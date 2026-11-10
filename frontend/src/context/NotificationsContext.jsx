@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
-import { fetchUnreadCount } from "../api/notification";
+import { fetchUnreadCount } from "../api/notifications";
 
 const NotificationsContext = createContext({ unreadCount: 0, refreshUnreadCount: () => {} });
 
