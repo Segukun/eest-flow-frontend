@@ -21,6 +21,7 @@
 }
 
 .admin-login-content {
+  min-width: 0;
   width: 100%;
   position: relative;
   z-index: 2;
@@ -30,6 +31,9 @@
 }
 
 .admin-card {
+  min-width: 0;
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
   width: min(100%, 410px);
   background: var(--theme-background, var(--color-bone));
   border-radius: 18px;
@@ -94,6 +98,7 @@
 }
 
 .admin-field {
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 7px;
@@ -108,7 +113,10 @@
 }
 
 .admin-field input {
-  width: 350px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
   height: 45px;
   padding: 0px 2px;
   padding-left: 2px;
@@ -140,7 +148,7 @@
   border: none;
   border-radius: 7px;
   margin-top: 3px;
-  padding: 0x 14px;
+  padding: 0 14px;
   background: var(--color-terracotta);
   color: #ffffff;
   font-size: 18px;
@@ -240,9 +248,6 @@ font-family: var(--font-family-base);
     padding: 30px 27px 27px;
   }
 
-  .admin-field input{
-    width: 340px;
-  }
 }
 
 /*movil*/
@@ -299,23 +304,20 @@ font-family: var(--font-family-base);
   }
 
   .admin-card {
-    width: 80%;
+    width: 100%;
     padding: 25px 10px 25px 10px;
   }
 
-  .admin-field input{
-    width: 250px;
-  }
 }
 
 /* ===== PEGAR AL FINAL DE login.css =====
    Ojito para mostrar / ocultar la contraseña en el Login */
 
-/* El contenedor toma el mismo ancho que el input (350 / 340 / 250px según
-   el media query), así el ojito siempre queda pegado a su borde derecho */
+/* El contenedor y el input se ajustan al ancho interior de la tarjeta. */
 .admin-password {
   position: relative;
-  width: fit-content;
+  width: 100%;
+  min-width: 0;
   max-width: 100%;
 }
 

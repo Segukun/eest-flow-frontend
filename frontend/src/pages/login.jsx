@@ -97,7 +97,13 @@ const Login = () => {
     catch (error) {
       if (error.response) {
         if (error.response.status === 401) {
-          setServerError("Usuario o contraseña incorrectos.");
+          setServerError("La contraseña ingresada es incorrecta.");
+        } else if (error.response.status === 404) {
+          setServerError("No existe una cuenta asociada a ese correo electrónico.");
+        } else if (error.response.status === 403) {
+          setServerError("Tu cuenta está desactivada o no tiene acceso. Contactá al administrador.");
+        } else if (error.response.status >= 500) {
+          setServerError("No se pudo iniciar sesión. Intentá nuevamente más tarde.");
         } else {
           setServerError(
             error.response.data?.message ||
@@ -219,7 +225,7 @@ const Login = () => {
 
               {passwordError && <p className="field-error">{passwordError}</p>}
             </div>
-            {serverError && <p className="server-error">{serverError}</p>}
+            {serverError && <p className="server-error" role="alert">{serverError}</p>}
 
             <button
               type="submit"

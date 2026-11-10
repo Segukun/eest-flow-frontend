@@ -5,6 +5,8 @@ import {
 } from "react-icons/fi";
 
 import UserAvatar from "./layout/UserAvatar";
+import CharacterCounter from "./CharacterCounter";
+import { POST_TEXT_MAX_LENGTH } from "../formLimits.js";
 
 export default function ForoCreate({
   currentUser,
@@ -21,7 +23,7 @@ export default function ForoCreate({
   publishing = false,
 }) {
   const handlePublish = () => {
-    if (publishing) return;
+    if (publishing || newPost.length > POST_TEXT_MAX_LENGTH) return;
     onPublish();
   };
 
@@ -49,6 +51,8 @@ export default function ForoCreate({
 
         <textarea
           ref={createInputRef}
+          maxLength={POST_TEXT_MAX_LENGTH}
+          aria-describedby="post-inline-counter"
           placeholder="Escribe algo..."
           value={newPost}
           onChange={(event) =>
@@ -102,6 +106,7 @@ export default function ForoCreate({
           onClick={handlePublish}
           disabled={
             publishing ||
+            newPost.length > POST_TEXT_MAX_LENGTH ||
             (!newPost.trim() && inlineFiles.length === 0)
           }
           type="button"
@@ -109,6 +114,8 @@ export default function ForoCreate({
           {publishing ? "Publicando..." : "Publicar"}
         </button>
       </div>
+
+      <CharacterCounter id="post-inline-counter" value={newPost} maxLength={POST_TEXT_MAX_LENGTH} />
 
       {inlineFiles.length > 0 && (
         <div className="foro-inline-files">

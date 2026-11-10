@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../api.js";
+import { MEMBER_NAME_MAX_LENGTH } from "../formLimits.js";
 import "../styles/components/AgregarMiembro.css";
 
 const AgregarMiembro = ({ onClose, onAgregado }) => {
@@ -70,6 +71,8 @@ const AgregarMiembro = ({ onClose, onAgregado }) => {
 
     if (!formulario.nombre.trim()) {
       nuevosErrores.nombre = "El nombre es obligatorio.";
+    } else if (formulario.nombre.trim().length > MEMBER_NAME_MAX_LENGTH) {
+      nuevosErrores.nombre = `El nombre puede tener como máximo ${MEMBER_NAME_MAX_LENGTH} caracteres.`;
     } else if (!nombreValido.test(formulario.nombre.trim())) {
       nuevosErrores.nombre =
         "El nombre solo puede contener letras.";
@@ -239,6 +242,7 @@ const AgregarMiembro = ({ onClose, onAgregado }) => {
 
             <input
               id="nombre"
+              maxLength={MEMBER_NAME_MAX_LENGTH}
               name="nombre"
               type="text"
               placeholder="Ingresá el nombre completo"

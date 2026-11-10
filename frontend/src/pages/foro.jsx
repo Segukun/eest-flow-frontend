@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { POST_TEXT_MAX_LENGTH } from "../formLimits.js";
 import { FiPlus } from "react-icons/fi";
 import { useSearchParams } from "react-router-dom";
 
@@ -250,6 +251,10 @@ export default function Foro() {
     }
 
     if (!text.trim() && !files.length) return false;
+    if (text.length > POST_TEXT_MAX_LENGTH) {
+      toast.error(`La publicación no puede superar los ${POST_TEXT_MAX_LENGTH} caracteres.`);
+      return false;
+    }
 
     const result = await publishGuard.run(async () => {
       try {
@@ -470,6 +475,10 @@ export default function Foro() {
 
   const handleSaveEdit = async () => {
     if (!editText.trim()) return;
+    if (editText.length > POST_TEXT_MAX_LENGTH) {
+      toast.error(`La publicación no puede superar los ${POST_TEXT_MAX_LENGTH} caracteres.`);
+      return;
+    }
 
     try {
       const response = await updatePostRequest({

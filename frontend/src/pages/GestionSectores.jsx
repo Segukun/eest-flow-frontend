@@ -242,9 +242,9 @@ export default function GestionSectores() {
       console.error("Error al cargar sectores:", error);
 
       if (error.response?.status === 401) {
-        alert("La sesión expiró. Volvé a iniciar sesión.");
+        toast.error("La sesión expiró. Volvé a iniciar sesión.");
       } else {
-        alert("No se pudieron cargar los sectores.");
+        toast.error("No se pudieron cargar los sectores.");
       }
     } finally {
       setCargando(false);
@@ -291,21 +291,14 @@ export default function GestionSectores() {
       const status = error.response?.status;
       const message = error.response?.data?.message;
 
-      if (status === 400) {
-        alert(
-          message || "Los datos del sector no son válidos."
-        );
-      } else if (status === 403) {
-        alert(
-          "No tenés permisos para realizar esta acción."
-        );
-      } else if (status === 409) {
-        alert(
-          message || "Ya existe un sector con ese nombre."
-        );
-      } else {
-        alert("No se pudo guardar el sector.");
-      }
+      const messages = {
+        400: message || "Los datos del sector no son válidos.",
+        403: "No tenés permisos para realizar esta acción.",
+        409: "Ya existe un sector con ese nombre.",
+      };
+      throw new Error(messages[status] || (error.response
+        ? "No se pudo guardar el sector. Intentá nuevamente."
+        : "No se pudo conectar con el servidor. Revisá tu conexión e intentá nuevamente."), { cause: error });
     }
   };
 
@@ -393,12 +386,12 @@ export default function GestionSectores() {
   const handleSaveMember = async (usuario) => {
     if (!isAdmin) return;
     if (!usuario?._id && !usuario?.id) {
-      alert("No se seleccionó un usuario válido.");
+      toast.error("No se seleccionó un usuario válido.");
       return;
     }
 
     if (!adminSectorId) {
-      alert("No se seleccionó un sector.");
+      toast.error("No se seleccionó un sector.");
       return;
     }
 
@@ -481,17 +474,17 @@ export default function GestionSectores() {
       const message = error.response?.data?.message;
 
       if (status === 400) {
-        alert(
+        toast.error(
           message || "Los datos del usuario no son válidos."
         );
       } else if (status === 403) {
-        alert(
+        toast.error(
           "No tenés permisos para modificar este usuario."
         );
       } else if (status === 404) {
-        alert("El usuario no existe.");
+        toast.error("El usuario no existe.");
       } else {
-        alert("No se pudo asignar el usuario al sector.");
+        toast.error("No se pudo asignar el usuario al sector.");
       }
     }
   };

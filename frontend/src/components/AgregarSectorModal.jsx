@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import ColorPresetPicker from "./ColorPresetPicker";
+import CharacterCounter from "./CharacterCounter";
+import { SECTOR_DESCRIPTION_MAX_LENGTH } from "../formLimits.js";
 import { DEFAULT_COLOR, colorChipStyle } from "../colorPresets.js";
 import { FiX, FiPlus, FiAlertCircle } from "react-icons/fi";
 import "../styles/components/AgregarSectorModal.css";
@@ -18,6 +20,7 @@ export default function AgregarSectorModal({
     color: DEFAULT_COLOR,
   });
   const [errors, setErrors] = useState({});
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!isOpen) {
@@ -50,23 +53,30 @@ export default function AgregarSectorModal({
     const nuevosErrores = {};
     if (!form.nombre.trim()) nuevosErrores.nombre = "El nombre es obligatorio.";
     else if (form.nombre.trim().length < 3) nuevosErrores.nombre = "El nombre debe tener al menos 3 caracteres.";
-    if (form.descripcion.trim().length > 500) nuevosErrores.descripcion = "La descripción no puede superar los 500 caracteres.";
+    if (form.descripcion.trim().length > SECTOR_DESCRIPTION_MAX_LENGTH) nuevosErrores.descripcion = `La descripción no puede superar los ${SECTOR_DESCRIPTION_MAX_LENGTH} caracteres.`;
     setErrors(nuevosErrores);
     return Object.keys(nuevosErrores).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validate()) return;
-    onSave?.({
-      nombre: form.nombre.trim(),
-      descripcion: form.descripcion.trim(),
-      color: form.color,
-    });
+    if (saving || !validate()) return;
+    setSaving(true);
+    try {
+      await onSave?.({
+        nombre: form.nombre.trim(),
+        descripcion: form.descripcion.trim(),
+        color: form.color,
+      });
+    } catch (error) {
+      setErrors((prev) => ({ ...prev, submit: error.message || "No se pudo guardar el sector." }));
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleOverlay = (e) => {
-    if (e.target === e.currentTarget) onClose();
+    if (e.target === e.currentTarget && !saving) onClose();
   };
 
   return (
@@ -77,7 +87,7 @@ export default function AgregarSectorModal({
             <span className="asm-kicker">{isEditing ? "MODIFICAR" : "NUEVO SECTOR"}</span>
             <h2>{isEditing ? "Editar sector" : "Agregar sector"}</h2>
           </div>
-          <button type="button" className="asm-close" onClick={onClose}><FiX /></button>
+          <button type="button" className="asm-close" onClick={onClose} disabled={saving}><FiX /></button>
         </div>
 
         <form className="asm-form" onSubmit={handleSubmit} noValidate>
@@ -89,7 +99,8 @@ export default function AgregarSectorModal({
 
           <div className="asm-field">
             <label htmlFor="sector-descripcion">Descripción</label>
-            <textarea id="sector-descripcion" name="descripcion" placeholder="Descripción del sector" value={form.descripcion} onChange={handleChange} rows={4} maxLength={500} />
+            <textarea id="sector-descripcion" name="descripcion" placeholder="Descripción del sector" value={form.descripcion} onChange={handleChange} rows={4} maxLength={SECTOR_DESCRIPTION_MAX_LENGTH} aria-describedby="sector-description-counter" />
+            <CharacterCounter id="sector-description-counter" value={form.descripcion} maxLength={SECTOR_DESCRIPTION_MAX_LENGTH} />
             {errors.descripcion && <p className="asm-error"><FiAlertCircle />{errors.descripcion}</p>}
           </div>
 
@@ -107,9 +118,10 @@ export default function AgregarSectorModal({
             <div><strong>{form.nombre || "Nombre del sector"}</strong><span>{form.descripcion || "Sin descripción"}</span></div>
           </div>
 
+          {errors.submit && <p className="asm-error" role="alert"><FiAlertCircle />{errors.submit}</p>}
           <div className="asm-footer">
-            <button type="button" className="asm-button asm-button-cancel" onClick={onClose}>Cancelar</button>
-            <button type="submit" className="asm-button asm-button-save">{isEditing ? "Guardar cambios" : "Agregar sector"}</button>
+            <button type="button" className="asm-button asm-button-cancel" onClick={onClose} disabled={saving}>Cancelar</button>
+            <button type="submit" className="asm-button asm-button-save" disabled={saving}>{saving ? "Guardando…" : isEditing ? "Guardar cambios" : "Agregar sector"}</button>
           </div>
         </form>
       </div>

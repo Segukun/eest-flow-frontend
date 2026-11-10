@@ -11,6 +11,8 @@ import {
 import { useToast } from "./Toast.jsx";
 import { useApp } from "../context/AppContext";
 import UserAvatar from "./layout/UserAvatar";
+import CharacterCounter from "./CharacterCounter";
+import { POST_TEXT_MAX_LENGTH } from "../formLimits.js";
 
 import "../styles/components/PublicarModal.css";
 
@@ -110,6 +112,7 @@ export default function PublicarModal({
 
   const canSubmit =
     (text.trim() || files.length > 0) &&
+    text.length <= POST_TEXT_MAX_LENGTH &&
     !submitting;
 
   /* ---------- cerrar al hacer clic en el fondo ---------- */
@@ -279,6 +282,8 @@ export default function PublicarModal({
 
           <textarea
             ref={textareaRef}
+            maxLength={POST_TEXT_MAX_LENGTH}
+            aria-describedby="post-create-counter"
             placeholder="Escribe algo..."
             value={text}
             onChange={(event) =>
@@ -286,6 +291,7 @@ export default function PublicarModal({
             }
             rows={5}
           />
+          <CharacterCounter id="post-create-counter" value={text} maxLength={POST_TEXT_MAX_LENGTH} />
 
           {/* ---------- ARCHIVOS SELECCIONADOS ---------- */}
 

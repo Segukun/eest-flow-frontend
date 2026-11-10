@@ -101,16 +101,16 @@
   height: 19px;
 
   border-radius: 50%;
-  background: var(--color-orange);
-  color: var(--color-white);
+  background: var(--theme-warm-text, var(--color-orange));
+  color: var(--color-graphite);
 
   font-size: 11px;
   font-weight: 700;
 }
 
 .filtroNotificacion.activo .contadorNoLeidas {
-  background: var(--theme-surface, var(--color-white));
-  color: var(--theme-green-text, var(--color-green));
+  background: var(--color-white);
+  color: var(--theme-green-fill, #047a35);
 }
 
 /* =========================================

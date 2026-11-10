@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../api.js";
+import { MEMBER_NAME_MAX_LENGTH } from "../formLimits.js";
 import { useApp } from "../context/AppContext";
 import "../styles/components/ModificarMiembro.css";
 
@@ -134,6 +135,8 @@ const ModificarMiembro = ({ miembro, onClose, onActualizado }) => {
 
     if (!formulario.nombre.trim()) {
       nuevosErrores.nombre = "El nombre no puede quedar vacío.";
+    } else if (formulario.nombre.trim().length > MEMBER_NAME_MAX_LENGTH) {
+      nuevosErrores.nombre = `El nombre puede tener como máximo ${MEMBER_NAME_MAX_LENGTH} caracteres.`;
     } else if (!nombreValido.test(formulario.nombre.trim())) {
       nuevosErrores.nombre = "El nombre solo puede contener letras.";
     }
@@ -266,6 +269,7 @@ const ModificarMiembro = ({ miembro, onClose, onActualizado }) => {
             <label htmlFor="modificar-nombre">Nombre</label>
             <input
               id="modificar-nombre"
+              maxLength={MEMBER_NAME_MAX_LENGTH}
               name="nombre"
               type="text"
               value={formulario.nombre}

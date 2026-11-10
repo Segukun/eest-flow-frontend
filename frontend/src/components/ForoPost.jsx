@@ -1,5 +1,7 @@
 
 import { useEffect, useState } from "react";
+import CharacterCounter from "./CharacterCounter";
+import { POST_TEXT_MAX_LENGTH } from "../formLimits.js";
 
 import {
   FiMoreVertical,
@@ -527,11 +529,14 @@ export default function ForoPost({
           <div className="foro-edit-area">
             <textarea
               value={editText}
+              maxLength={POST_TEXT_MAX_LENGTH}
+              aria-describedby={`post-edit-counter-${post.id}`}
               onChange={(event) =>
                 setEditText(event.target.value)
               }
               autoFocus
             />
+            <CharacterCounter id={`post-edit-counter-${post.id}`} value={editText} maxLength={POST_TEXT_MAX_LENGTH} />
 
             <div className="foro-edit-actions">
               <button
@@ -545,6 +550,7 @@ export default function ForoPost({
 
               <button
                 className="foro-edit-save"
+                disabled={!editText.trim() || editText.length > POST_TEXT_MAX_LENGTH}
                 onClick={onSaveEdit}
                 type="button"
               >
