@@ -1523,12 +1523,15 @@
   flex-direction: column;
   align-items: center;
   gap: 12px;
-  margin-top: 8px;
-  padding: 24px 0;
+  margin: 16px 12px 24px;
+  padding: 16px 8px;
+  border: 1px solid var(--theme-border, var(--color-border));
+  border-radius: var(--radius-lg);
+  background: var(--theme-surface, var(--color-white));
 }
 
 .foro-pagination-info {
-  color: var(--text-secondary, #6b7280);
+  color: var(--theme-secondary, #6b7a72);
   font-size: 13px;
 }
 
@@ -1543,36 +1546,69 @@
 .foro-pagination-btn {
   min-width: 36px;
   height: 36px;
-  padding: 0 12px;
-  border: 1px solid var(--border, #e5e7eb);
+  padding: 0 8px;
+  border: 1px solid var(--theme-border, var(--color-border));
   border-radius: 8px;
-  background: var(--card, #fff);
+  background: var(--theme-surface, var(--color-white));
+  color: var(--theme-text, var(--color-graphite));
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.2s, border-color 0.2s;
 }
 
 .foro-pagination-btn:hover:not(:disabled) {
-  border-color: var(--primary, #05903e);
-  background: var(--hover, #ffffff);
-  color: #1f151c;
+  border-color: var(--theme-green-text, var(--color-green));
+  background: var(--theme-hover, var(--color-bone));
 }
 
-.foro-pagination-btn.active {
-  border-color: var(--theme-secondary, #fff7ed);
-  background: var(--primary, #05903e);
-  color: white;
+.foro-pagination-btn.active,
+.foro-pagination-btn.active:disabled,
+.foro-pagination-btn.active:hover:not(:disabled) {
+  border-color: var(--theme-green-fill, #047a35);
+  background: var(--theme-green-fill, #047a35);
+  color: var(--color-white);
+  font-weight: 800;
+}
+
+.foro-pagination-btn:focus-visible {
+  outline: 2px solid var(--theme-green-text, var(--color-green));
+  outline-offset: 2px;
 }
 
 .foro-pagination-btn:disabled {
-  opacity: 0.4;
+  color: var(--theme-secondary, #6b7a72);
+  background: var(--theme-hover, var(--color-bone));
   cursor: not-allowed;
 }
 
 .foro-pagination-dots {
   padding: 0 4px;
-  color: var(--text-secondary, #9ca3af);
+  color: var(--theme-secondary, #6b7a72);
+}
+
+.foro-feed-region {
+  scroll-margin-top: 16px;
+}
+
+@media (max-width: 700px) {
+  .foro-feed-region {
+    scroll-margin-top: calc(var(--topbar-h) + 12px);
+  }
+  .foro-pagination {
+    /* Dejar libres los controles sobre el botón flotante (56px + 24px). */
+    margin-bottom: 96px;
+  }
+  .foro-pagination-controls {
+    gap: 2px;
+  }
+  .foro-pagination-dots {
+    padding-inline: 2px;
+  }
+  .foro-pagination-btn {
+    min-width: 30px;
+    padding-inline: 6px;
+  }
 }
 
 /* =========================================================

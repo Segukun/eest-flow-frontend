@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { POST_TEXT_MAX_LENGTH } from "../formLimits.js";
+import { FORUM_PAGE_SIZE, loadForumPage } from "../forumPagination.js";
 import { FiPlus } from "react-icons/fi";
 import { useSearchParams } from "react-router-dom";
 
@@ -53,6 +54,8 @@ export default function Foro() {
 
   const [posts, setPosts] = useState([]);
   const [sectors, setSectors] = useState([]);
+  const [sectorsLoaded, setSectorsLoaded] = useState(false);
+  const [linkedPost, setLinkedPost] = useState(null);
   const [newPost, setNewPost] = useState("");
   const [inlineFiles, setInlineFiles] = useState([]);
   const [search, setSearch] = useState("");
@@ -72,7 +75,12 @@ export default function Foro() {
   const [imageModal, setImageModal] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [pageRequest, setPageRequest] = useState({ page: 1, search: "" });
+  const [pagination, setPagination] = useState({ page: 1, limit: FORUM_PAGE_SIZE, total: 0, totalPages: 0 });
+  const currentPage = pagination.page;
+  const pageBusy = useRef(false);
+  const feedRef = useRef(null);
+  const scrollAfterLoad = useRef(false);
 
   // Estado del modal de pineado.
   const [pinModal, setPinModal] = useState(null);
@@ -81,69 +89,113 @@ export default function Foro() {
   // ID de la publicación que se quiere eliminar.
   const [deletePostId, setDeletePostId] = useState(null);
 
-  const POSTS_PER_PAGE = 10;
-
   const inlineInputRef = useRef(null);
   const createInputRef = useRef(null);
 
   const selectedPost = posts.find(
     (post) => String(post.id) === String(selectedPostId),
-  );
+  ) ?? (String(linkedPost?.id) === String(selectedPostId) ? linkedPost : null);
 
   /* ---------- cargar sectores ---------- */
 
   useEffect(() => {
+    let cancelled = false;
     fetchSectors()
-      .then((response) =>
+      .then((response) => {
+        if (cancelled) return;
         setSectors(
           Array.isArray(response)
             ? response
             : response?.data || [],
-        ),
-      )
-      .catch(() => {});
+        );
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setSectorsLoaded(true);
+      });
+    return () => { cancelled = true; };
   }, []);
 
-  /* ---------- cargar publicaciones ---------- */
+  /* ---------- paginación del servidor ---------- */
 
   useEffect(() => {
+    if (!sectorsLoaded || !currentUserId) return;
+    const controller = new AbortController();
     const load = async () => {
+      pageBusy.current = true;
+      setLoading(true);
+      setError("");
       try {
-        setLoading(true);
-        setError("");
-
-        const response = await fetchPosts({
-          page: 1,
-          limit: 50,
+        const data = await loadForumPage(fetchPosts, {
+          ...pageRequest,
+          signal: controller.signal,
         });
-
-        const apiPosts =
-          response?.data?.posts ??
-          response?.posts ??
-          [];
-
-        setPosts(
-          apiPosts.map((post) =>
-            mapPostFromApi(post, sectors, currentUserId),
-          ),
-        );
+        if (controller.signal.aborted) return;
+        setPosts(data.posts.map((post) => mapPostFromApi(post, sectors, currentUserId)));
+        setPagination(data.pagination);
       } catch (error) {
-        setError(
-          error.response?.data?.message ||
-            "No se pudieron cargar las publicaciones.",
-        );
+        if (!controller.signal.aborted) {
+          setError(error.response?.data?.message || error.message || "No se pudieron cargar las publicaciones.");
+        }
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) {
+          pageBusy.current = false;
+          setLoading(false);
+        }
       }
     };
-
     load();
-  }, [currentUserId, sectors]);
+    return () => controller.abort();
+  }, [pageRequest, currentUserId, sectors, sectorsLoaded]);
+
+  // Esperar al render de los nuevos posts: durante el loading el documento
+  // puede ser demasiado corto para desplazarse al inicio del feed.
+  useEffect(() => {
+    if (loading || error || !scrollAfterLoad.current) return;
+    scrollAfterLoad.current = false;
+    feedRef.current?.scrollIntoView({
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
+      block: "start",
+    });
+  }, [loading, error, posts]);
+
+  // El buscador consulta todo el foro; cada nueva búsqueda comienza en página 1.
+  useEffect(() => {
+    if (search.trim() === pageRequest.search) return;
+    const timer = setTimeout(() => {
+      scrollAfterLoad.current = true;
+      setPageRequest({ page: 1, search: search.trim() });
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search, pageRequest.search]);
+
+  const refreshPage = (page = currentPage) => {
+    setPageRequest({ page, search: search.trim() });
+  };
+
+  const handlePageChange = (page) => {
+    if (pageBusy.current || loading || search.trim() !== pageRequest.search ||
+        page < 1 || page > pagination.totalPages || (page === currentPage && !error)) return;
+    pageBusy.current = true;
+    setLoading(true);
+    setOpenMenuId(null);
+    scrollAfterLoad.current = true;
+    setPageRequest({ page, search: pageRequest.search });
+  };
+
+  const retryPage = () => {
+    if (pageBusy.current) return;
+    pageBusy.current = true;
+    setLoading(true);
+    setPageRequest((previous) => ({ ...previous }));
+  };
 
   /* ---------- cargar publicación desde enlace directo ---------- */
 
   useEffect(() => {
     if (loading || !selectedPostId) return;
+
+    if (String(linkedPost?.id) === String(selectedPostId)) return;
 
     if (
       posts.some(
@@ -162,10 +214,7 @@ export default function Foro() {
 
         if (cancelled || !raw?._id) return;
 
-        setPosts((previous) => [
-          mapPostFromApi(raw, sectors, currentUserId),
-          ...previous,
-        ]);
+        setLinkedPost(mapPostFromApi(raw, sectors, currentUserId));
       } catch {
         if (!cancelled) {
           toast.error("No se pudo abrir la publicación.");
@@ -181,6 +230,7 @@ export default function Foro() {
   }, [
     loading,
     selectedPostId,
+    linkedPost,
     posts,
     sectors,
     currentUserId,
@@ -231,12 +281,6 @@ export default function Foro() {
       `${Math.min(createInputRef.current.scrollHeight, max)}px`;
   }, [newPost, isCreateActive]);
 
-  /* ---------- reiniciar paginación al buscar ---------- */
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [search]);
-
   /* ---------- crear publicación ---------- */
 
   const createPost = async (arg) => {
@@ -271,17 +315,12 @@ export default function Foro() {
           throw new Error("No devolvió post");
         }
 
-        setPosts((previous) => [
-          mapPostFromApi(created, sectors, currentUserId),
-          ...previous,
-        ]);
-
         setNewPost("");
         setInlineFiles([]);
         setIsCreateActive(false);
 
         toast.success("Publicación creada");
-        setCurrentPage(1);
+        refreshPage(1);
 
         return true;
       } catch (error) {
@@ -347,6 +386,7 @@ export default function Foro() {
       );
 
       setPinModal(null);
+      refreshPage();
 
       toast.success(
         savedPinned
@@ -469,6 +509,7 @@ export default function Foro() {
     );
 
     toast.success("Publicación eliminada");
+    refreshPage();
   };
 
   /* ---------- guardar edición ---------- */
@@ -510,6 +551,7 @@ export default function Foro() {
       setEditText("");
 
       toast.success("Publicación actualizada");
+      if (pageRequest.search) refreshPage();
     } catch (error) {
       toast.error(
         error.response?.data?.message ||
@@ -582,41 +624,6 @@ export default function Foro() {
     }));
   };
 
-  /* ---------- búsqueda ---------- */
-
-  const filtered = posts.filter((post) => {
-    const query = search.toLowerCase();
-
-    return (
-      post.content.toLowerCase().includes(query) ||
-      post.author.toLowerCase().includes(query) ||
-      post.sectorName?.toLowerCase().includes(query)
-    );
-  });
-
-  /* ---------- ordenar publicaciones ---------- */
-
-  const sorted = [...filtered].sort((a, b) => {
-    if (a.pinned && !b.pinned) return -1;
-    if (!a.pinned && b.pinned) return 1;
-
-    return (
-      new Date(b.createdAt || 0) -
-      new Date(a.createdAt || 0)
-    );
-  });
-
-  /* ---------- paginación ---------- */
-
-  const totalPages = Math.ceil(
-    sorted.length / POSTS_PER_PAGE,
-  );
-
-  const paginatedPosts = sorted.slice(
-    (currentPage - 1) * POSTS_PER_PAGE,
-    currentPage * POSTS_PER_PAGE,
-  );
-
   /* ---------- render ---------- */
 
   return (
@@ -653,20 +660,18 @@ export default function Foro() {
           publishing={publishGuard.busy}
         />
 
-        {error && (
-          <div className="foro-empty">
-            {error}
-          </div>
-        )}
-
-        {loading ? (
-          <div className="foro-empty">
-            Cargando publicaciones...
-          </div>
-        ) : (
-          <div>
+        <div className="foro-feed-region" ref={feedRef} aria-busy={loading}>
+          {error && (
+            <div className="foro-empty" role="alert">
+              <p>{error}</p>
+              <button className="foro-pagination-btn" type="button" disabled={loading}
+                onClick={retryPage}>Reintentar</button>
+            </div>
+          )}
+          {loading && <p className="foro-empty" role="status">Cargando publicaciones...</p>}
+          {!loading && (
             <ForoFeed
-              posts={paginatedPosts}
+              posts={posts}
               currentUserId={currentUserId}
               canPinPosts={canPinPosts}
               onPin={handlePinClick}
@@ -697,15 +702,16 @@ export default function Foro() {
               onVerMenos={handleVerMenos}
             />
 
-            <ForoPagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              totalPosts={sorted.length}
-              visiblePosts={paginatedPosts.length}
-              onPageChange={setCurrentPage}
-            />
-          </div>
-        )}
+          )}
+          <ForoPagination
+            currentPage={currentPage}
+            totalPages={pagination.totalPages}
+            totalPosts={pagination.total}
+            visiblePosts={posts.length}
+            loading={loading || search.trim() !== pageRequest.search}
+            onPageChange={handlePageChange}
+          />
+        </div>
 
         <button
           className="foro-fab"
@@ -726,7 +732,7 @@ export default function Foro() {
         isOpen={!!selectedPostId}
         post={selectedPost}
         onClose={closeComments}
-        onCommentCreated={(id) =>
+        onCommentCreated={(id) => {
           setPosts((previous) =>
             previous.map((post) =>
               String(post.id) === String(id)
@@ -736,8 +742,11 @@ export default function Foro() {
                   }
                 : post,
             ),
-          )
-        }
+          );
+          setLinkedPost((post) => post && String(post.id) === String(id)
+            ? { ...post, commentsCount: post.commentsCount + 1 }
+            : post);
+        }}
       />
 
       <PublicarModal

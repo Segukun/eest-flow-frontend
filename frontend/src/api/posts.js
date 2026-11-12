@@ -4,6 +4,8 @@ export const fetchPosts = async ({
   page = 1,
   limit = 10,
   sectorId,
+  search,
+  signal,
 } = {}) => {
   const params = {
     page,
@@ -13,11 +15,13 @@ export const fetchPosts = async ({
   if (sectorId) {
     params.sectorId = sectorId;
   }
+  if (search) params.search = search;
 
   const { data } = await api.get(
     "/api/posts",
     {
       params,
+      signal,
     },
   );
 
