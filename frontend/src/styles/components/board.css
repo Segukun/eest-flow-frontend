@@ -78,6 +78,30 @@
   background: transparent;
 }
 
+/* El espacio restante lo asigna el layout, incluyendo la barra de selección.
+   Conservamos el máximo visual y el scroll horizontal del tablero. */
+.home--kanban .board {
+  flex: 1;
+  min-height: 0;
+  overflow-y: hidden;
+}
+
+.home--kanban .column {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: 100%;
+}
+
+.home--kanban .column__head {
+  flex-shrink: 0;
+}
+
+.home--kanban .column__body {
+  min-height: 0;
+  overscroll-behavior-y: contain;
+}
+
 /* Cada tarjeta y el botón de agregar ocupan su propia fila. */
 .column__body > .task-card,
 .column__body > .add-task__empty,

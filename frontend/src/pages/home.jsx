@@ -40,7 +40,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="home">
+    <div className={`home${view === "lista" ? "" : " home--kanban"}`}>
       <BoardHeader />
 
       <div className="home__board-wrap">

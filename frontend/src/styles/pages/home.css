@@ -1,6 +1,39 @@
 .home {
   padding: 24px 28px 40px;
 }
+
+.home--kanban {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+
+.home--kanban > .board-header {
+  flex-shrink: 0;
+}
+
+.home--kanban > .home__board-wrap {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.home--kanban .task-selection-toolbar,
+.home--kanban .home__board-wrap > [role="status"] {
+  flex-shrink: 0;
+}
+
+.home--kanban .board-scroll {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
 @media (max-width: 700px) {
   .home {
     padding: 16px;

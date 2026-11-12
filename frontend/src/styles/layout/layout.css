@@ -8,6 +8,21 @@
   background: var(--theme-background, var(--color-bone));
 }
 
+/* Solo Kanban: el padding del topbar responsive queda dentro del viewport.
+   Lista y las demás rutas conservan su altura y scroll naturales. */
+.app-shell:has(> .app-main > .home--kanban) {
+  height: 100dvh;
+  min-height: 0;
+}
+
+.app-main:has(> .home--kanban) {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .avatar {
   display: inline-grid;
   place-items: center;
