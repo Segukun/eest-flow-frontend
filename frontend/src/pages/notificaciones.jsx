@@ -1,8 +1,9 @@
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { useApp } from "../context/AppContext";
+import { useToast } from "../components/Toast.jsx";
 
 import {
   fetchNotifications,
@@ -43,6 +44,8 @@ const mapNotification = (notification) => ({
 const Notificaciones = () => {
   const navigate = useNavigate();
   const { reloadUnreadCount } = useApp();
+  const toast = useToast();
+  const openingIds = useRef(new Set());
 
   const [filtroActivo, setFiltroActivo] = useState("all");
   const [notificaciones, setNotificaciones] = useState([]);
@@ -162,28 +165,37 @@ const Notificaciones = () => {
   };
 
   const handleVer = async (notificacion) => {
-    if (!notificacion.leida) {
-      try {
-        await markNotificationRead(notificacion.id);
+    if (openingIds.current.has(notificacion.id)) return;
+    openingIds.current.add(notificacion.id);
 
-        setNotificaciones((prev) =>
-          prev.map((n) =>
-            n.id === notificacion.id
-              ? { ...n, leida: true }
-              : n
-          )
-        );
+    try {
+      if (!notificacion.leida) {
+        try {
+          await markNotificationRead(notificacion.id);
 
-        setNoLeidas((count) => Math.max(0, count - 1));
+          setNotificaciones((prev) =>
+            prev.map((n) =>
+              n.id === notificacion.id
+                ? { ...n, leida: true }
+                : n
+            )
+          );
 
-        await reloadUnreadCount();
-      } catch {
-        // Si falla el marcado, igualmente permitimos navegar.
+          setNoLeidas((count) => Math.max(0, count - 1));
+
+          // La sincronización global no debe demorar la navegación.
+          void reloadUnreadCount();
+        } catch (err) {
+          console.error("No se pudo marcar la notificación como leída:", err);
+          toast.error("No se pudo marcar la notificación como leída. Podés volver a intentarlo desde Notificaciones.");
+        }
       }
-    }
 
-    if (notificacion.link) {
-      navigate(notificacion.link);
+      if (notificacion.link) {
+        navigate(notificacion.link);
+      }
+    } finally {
+      openingIds.current.delete(notificacion.id);
     }
   };
 
@@ -212,6 +224,10 @@ const Notificaciones = () => {
       setMarking(false);
     }
   };
+
+  const notificacionesVisibles = filtroActivo === "unread"
+    ? notificaciones.filter((notificacion) => !notificacion.leida)
+    : notificaciones;
 
   return (
     <div id="contenedorNotificaciones">
@@ -268,9 +284,9 @@ const Notificaciones = () => {
               <h2>Algo salió mal</h2>
               <p>{error}</p>
             </div>
-          ) : notificaciones.length > 0 ? (
+          ) : notificacionesVisibles.length > 0 || pagination.page < pagination.totalPages ? (
             <>
-              {notificaciones.map((notificacion) => (
+              {notificacionesVisibles.map((notificacion) => (
                 <article
                   className={notificationPresentation(notificacion.categoria, notificacion.type, notificacion.leida).className}
                   key={notificacion.id}

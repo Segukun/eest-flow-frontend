@@ -32,6 +32,9 @@ export const markNotificationRead = async (
 ) => {
   const { data } = await api.patch(
     `/api/notifications/${notificationId}/read`,
+    undefined,
+    // Ver debe poder abrir el recurso aunque el marcado no responda.
+    { timeout: 5000 },
   );
 
   return data;

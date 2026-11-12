@@ -57,6 +57,25 @@
   align-items: stretch;
   gap: 12px;
   min-width: 0;
+  /* ~5 tarjetas de 114px + gaps de 12px + Agregar tarea (43px).
+     En pantallas bajas, dejamos espacio para la cabecera del tablero. */
+  max-height: clamp(15rem, calc(100dvh - 13rem), 43rem);
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--theme-border, var(--color-border)) transparent;
+}
+
+.column__body::-webkit-scrollbar {
+  width: 6px;
+}
+.column__body::-webkit-scrollbar-thumb {
+  background: var(--theme-border, var(--color-border));
+  border-radius: 999px;
+}
+.column__body::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 /* Cada tarjeta y el botón de agregar ocupan su propia fila. */
