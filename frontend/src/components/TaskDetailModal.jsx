@@ -492,7 +492,6 @@ export default function TaskDetailModal({
                     className="task-detail__empty"
                     onClick={() => setShowAttachments(true)}
                   >
-                    <FiPaperclip />
 
                     <span>
                       Todavía no hay archivos. Tocá para agregar.
