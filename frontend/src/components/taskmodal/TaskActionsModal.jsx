@@ -40,6 +40,8 @@ import {
 
 import UserAvatar from "../layout/UserAvatar.jsx";
 
+import { useToast } from "../Toast.jsx";
+
 function DueDateField({ value, onSave }) {
   const [text, setText] = useState(isoToDisplay(value));
   const [error, setError] = useState("");
@@ -239,6 +241,8 @@ export default function TaskActionsModal({
     uploadTaskAttachments,
     deleteTaskAttachment,
   } = useApp();
+
+  const toast = useToast();
 
   const isAdmin = currentUser?.accountType === "admin";
 
@@ -949,12 +953,19 @@ export default function TaskActionsModal({
                         ? " pill--outline-on"
                         : "")
                     }
-                    onClick={() => {
-                      updateTask(task.id, {
-                        column: c.id,
-                      });
-
-                      setPanel(null);
+                    onClick={async () => {
+                      try {
+                        await updateTask(task.id, { column: c.id });
+                        setPanel(null);
+                      } catch (error) {
+                        // moderación: el Toast ya se mostró; la tarjeta queda donde estaba
+                        if (!error?.handled) {
+                          toast.error(
+                            error?.response?.data?.message ||
+                              "No se pudo mover la tarea.",
+                          );
+                        }
+                      }
                     }}
                   >
                     {c.title}

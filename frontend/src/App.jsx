@@ -1,3 +1,4 @@
+
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import Login from "./pages/login";
@@ -27,13 +28,13 @@ function App() {
         <Route
           element={
             <ProtectedRoute>
-              <AppProvider>
-                <ToastProvider>
+              <ToastProvider>
+                <AppProvider>
                   <NotificationsProvider>
                     <Layout />
                   </NotificationsProvider>
-                </ToastProvider>
-              </AppProvider>
+                </AppProvider>
+              </ToastProvider>
             </ProtectedRoute>
           }
         >

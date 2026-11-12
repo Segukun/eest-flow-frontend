@@ -43,6 +43,7 @@ import {
 import { fetchNotifications } from "../api/notifications";
 import { updateTaskDrafts } from "../taskDrafts.js";
 import { applyTaskMove, executeTaskBatch } from "../taskSelection.js";
+import { useToast } from "../components/Toast.jsx";
 
 const AppContext = createContext(null);
 
@@ -60,6 +61,30 @@ export const PRIORITIES = {
   medium: { id: "medium", label: "Media", color: "#FFAA00" },
   high: { id: "high", label: "Alta", color: "#DC2626" },
 };
+
+export const MODERATION_DENIED_MESSAGE =
+  "No tienes permiso de mover esta tarjeta a Terminado. Prueba moverla a Revisión para que un moderador pueda verla";
+
+const MODERATOR_REQUIRED = "MODERATOR_REQUIRED";
+
+const isModerationError = (error) =>
+  error?.code === MODERATOR_REQUIRED ||
+  error?.response?.data?.code === MODERATOR_REQUIRED;
+
+// Misma regla que el backend (que es quien decide de verdad).
+function canMoveToCompleted(user, category) {
+  if (!user?.accountType) return true; // datos aún sin cargar: decide el servidor
+  if (user.accountType === "admin") return true;
+  if (!category || category.moderatorMode !== "custom") return true;
+
+  return (category.moderators ?? []).includes(String(user.id));
+}
+
+function createModerationError() {
+  const error = new Error(MODERATION_DENIED_MESSAGE);
+  error.code = MODERATOR_REQUIRED;
+  return error;
+}
 
 function getId(value) {
   if (value && typeof value === "object") {
@@ -160,6 +185,10 @@ function normalizeCategory(raw, fallback = {}) {
     color: source.color ?? fallback.color ?? "#05903e",
 
     sectors: source.sectors ?? fallback.sectors ?? [],
+
+    moderatorMode: source.moderatorMode ?? fallback.moderatorMode ?? "all",
+
+    moderators: normalizeIdList(source.moderators ?? fallback.moderators),
   };
 }
 
@@ -208,8 +237,6 @@ function normalizeUser(raw) {
   };
 }
 
-
-
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
@@ -248,11 +275,7 @@ function parseTaskDate(value) {
     return null;
   }
 
-  return new Date(
-    parsed.getFullYear(),
-    parsed.getMonth(),
-    parsed.getDate(),
-  );
+  return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
 }
 
 /**
@@ -260,21 +283,15 @@ function parseTaskDate(value) {
  * "hoy", "48" y "7".
  */
 function normalizeDueFilters(value) {
-  const values = Array.isArray(value)
-    ? value
-    : value
-      ? [value]
-      : [];
+  const values = Array.isArray(value) ? value : value ? [value] : [];
 
   const legacyValues = {
     hoy: "today",
-    "48": "48h",
-    "7": "week",
+    48: "48h",
+    7: "week",
   };
 
-  return values.map(
-    (item) => legacyValues[item] ?? item,
-  );
+  return values.map((item) => legacyValues[item] ?? item);
 }
 
 /**
@@ -288,11 +305,7 @@ function normalizeDueFilters(value) {
  *
  * Si se eligen varias, se aplica una unión (OR).
  */
-function matchesDueFilters(
-  dueDate,
-  selectedFilters,
-  today,
-) {
+function matchesDueFilters(dueDate, selectedFilters, today) {
   if (!selectedFilters.length) {
     return true;
   }
@@ -303,9 +316,7 @@ function matchesDueFilters(
     return selectedFilters.includes("noDate");
   }
 
-  const daysUntil = Math.round(
-    (due.getTime() - today.getTime()) / DAY_MS,
-  );
+  const daysUntil = Math.round((due.getTime() - today.getTime()) / DAY_MS);
 
   return selectedFilters.some((filter) => {
     switch (filter) {
@@ -419,6 +430,27 @@ export function AppProvider({ children }) {
       })
     : null;
 
+  const toast = useToast();
+
+  // Si el error es de moderación: avisa con Toast (salvo en lote) y lo marca como atendido.
+  const reportModerationError = (error, { silent = false } = {}) => {
+    if (!isModerationError(error)) return;
+
+    if (!silent) {
+      toast?.error?.(MODERATION_DENIED_MESSAGE);
+      error.handled = true;
+    }
+  };
+
+  const assertCanMoveToCompleted = (categoryId) => {
+    const category = categories.find(
+      (item) => String(item.id) === String(categoryId),
+    );
+
+    if (!canMoveToCompleted(currentUser, category)) {
+      throw createModerationError();
+    }
+  };
   /* ---------- categorías ---------- */
 
   const reloadUsers = useCallback(async () => {
@@ -725,11 +757,7 @@ export function AppProvider({ children }) {
   const visibleTasks = useMemo(() => {
     const now = new Date();
 
-    const today = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate(),
-    );
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
     const selectedPriorities = Array.isArray(filters.priorities)
       ? filters.priorities
@@ -738,16 +766,13 @@ export function AppProvider({ children }) {
     const selectedDue = normalizeDueFilters(filters.due);
 
     const selectedLabels = new Set(
-      (Array.isArray(filters.labels) ? filters.labels : [])
-        .map(String),
+      (Array.isArray(filters.labels) ? filters.labels : []).map(String),
     );
 
     return tasks
       .filter((task) => {
         // Categoría activa.
-        if (
-          String(task.categoryId) !== String(activeCategory)
-        ) {
+        if (String(task.categoryId) !== String(activeCategory)) {
           return false;
         }
 
@@ -776,11 +801,8 @@ export function AppProvider({ children }) {
             return false;
           }
 
-          const assignedToCurrentUser = (
-            task.members || []
-          ).some(
-            (memberId) =>
-              String(memberId) === String(currentUser.id),
+          const assignedToCurrentUser = (task.members || []).some(
+            (memberId) => String(memberId) === String(currentUser.id),
           );
 
           if (!assignedToCurrentUser) {
@@ -793,8 +815,8 @@ export function AppProvider({ children }) {
         if (selectedLabels.size > 0) {
           const taskLabels = (task.labelIds || []).map(String);
 
-          const matchesLabel = taskLabels.some(
-            (labelId) => selectedLabels.has(labelId),
+          const matchesLabel = taskLabels.some((labelId) =>
+            selectedLabels.has(labelId),
           );
 
           if (!matchesLabel) {
@@ -805,11 +827,7 @@ export function AppProvider({ children }) {
         // Vencimientos.
         if (
           selectedDue.length > 0 &&
-          !matchesDueFilters(
-            task.dueDate,
-            selectedDue,
-            today,
-          )
+          !matchesDueFilters(task.dueDate, selectedDue, today)
         ) {
           return false;
         }
@@ -817,92 +835,86 @@ export function AppProvider({ children }) {
         return true;
       })
       .sort((a, b) => a.order - b.order);
-  }, [
-    tasks,
-    activeCategory,
-    search,
-    filters,
-    currentUser,
-  ]);
+  }, [tasks, activeCategory, search, filters, currentUser]);
   /* ---------- acciones: tareas ---------- */
 
   const addTask = (columnId, title) =>
     track(async () => {
       if (!activeCategory) return;
 
-      const sameColumn = tasks.filter(
-        (t) => t.column === columnId && t.categoryId === activeCategory,
-      );
+      try {
+        if (columnId === "completed") assertCanMoveToCompleted(activeCategory);
 
-      const nextOrder = sameColumn.length
-        ? Math.max(...sameColumn.map((t) => t.order)) + 1
-        : 0;
+        const sameColumn = tasks.filter(
+          (t) => t.column === columnId && t.categoryId === activeCategory,
+        );
 
-      const created = await createTaskRequest({
-        title,
-        description: "",
-        priority: "medium",
-        state: columnId,
-        category: activeCategory,
-        order: nextOrder,
-      });
+        const nextOrder = sameColumn.length
+          ? Math.max(...sameColumn.map((t) => t.order)) + 1
+          : 0;
 
-      setTasks((prev) => [...prev, normalizeTask(created)]);
+        const created = await createTaskRequest({
+          title,
+          description: "",
+          priority: "medium",
+          state: columnId,
+          category: activeCategory,
+          order: nextOrder,
+        });
+
+        setTasks((prev) => [...prev, normalizeTask(created)]);
+      } catch (error) {
+        if (error?.handled) return; // el Toast ya avisó que no tiene permiso
+        console.error("No se pudo crear la tarea:", error);
+        reportModerationError(error);
+        throw error;
+      }
     });
 
   const updateTask = (id, patch) =>
     track(async () => {
       const payload = {};
 
-      if (patch.title !== undefined) {
-        payload.title = patch.title;
-      }
-
-      if (patch.description !== undefined) {
+      if (patch.title !== undefined) payload.title = patch.title;
+      if (patch.description !== undefined)
         payload.description = patch.description;
-      }
-
-      if (patch.priority !== undefined) {
-        payload.priority = patch.priority;
-      }
-
-      if (patch.column !== undefined) {
-        payload.state = patch.column;
-      }
-
-      if (patch.members !== undefined) {
-        payload.assignedUser = patch.members;
-      }
-
-      if (patch.labelIds !== undefined) {
-        payload.labels = patch.labelIds;
-      }
-
-      if (patch.dueDate !== undefined) {
-        payload.dueDate = patch.dueDate || null;
-      }
-
-      if (patch.order !== undefined) {
-        payload.order = patch.order;
-      }
+      if (patch.priority !== undefined) payload.priority = patch.priority;
+      if (patch.column !== undefined) payload.state = patch.column;
+      if (patch.members !== undefined) payload.assignedUser = patch.members;
+      if (patch.labelIds !== undefined) payload.labels = patch.labelIds;
+      if (patch.dueDate !== undefined) payload.dueDate = patch.dueDate || null;
+      if (patch.order !== undefined) payload.order = patch.order;
 
       const existing = tasks.find((task) => String(task.id) === String(id));
 
-      const updated = await updateTaskRequest(id, payload);
+      try {
+        if (
+          patch.column === "completed" &&
+          existing &&
+          existing.column !== "completed"
+        ) {
+          assertCanMoveToCompleted(existing.categoryId);
+        }
 
-      const normalized = normalizeTask(updated, {
-        ...existing,
-        ...patch,
-        id,
-      });
+        const updated = await updateTaskRequest(id, payload);
 
-      setTasks((prev) =>
-        prev.map((task) =>
-          String(task.id) === String(id) ? normalized : task,
-        ),
-      );
+        const normalized = normalizeTask(updated, {
+          ...existing,
+          ...patch,
+          id,
+        });
 
-      return normalized;
+        setTasks((prev) =>
+          prev.map((task) =>
+            String(task.id) === String(id) ? normalized : task,
+          ),
+        );
+
+        return normalized;
+      } catch (error) {
+        reportModerationError(error);
+        throw error;
+      }
     });
 
   // Archiva la tarea (soft delete): sale del tablero y pasa al archivero.
@@ -996,22 +1008,52 @@ export function AppProvider({ children }) {
       return normalized;
     });
 
-  const moveTask = (id, columnId, beforeId = null) =>
+  const moveTask = (id, columnId, beforeId = null, { silent = false } = {}) =>
     track(async () => {
       if (id === beforeId) return;
-      const updated = await moveTaskRequest(id, { state: columnId, beforeId });
-      setTasks((prev) => applyTaskMove(prev, id, columnId, beforeId));
-      return updated;
+
+      const moving = tasks.find((task) => String(task.id) === String(id));
+
+      try {
+        // Solo al ENTRAR a Terminado; reordenar dentro de Terminado es libre.
+        if (
+          moving &&
+          columnId === "completed" &&
+          moving.column !== "completed"
+        ) {
+          assertCanMoveToCompleted(moving.categoryId);
+        }
+
+        const updated = await moveTaskRequest(id, {
+          state: columnId,
+          beforeId,
+        });
+        setTasks((prev) => applyTaskMove(prev, id, columnId, beforeId));
+        return updated;
+      } catch (error) {
+        // la tarjeta no se movió: el estado solo cambia tras confirmar el servidor
+        reportModerationError(error, { silent });
+        throw error;
+      }
     });
 
   const runTaskBatch = async (ids, action, destination) => {
-    if (taskBatchLock.current || mutationsInFlight.current > 0) throw new Error("Ya hay una operación en curso. Intentá nuevamente cuando termine.");
-    if (!currentUser || (action === "archive" &&
-      !["admin", "collaborator"].includes(currentUser.accountType))) {
+    if (taskBatchLock.current || mutationsInFlight.current > 0)
+      throw new Error(
+        "Ya hay una operación en curso. Intentá nuevamente cuando termine.",
+      );
+    if (
+      !currentUser ||
+      (action === "archive" &&
+        !["admin", "collaborator"].includes(currentUser.accountType))
+    ) {
       throw new Error("No tenés permisos para esta acción.");
     }
-    if (!["move", "archive"].includes(action) ||
-      (action === "move" && !COLUMNS.some((column) => column.id === destination))) {
+    if (
+      !["move", "archive"].includes(action) ||
+      (action === "move" &&
+        !COLUMNS.some((column) => column.id === destination))
+    ) {
       throw new Error("Acción o destino no válido.");
     }
     taskBatchLock.current = true;
@@ -1019,7 +1061,13 @@ export function AppProvider({ children }) {
     try {
       return await track(async () => {
         const result = await executeTaskBatch({
-          ids, tasks, action, destination, move: moveTask, archive: deleteTask,
+          ids,
+          tasks,
+          action,
+          destination,
+          move: (taskId, targetColumn) =>
+            moveTask(taskId, targetColumn, null, { silent: true }),
+          archive: deleteTask,
         });
         // Reconcile positions and ambiguous network failures with server state.
         try {
@@ -1027,7 +1075,8 @@ export function AppProvider({ children }) {
           setTasks(raw.map((task) => normalizeTask(task)));
           tasksSignature.current = JSON.stringify(raw);
         } catch {
-          result.syncError = "No se pudo actualizar el tablero. Se conservan los cambios confirmados; reintentá la sincronización.";
+          result.syncError =
+            "No se pudo actualizar el tablero. Se conservan los cambios confirmados; reintentá la sincronización.";
         }
         return result;
       });
@@ -1039,17 +1088,27 @@ export function AppProvider({ children }) {
 
   /* ---------- acciones: categorías ---------- */
 
-  const addCategory = async ({ name, color, sectors: sectorIds }) => {
+  const addCategory = async ({
+    name,
+    color,
+    sectors: sectorIds,
+    moderatorMode = "all",
+    moderators = [],
+  }) => {
     const created = await createCategoryRequest({
       name,
       color,
       sectors: sectorIds,
+      moderatorMode,
+      moderators: moderatorMode === "custom" ? moderators : [],
     });
 
     const normalized = normalizeCategory(created, {
       name,
       color,
       sectors: sectorIds,
+      moderatorMode,
+      moderators,
     });
 
     setCategories((prev) => [...prev, normalized]);
@@ -1059,7 +1118,10 @@ export function AppProvider({ children }) {
     return normalized.id;
   };
 
-  const updateCategory = async (id, { name, color, sectors: sectorIds }) => {
+  const updateCategory = async (
+    id,
+    { name, color, sectors: sectorIds, moderatorMode, moderators },
+  ) => {
     const existing = categories.find(
       (category) => String(category.id) === String(id),
     );
@@ -1068,6 +1130,8 @@ export function AppProvider({ children }) {
       name,
       color,
       sectors: sectorIds,
+      moderatorMode,
+      moderators: moderatorMode === "custom" ? moderators : [],
     });
 
     const normalized = normalizeCategory(updated, {
@@ -1075,6 +1139,8 @@ export function AppProvider({ children }) {
       name: name ?? existing?.name,
       color: color ?? existing?.color,
       sectors: sectorIds ?? existing?.sectors,
+      moderatorMode: moderatorMode ?? existing?.moderatorMode,
+      moderators: moderators ?? existing?.moderators,
     });
 
     setCategories((prev) =>
@@ -1083,22 +1149,30 @@ export function AppProvider({ children }) {
       ),
     );
 
+    // Quitar sectores puede haber desasignado gente de tareas: se vuelve a leer el tablero.
+    loadTasks({ silent: true });
+
     return normalized.id;
   };
 
-  const deleteCategory = async (id) => {
-    if (categories.length <= 1) return;
 
-    await deleteCategoryRequest(id);
+const deleteCategory = async (id) => {
+  await deleteCategoryRequest(id);
 
-    setCategories((prev) => prev.filter((c) => c.id !== id));
+  const remainingCategories = categories.filter(
+    (category) => String(category.id) !== String(id),
+  );
 
-    if (activeCategory === id) {
-      const fallback = categories.find((c) => c.id !== id);
+  setCategories(remainingCategories);
 
-      setActiveCategory(fallback?.id ?? null);
-    }
-  };
+  // Si eliminamos la categoría activa, seleccionamos otra disponible.
+  if (String(activeCategory) === String(id)) {
+    setActiveCategory(remainingCategories[0]?.id ?? null);
+  }
+
+  return true;
+};
+
 
   /* ---------- acciones: etiquetas ---------- */
 

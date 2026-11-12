@@ -10,6 +10,8 @@ const TYPE_LABELS = {
   comment_reply: "Respuesta",
   task_assigned: "Tarea asignada",
   task_updated: "Tarea actualizada",
+  category_sector_removed: "Gestión de sectores",
+  category_moderator_selected: "Moderación",
 };
 
 export function notificationPresentation(category, type, read) {
