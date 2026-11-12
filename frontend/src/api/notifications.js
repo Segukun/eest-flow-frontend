@@ -1,3 +1,4 @@
+
 import api from "../api";
 
 export const fetchNotifications = async ({
@@ -27,9 +28,7 @@ export const fetchUnreadCount = async () => {
   return data;
 };
 
-export const markNotificationRead = async (
-  notificationId,
-) => {
+export const markNotificationRead = async (notificationId) => {
   const { data } = await api.patch(
     `/api/notifications/${notificationId}/read`,
     undefined,

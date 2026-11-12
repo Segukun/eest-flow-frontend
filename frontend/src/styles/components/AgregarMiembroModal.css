@@ -1,0 +1,537 @@
+
+/* =========================================================
+   AGREGAR MIEMBRO
+   EESTFlow - Técnica digital
+========================================================= */
+
+.asm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(31, 21, 28, 0.45);
+  backdrop-filter: blur(4px);
+  animation: asm-fade 0.2s ease;
+}
+
+.asm-modal {
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow: hidden;
+  border: 1px solid var(--theme-border, #e6dcbf);
+  border-radius: 20px;
+  background: var(--theme-surface, #fff);
+  color: var(--theme-text, #1f151c);
+  box-shadow: 0 20px 60px -12px rgba(31, 21, 28, 0.25);
+  animation: asm-slide 0.25s ease;
+}
+
+.asm-member-modal {
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.asm-member-modal .asm-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 24px;
+  border-bottom: 1px solid var(--theme-border, #e6dcbf);
+  flex-shrink: 0;
+}
+
+.asm-member-modal .asm-kicker {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--theme-green-text, #05903e);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+}
+
+.asm-member-modal .asm-header h2 {
+  margin: 0;
+  color: var(--theme-text, #1f151c);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 24px;
+}
+
+.asm-member-modal .asm-close {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--theme-border, #e6dcbf);
+  border-radius: 9999px;
+  background: var(--theme-surface-soft, #fffcf7);
+  color: var(--theme-secondary, #756b70);
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.asm-member-modal .asm-close:hover:not(:disabled) {
+  background: var(--theme-hover, #f4f4f5);
+  color: var(--theme-text, #1f151c);
+}
+
+.asm-member-modal .asm-close:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   FORMULARIO
+========================================================= */
+
+.asm-member-modal .asm-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+  max-height: calc(90vh - 90px);
+  overflow-y: auto;
+}
+
+.asm-member-modal .asm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.asm-member-modal .asm-field label {
+  color: var(--theme-text, #1f151c);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* =========================================================
+   BUSCADOR
+========================================================= */
+
+.asm-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 12px;
+  border: 1px solid var(--theme-border, #e6dcbf);
+  border-radius: 12px;
+  background: var(--theme-surface-soft, #fffcf7);
+  transition: 0.2s;
+}
+
+.asm-search:focus-within {
+  border-color: var(--theme-green-text, #05903e);
+  background: var(--theme-surface, #fff);
+  box-shadow: 0 0 0 3px rgba(5, 144, 62, 0.12);
+}
+
+.asm-search > svg {
+  flex: none;
+  color: var(--theme-secondary, #756b70);
+}
+
+.asm-search input {
+  width: 100%;
+  min-width: 0;
+  padding: 12px 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--theme-text, #1f151c);
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.asm-search input::placeholder {
+  color: var(--theme-secondary, #93898e);
+}
+
+.asm-search input:focus {
+  box-shadow: none;
+}
+
+/* =========================================================
+   ERRORES
+========================================================= */
+
+.asm-member-modal .asm-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin: 0;
+  color: var(--theme-danger-text, var(--color-danger, #dc2626));
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.asm-member-modal .asm-error svg {
+  flex: none;
+  margin-top: 1px;
+}
+
+/* =========================================================
+   LISTA DE USUARIOS
+========================================================= */
+
+.asm-users-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding-right: 3px;
+}
+
+.asm-users-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.asm-users-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.asm-users-list::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  background: var(--theme-border, #e6dcbf);
+}
+
+.asm-user-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+  border: 1px solid var(--theme-border, #e6dcbf);
+  border-radius: 12px;
+  background: var(--theme-surface, #fff);
+  color: var(--theme-text, #1f151c);
+  cursor: pointer;
+  text-align: left;
+  transition: 0.15s ease;
+}
+
+.asm-user-option:hover:not(:disabled) {
+  border-color: var(--theme-green-text, #05903e);
+  background: var(--theme-surface-soft, #fffcf7);
+}
+
+.asm-user-option-selected {
+  border-color: var(--theme-green-text, #05903e);
+  background: color-mix(
+    in srgb,
+    var(--theme-green-fill, #05903e) 7%,
+    var(--theme-surface, #fff)
+  );
+}
+
+.asm-user-option:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   AVATARES DE USUARIOS
+========================================================= */
+
+.asm-user-avatar.user-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  max-width: 40px;
+  max-height: 40px;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  box-sizing: border-box;
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.asm-user-avatar .user-avatar__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+/* =========================================================
+   INFORMACIÓN DEL USUARIO
+========================================================= */
+
+.asm-user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.asm-user-info strong {
+  overflow: hidden;
+  color: var(--theme-text, #1f151c);
+  font-size: 14px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.asm-user-info small {
+  overflow: hidden;
+  color: var(--theme-secondary, #756b70);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* =========================================================
+   CHECK DE SELECCIÓN
+========================================================= */
+
+.asm-user-check {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--theme-green-fill, #05903e);
+  color: #fff;
+}
+
+/* =========================================================
+   LISTA VACÍA
+========================================================= */
+
+.asm-users-empty {
+  margin: 15px 0;
+  padding: 20px;
+  border: 1px dashed var(--theme-border, #e6dcbf);
+  border-radius: 12px;
+  background: var(--theme-surface-soft, #fffcf7);
+  color: var(--theme-secondary, #756b70);
+  font-size: 14px;
+  text-align: center;
+}
+
+/* =========================================================
+   USUARIO SELECCIONADO
+========================================================= */
+
+.asm-selected-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid color-mix(
+    in srgb,
+    var(--theme-green-fill, #05903e) 30%,
+    transparent
+  );
+  border-radius: 12px;
+  background: color-mix(
+    in srgb,
+    var(--theme-green-fill, #05903e) 6%,
+    var(--theme-surface, #fff)
+  );
+}
+
+.asm-selected-user__avatar.user-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  max-width: 36px;
+  max-height: 36px;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  box-sizing: border-box;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.asm-selected-user__avatar .user-avatar__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+.asm-selected-user > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.asm-selected-user strong {
+  overflow: hidden;
+  color: var(--theme-text, #1f151c);
+  font-size: 14px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.asm-selected-user span {
+  overflow: hidden;
+  color: var(--theme-secondary, #756b70);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+.asm-member-modal .asm-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--theme-border, #e6dcbf);
+  margin-top: 4px;
+}
+
+.asm-member-modal .asm-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border: 1px solid transparent;
+  border-radius: 9999px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.asm-member-modal .asm-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.asm-member-modal .asm-button-cancel {
+  border-color: var(--theme-border, #e6dcbf);
+  background: var(--theme-surface, #fff);
+  color: var(--theme-text, #1f151c);
+}
+
+.asm-member-modal .asm-button-cancel:hover:not(:disabled) {
+  background: var(--theme-surface-soft, #fffcf7);
+}
+
+.asm-member-modal .asm-button-save {
+  background: var(--theme-green-fill, #05903e);
+  color: #fff;
+  box-shadow: 0 1px 2px rgba(5, 144, 62, 0.2);
+}
+
+.asm-member-modal .asm-button-save:hover:not(:disabled) {
+  background: var(--theme-green-hover, #047a35);
+}
+
+/* =========================================================
+   ANIMACIONES
+========================================================= */
+
+@keyframes asm-fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes asm-slide {
+  from {
+    transform: translateY(12px) scale(0.98);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 600px) {
+  .asm-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .asm-member-modal {
+    max-width: 100%;
+    max-height: 94dvh;
+    border-radius: 17px 17px 0 0;
+    border-bottom: 0;
+  }
+
+  .asm-member-modal .asm-header {
+    padding: 18px;
+  }
+
+  .asm-member-modal .asm-form {
+    max-height: calc(94dvh - 75px);
+    padding: 18px;
+  }
+
+  .asm-member-modal .asm-footer {
+    flex-direction: column-reverse;
+  }
+
+  .asm-member-modal .asm-button {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .asm-overlay,
+  .asm-modal {
+    animation: none;
+  }
+
+  .asm-member-modal .asm-button,
+  .asm-user-option {
+    transition: none;
+  }
+}

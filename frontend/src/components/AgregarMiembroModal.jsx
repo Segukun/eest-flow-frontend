@@ -7,7 +7,7 @@ import {
   FiCheck,
 } from "react-icons/fi";
 import api from "../api.js";
-import "../styles/components/AgregarSectorModal.css";
+import "../styles/components/AgregarMiembroModal.css";
 
 import UserAvatar from "./layout/UserAvatar.jsx";
 

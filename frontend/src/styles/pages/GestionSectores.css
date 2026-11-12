@@ -1,500 +1,625 @@
-/* EEST Flow - Gestion de Sectores - Lista completa + Modales */
+/* =========================================================
+   GESTIÓN DE SECTORES
+   EESTFlow · Técnica digital
+========================================================= */
 
 .gs-content {
-  padding: 24px 32px;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  background: var(--theme-background, #fff9ed);
-  font-family: "Inter", system-ui, sans-serif;
-  color: var(--theme-text, #1f151c);
+  --gs-radius-sm: 9px;
+  --gs-radius-md: 12px;
+  --gs-radius-lg: 16px;
+  --gs-card-shadow: 0 2px 8px rgba(31, 21, 28, 0.035);
+
   width: 100%;
   min-width: 0;
   max-width: 100%;
-  box-sizing: border-box;
-  overflow: visible;
   min-height: 100vh;
-}
-
-.gs-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid var(--theme-border, rgba(230, 220, 191, 0.5));
-  padding-bottom: 16px;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-.gs-header h1 {
-  font-size: 30px;
-  font-weight: 700;
-  margin: 0;
-}
-.gs-header p {
-  font-size: 14px;
-  color: var(--theme-secondary, rgba(31, 21, 28, 0.7));
-  margin: 4px 0 0;
-}
-
-.gs-primary {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
-  background: var(--theme-green-fill, #05903e);
-  color: white;
-  border: 0;
-  border-radius: 9999px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-}
-.gs-primary:hover {
-  background: var(--theme-green-hover, #047a35);
-}
-
-/* LISTA FULL WIDTH */
-.gs-sectores-list {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-}
-.gs-sectores-list--full {
-  width: 100%;
-}
-
-.gs-sector-card {
-  background: var(--theme-surface, white);
-  border: 1px solid var(--theme-border, #e6dcbf);
-  border-radius: 16px;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  box-shadow: 0 4px 20px -2px rgba(31, 21, 28, 0.05);
-  transition: 0.2s;
-  width: 100%;
-  min-width: 0;
-  max-width: 100%;
   box-sizing: border-box;
-}
-.gs-sector-card:hover {
-  border-color: var(--theme-border, #dc9655);
-}
 
-/* Preserve each sector's hue while lifting it against dark surfaces. */
-:root[data-theme="oscuro"] :is(.gs-sector-card, .gsd-modal) {
-  --gs-accent: color-mix(
-    in srgb,
-    var(--sector-color) var(--theme-accent-weight),
-    var(--color-bone)
-  );
-}
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
 
-.gs-sector-card-head {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 12px;
-}
-.gs-sector-info {
-  min-width: 0;
-  flex: 1;
-}
-.gs-sector-info,
-.gs-sector-description {
-  max-width: 100%;
-  overflow-wrap: anywhere;
-  word-break: normal;
-  white-space: normal;
-}
-.gs-sector-description {
-  margin: 0;
-}
-.gs-sector-icon {
-  width: 48px;
-  height: 48px;
+  padding: 28px 32px;
+
+  color: var(--theme-text, #1f151c);
   background: var(--theme-background, #fff9ed);
-  border: 1px solid var(--theme-border, #e6dcbf);
-  border-radius: 12px;
-  display: grid;
-  place-items: center;
-  font-size: 20px;
-}
-.gs-sector-icon--large {
-  width: 44px;
-  height: 44px;
-  border: 0;
-}
-.gs-sector-cat {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.6px;
-  text-transform: uppercase;
-}
-.gs-sector-card-head h3 {
-  font-size: 18px;
-  font-weight: 700;
-  margin: 2px 0 0;
-}
-.gs-sector-badge {
-  margin-left: auto;
-  padding: 4px 10px;
-  border-radius: 9999px;
-  font-size: 12px;
-  font-weight: 500;
-  white-space: nowrap;
-}
 
-.gs-sector-members-preview {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.gs-member-preview {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px;
-  background: var(--theme-surface-soft, #fffcf7);
-  border: 1px solid var(--theme-border, rgba(230, 220, 191, 0.8));
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 500;
-}
-.gs-member-avatar {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  color: white;
-  font-size: 11px;
-  font-weight: 700;
-}
-.gs-more {
-  font-size: 12px;
-  color: var(--theme-secondary, rgba(31, 21, 28, 0.5));
-  padding: 4px 8px;
-}
-
-.gs-sector-card-foot {
-  border-top: 1px solid var(--theme-border, rgba(230, 220, 191, 0.5));
-  padding-top: 12px;
-  display: flex;
-  justify-content: flex-end;
-}
-.gs-secondary {
-  padding: 6px 20px;
-  border-radius: 9999px;
-  border: 1px solid var(--theme-green-text, #05903e);
-  background: var(--theme-surface, white);
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.gs-add-sector {
-  padding: 16px;
-  border-radius: 16px;
-  border: 2px dashed var(--theme-border, #e6dcbf);
-  background: var(--theme-surface-soft, rgba(255, 252, 247, 0.5));
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 12px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  min-width: min(600px, 100%);
-}
-.gs-add-sector:hover {
-  border-color: var(--theme-green-text, #05903e);
-  background: rgba(5, 144, 62, 0.05);
-}
-.gs-add-sector-icon {
-  width: 28px;
-  height: 28px;
-  background: rgba(5, 144, 62, 0.1);
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  color: var(--theme-green-text, #05903e);
-}
-
-/* MODAL ADMINISTRAR - nuevo */
-.gsd-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(31, 21, 28, 0.45);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  z-index: 1000;
-  animation: gsd-fade 0.2s ease;
-}
-
-.gsd-modal {
-  width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
-  max-width: 560px;
-  max-height: 85vh;
-  background: var(--theme-surface, white);
-  border-radius: 20px;
-  border: 1px solid var(--theme-border, #e6dcbf);
-  box-shadow: 0 20px 60px -12px rgba(31, 21, 28, 0.25);
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  animation: gsd-slide 0.25s ease;
-}
-
-@keyframes gsd-fade {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-@keyframes gsd-slide {
-  from {
-    transform: translateY(12px) scale(0.98);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0) scale(1);
-    opacity: 1;
-  }
-}
-
-.gsd-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 20px 24px;
-  border-bottom: 1px solid var(--theme-border, rgba(230, 220, 191, 0.6));
-  flex-shrink: 0;
-}
-.gsd-header-left {
-  display: flex;
-  flex: 1;
-  min-width: 0;
-  gap: 12px;
-  align-items: flex-start;
-}
-.gs-sector-icon,
-.gs-icon-btn {
-  flex-shrink: 0;
-}
-.gsd-header h2 {
-  font-size: 20px;
-  font-weight: 700;
-  margin: 0;
-}
-.gsd-header span {
-  font-size: 12px;
-  color: var(--theme-warm-text, #dc9655);
-}
-
-.gsd-members-head {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 24px 0;
-  flex-shrink: 0;
-}
-.gsd-members-head h4 {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--theme-secondary, rgba(31, 21, 28, 0.7));
-  letter-spacing: 0.6px;
-  margin: 0;
-}
-
-.gsd-members-list {
-  padding: 16px 24px;
-  flex: 0 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.gs-detail-member {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px;
-  background: var(--theme-surface-soft, #fffcf7);
-  border: 1px solid var(--theme-border, rgba(230, 220, 191, 0.7));
-  border-radius: 12px;
-}
-.gs-detail-member-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.gs-member-avatar--lg {
-  width: 32px;
-  height: 32px;
-}
-.gs-dm-name {
-  font-size: 12px;
-  font-weight: 600;
-  margin: 0;
-}
-.gs-dm-sub {
-  font-size: 10px;
-  color: var(--theme-warm-text, #dc9655);
-  margin: 0;
-}
-.gs-dm-actions {
-  display: flex;
-  gap: 6px;
-}
-.gs-dm-actions button {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: 0;
-  background: transparent;
-  color: var(--theme-secondary, rgba(31, 21, 28, 0.5));
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-}
-.gs-dm-actions button:hover {
-  background: var(--theme-surface, white);
-}
-
-.gs-detail-foot {
-  border-top: 1px solid var(--theme-border, rgba(230, 220, 191, 0.6));
-  padding: 16px 24px;
-  display: flex;
-  justify-content: space-between;
-  flex-shrink: 0;
-}
-.gs-detail-foot button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: transparent;
-  border: 0;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-}
-.gs-danger {
-  color: var(--theme-danger-text, rgba(220, 38, 38, 0.8));
-}
-
-.gs-chip {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
-  background: var(--theme-background, #fff9ed);
-  border: 1px solid rgba(220, 150, 85, 0.4);
-  border-radius: 9999px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-}
-.gs-icon-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 1px solid var(--theme-border, #e6dcbf);
-  background: var(--theme-surface-soft, #fffcf7);
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-}
-.gs-empty {
-  text-align: center;
-  padding: 12px;
-  color: var(--theme-secondary, rgba(31, 21, 28, 0.5));
-  font-size: 13px;
-}
-
-.gs-detail-foot {
-  flex-wrap: wrap;
-  gap: 12px;
-}
-.gs-detail-foot button,
-.gs-chip {
-  flex-shrink: 0;
-}
-
-@media (max-width: 600px) {
-  .gsd-modal {
-    max-width: 100%;
-    max-height: 90vh;
-  }
-  .gs-content {
-    padding: 16px;
-  }
-  .gs-sector-card-head {
-    grid-template-columns: auto minmax(0, 1fr);
-  }
-  .gs-sector-badge {
-    grid-column: 2;
-    justify-self: start;
-    margin-left: 0;
-  }
+  font-family: "Inter", system-ui, sans-serif;
 }
 
 /* =========================================================
-   AVATARES DE MIEMBROS
-   Vista previa de sectores y modal de administración
+   ENCABEZADO
 ========================================================= */
 
-.gs-member-avatar.user-avatar {
+.gs-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 2px 0 20px;
+  border-bottom: 1px solid var(--theme-border, #e6dcbf);
+}
+
+.gs-header__content {
+  min-width: 0;
+}
+
+.gs-header__eyebrow {
+  display: block;
+  margin-bottom: 7px;
+
+  color: var(--theme-green-text, #05903e);
+
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.13em;
+}
+
+.gs-header h1 {
+  margin: 0;
+
+  color: var(--theme-text, #1f151c);
+
+  font-size: clamp(25px, 2.6vw, 31px);
+  font-weight: 750;
+  letter-spacing: -0.045em;
+  line-height: 1.2;
+}
+
+.gs-header p {
+  max-width: 640px;
+  margin: 8px 0 0;
+
+  color: var(--theme-secondary, #756b70);
+
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+/* =========================================================
+   BOTÓN PRINCIPAL
+========================================================= */
+
+.gs-primary {
+  min-height: 40px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
 
-  flex: 0 0 28px;
+  padding: 9px 16px;
 
+  border: 1px solid var(--theme-green-fill, #05903e);
+  border-radius: 10px;
+
+  color: #fff;
+  background: var(--theme-green-fill, #05903e);
+
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 650;
+
+  cursor: pointer;
+
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.gs-primary:hover {
+  border-color: var(--theme-green-hover, #047a35);
+  background: var(--theme-green-hover, #047a35);
+  box-shadow: 0 3px 9px rgba(5, 144, 62, 0.16);
+}
+
+.gs-primary:active {
+  transform: translateY(1px);
+}
+
+.gs-primary svg {
+  font-size: 15px;
+}
+
+/* =========================================================
+   BARRA DE BÚSQUEDA Y FILTROS
+========================================================= */
+
+.gs-sector-toolbar {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+
+  padding: 13px;
+
+  border: 1px solid var(--theme-border, #e6dcbf);
+  border-radius: var(--gs-radius-lg);
+
+  background: var(--theme-surface, #fff);
+
+  box-shadow: var(--gs-card-shadow);
+}
+
+.gs-sector-search {
+  min-width: 0;
+  min-height: 39px;
+
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  padding: 0 11px;
+
+  border: 1px solid var(--theme-border, #e6dcbf);
+  border-radius: var(--gs-radius-sm);
+
+  color: var(--theme-secondary, #756b70);
+  background: var(--theme-surface-soft, #fffcf7);
+
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+
+.gs-sector-search:focus-within {
+  border-color: var(--theme-green-fill, #05903e);
+  background: var(--theme-surface, #fff);
+  box-shadow: 0 0 0 3px rgba(5, 144, 62, 0.09);
+}
+
+.gs-sector-search svg {
+  flex: 0 0 auto;
+  font-size: 15px;
+}
+
+.gs-sector-search input {
+  width: 100%;
+  min-width: 0;
+  height: 37px;
+
+  padding: 0;
+
+  border: 0;
+  outline: 0;
+
+  color: var(--theme-text, #1f151c);
+  background: transparent;
+
+  font-family: inherit;
+  font-size: 12px;
+}
+
+.gs-sector-search input::placeholder {
+  color: var(--theme-secondary, #93898e);
+  opacity: 0.85;
+}
+
+.gs-access-filters {
+  min-height: 39px;
+
+  display: flex;
+  align-items: center;
+  gap: 3px;
+
+  padding: 3px;
+
+  border: 1px solid var(--theme-border, #e6dcbf);
+  border-radius: var(--gs-radius-sm);
+
+  background: var(--theme-surface-soft, #f7f2e9);
+}
+
+.gs-access-filters button {
+  min-height: 31px;
+
+  padding: 6px 11px;
+
+  border: 0;
+  border-radius: 7px;
+
+  color: var(--theme-secondary, #756b70);
+  background: transparent;
+
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+
+  cursor: pointer;
+  white-space: nowrap;
+
+  transition:
+    color 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.gs-access-filters button:hover:not(.is-active) {
+  color: var(--theme-text, #1f151c);
+}
+
+.gs-access-filters button.is-active {
+  color: var(--theme-text, #1f151c);
+  background: var(--theme-surface, #fff);
+  box-shadow: 0 1px 3px rgba(31, 21, 28, 0.1);
+}
+
+.gs-sector-toolbar > .gs-primary {
+  justify-self: end;
+  white-space: nowrap;
+}
+
+/* =========================================================
+   GRUPOS DE SECTORES
+========================================================= */
+
+.gs-sector-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.gs-sector-group {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.gs-sector-group__heading,
+.gs-requests-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.gs-section-kicker {
+  display: block;
+  margin-bottom: 5px;
+
+  color: var(--theme-green-text, #05903e);
+
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+}
+
+.gs-sector-group__heading h2,
+.gs-requests-heading h2 {
+  margin: 0;
+
+  color: var(--theme-text, #1f151c);
+
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.3;
+}
+
+.gs-sector-group__heading p,
+.gs-requests-heading p {
+  margin: 5px 0 0;
+
+  color: var(--theme-secondary, #756b70);
+
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.gs-group-count,
+.gs-requests-count {
+  min-width: 31px;
+  height: 31px;
+  flex: 0 0 auto;
+
+  display: grid;
+  place-items: center;
+
+  padding: 0 9px;
+
+  border: 1px solid var(--theme-border, #e6dcbf);
+  border-radius: 9px;
+
+  color: var(--theme-secondary, #756b70);
+  background: var(--theme-surface, #fff);
+
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* =========================================================
+   GRID DE TARJETAS
+========================================================= */
+
+.gs-sectores-list.gs-sectores-list--full {
+  width: 100%;
+  min-width: 0;
+
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(100%, 340px), 1fr)
+  );
+
+  align-items: stretch;
+  gap: 16px;
+}
+
+/* =========================================================
+   TARJETA DEL SECTOR
+========================================================= */
+
+.gs-sector-card {
+  position: relative;
+  min-width: 0;
+  min-height: 260px;
+  box-sizing: border-box;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 17px;
+
+  padding: 19px;
+
+  overflow: hidden;
+
+  border: 1px solid var(--theme-border, #e6dcbf);
+  border-radius: 14px;
+
+  background: var(--theme-surface, #fff);
+
+  box-shadow: 0 2px 9px rgba(31, 21, 28, 0.025);
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.gs-sector-card:hover {
+  border-color: color-mix(
+    in srgb,
+    var(--sector-color, #05903e) 35%,
+    var(--theme-border, #e6dcbf)
+  );
+
+  box-shadow: 0 7px 20px -14px rgba(31, 21, 28, 0.22);
+  transform: translateY(-1px);
+}
+
+.gs-sector-card__main {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.gs-sector-card-head {
+  min-width: 0;
+
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 11px;
+}
+
+.gs-sector-icon {
+  width: 43px;
+  height: 43px;
+  flex: 0 0 43px;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid var(--theme-border, #e6dcbf);
+  border-radius: 11px;
+
+  font-size: 18px;
+}
+
+.gs-sector-icon--large {
+  width: 45px;
+  height: 45px;
+  flex-basis: 45px;
+
+  border: 0;
+  border-radius: 12px;
+
+  font-size: 19px;
+}
+
+.gs-sector-info {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.gs-sector-cat {
+  display: block;
+
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+  line-height: 1.3;
+}
+
+.gs-sector-info h3 {
+  margin: 3px 0 0;
+
+  color: var(--theme-text, #1f151c);
+
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.3;
+
+  overflow-wrap: anywhere;
+}
+
+.gs-sector-badge {
+  max-width: 115px;
+
+  margin-left: auto;
+  padding: 5px 8px;
+
+  border-radius: 7px;
+
+  font-size: 10px;
+  font-weight: 650;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.gs-sector-description {
+  min-height: 37px;
+  margin: 0;
+
+  color: var(--theme-secondary, #756b70);
+
+  font-size: 12px;
+  line-height: 1.55;
+
+  overflow-wrap: anywhere;
+}
+
+/* =========================================================
+   INFORMACIÓN DE ACCESO Y CATEGORÍAS
+========================================================= */
+
+.gs-sector-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.gs-access-badge,
+.gs-category-count {
+  min-height: 27px;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 5px 8px;
+
+  border: 1px solid transparent;
+  border-radius: 7px;
+
+  font-size: 10px;
+  font-weight: 650;
+  line-height: 1;
+}
+
+.gs-access-badge svg,
+.gs-category-count svg {
+  flex: 0 0 auto;
+  font-size: 12px;
+}
+
+.gs-access-badge.is-public {
+  border-color: color-mix(
+    in srgb,
+    var(--theme-green-fill, #05903e) 14%,
+    transparent
+  );
+
+  color: var(--theme-green-text, #047a35);
+
+  background: color-mix(
+    in srgb,
+    var(--theme-green-fill, #05903e) 8%,
+    transparent
+  );
+}
+
+.gs-access-badge.is-request {
+  border-color: color-mix(
+    in srgb,
+    var(--color-orange, #ff880f) 18%,
+    transparent
+  );
+
+  color: var(--theme-orange-text, #a4510b);
+
+  background: color-mix(
+    in srgb,
+    var(--color-orange, #ff880f) 9%,
+    transparent
+  );
+}
+
+.gs-category-count {
+  border-color: var(--theme-border, #e6dcbf);
+
+  color: var(--theme-secondary, #756b70);
+  background: var(--theme-surface-soft, #f7f2e9);
+}
+
+/* =========================================================
+   MIEMBROS Y AVATARES
+========================================================= */
+
+.gs-sector-members-preview {
+  min-height: 32px;
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.gs-member-preview {
+  min-width: 0;
+  max-width: 145px;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gs-member-preview > span {
+  min-width: 0;
+  overflow: hidden;
+
+  color: var(--theme-secondary, #756b70);
+
+  font-size: 10px;
+  font-weight: 550;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gs-member-avatar.user-avatar {
   width: 28px;
   height: 28px;
   min-width: 28px;
   min-height: 28px;
   max-width: 28px;
   max-height: 28px;
+  flex: 0 0 28px;
 
-  aspect-ratio: 1 / 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 
-  overflow: hidden;
   box-sizing: border-box;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+
   border-radius: 50%;
 
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   line-height: 1;
 }
-
-/* Avatar grande del modal */
-
-.gs-member-avatar--lg.user-avatar {
-  flex-basis: 32px;
-
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
-  min-height: 32px;
-  max-width: 32px;
-  max-height: 32px;
-}
-
-/* Imagen */
 
 .gs-member-avatar .user-avatar__image {
   display: block;
@@ -502,6 +627,1078 @@
   width: 100%;
   height: 100%;
 
-  object-fit: cover;
   border-radius: inherit;
+  object-fit: cover;
+}
+
+.gs-more {
+  padding: 4px 7px;
+
+  border-radius: 6px;
+
+  color: var(--theme-secondary, #756b70);
+  background: var(--theme-surface-soft, #f7f2e9);
+
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.gs-sector-members-preview .gs-empty {
+  padding: 0;
+
+  color: var(--theme-secondary, #93898e);
+
+  font-size: 11px;
+  font-style: italic;
+}
+
+/* =========================================================
+   ACCIONES DE LA TARJETA
+========================================================= */
+
+.gs-sector-card-foot--membership {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding-top: 13px;
+
+  border-top: 1px solid var(--theme-border, #e6dcbf);
+}
+
+.gs-sector-card-foot--membership button {
+  min-width: 0;
+  min-height: 37px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  padding: 8px 11px;
+
+  border: 1px solid var(--theme-border, #e6dcbf);
+  border-radius: 9px;
+
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 650;
+
+  cursor: pointer;
+
+  transition:
+    color 0.17s ease,
+    background 0.17s ease,
+    border-color 0.17s ease,
+    box-shadow 0.17s ease,
+    opacity 0.17s ease;
+}
+
+.gs-sector-card-foot--membership .gs-secondary {
+  flex: 1;
+
+  color: var(--theme-text, #1f151c);
+  background: var(--theme-surface, #fff);
+}
+
+.gs-sector-card-foot--membership .gs-secondary:hover {
+  border-color: var(--sector-color, var(--theme-green-fill, #05903e));
+
+  color: var(--theme-green-text, #047a35);
+  background: var(--theme-surface-soft, #f7f2e9);
+}
+
+.gs-membership-button {
+  flex: 1;
+
+  color: var(--theme-text, #1f151c);
+  background: var(--theme-surface, #fff);
+}
+
+.gs-membership-button svg {
+  flex: 0 0 auto;
+  font-size: 13px;
+}
+
+.gs-membership-button.is-join {
+  border-color: var(--theme-green-fill, #05903e);
+
+  color: #fff;
+  background: var(--theme-green-fill, #05903e);
+}
+
+.gs-membership-button.is-join:hover:not(:disabled) {
+  border-color: var(--theme-green-hover, #047a35);
+  background: var(--theme-green-hover, #047a35);
+  box-shadow: 0 3px 9px rgba(5, 144, 62, 0.14);
+}
+
+.gs-membership-button.is-pending {
+  border-color: var(--theme-border, #e6dcbf);
+
+  color: var(--theme-secondary, #756b70);
+  background: var(--theme-surface-soft, #f7f2e9);
+}
+
+.gs-membership-button.is-pending:hover:not(:disabled) {
+  border-color: var(--theme-orange-fill, #ff880f);
+
+  color: var(--theme-orange-text, #a4510b);
+}
+
+.gs-membership-button.is-leave {
+  color: var(--theme-secondary, #756b70);
+  background: var(--theme-surface, #fff);
+}
+
+.gs-membership-button.is-leave:hover:not(:disabled) {
+  border-color: var(--theme-danger-text, #dc2626);
+
+  color: var(--theme-danger-text, #dc2626);
+  background: var(--theme-danger-soft, #fef2f2);
+}
+
+.gs-sector-card-foot--membership button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* =========================================================
+   ESTADOS VACÍOS Y CARGA
+========================================================= */
+
+.gs-group-empty {
+  padding: 23px 18px;
+
+  border: 1px dashed var(--theme-border, #d9cdb7);
+  border-radius: 12px;
+
+  color: var(--theme-secondary, #756b70);
+  background: color-mix(
+    in srgb,
+    var(--theme-surface, #fff) 60%,
+    transparent
+  );
+
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.gs-empty-state {
+  min-height: 270px;
+
+  display: grid;
+  place-items: center;
+
+  padding: 28px;
+
+  border: 1px dashed var(--theme-border, #d9cdb7);
+  border-radius: 16px;
+
+  background: var(--theme-surface, #fff);
+  text-align: center;
+}
+
+.gs-empty-state__content {
+  width: min(440px, 100%);
+}
+
+.gs-empty-state__eyebrow {
+  color: var(--theme-green-text, #05903e);
+
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+}
+
+.gs-empty-state h2 {
+  margin: 9px 0 7px;
+
+  color: var(--theme-text, #1f151c);
+
+  font-size: 20px;
+  letter-spacing: -0.03em;
+}
+
+.gs-empty-state p {
+  margin: 0 auto 18px;
+
+  color: var(--theme-secondary, #756b70);
+
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.gs-empty-state .gs-primary {
+  margin: 0 auto;
+}
+
+.gs-loading {
+  min-height: 180px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 11px;
+
+  color: var(--theme-secondary, #756b70);
+
+  font-size: 12px;
+}
+
+.gs-loading__spinner {
+  width: 17px;
+  height: 17px;
+
+  border: 2px solid var(--theme-border, #e6dcbf);
+  border-top-color: var(--theme-green-fill, #05903e);
+  border-radius: 50%;
+
+  animation: gs-spin 0.75s linear infinite;
+}
+
+@keyframes gs-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =========================================================
+   SOLICITUDES PENDIENTES
+========================================================= */
+
+.gs-requests-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  padding: 17px 19px;
+
+  border: 1px solid var(--theme-border, #e6dcbf);
+  border-left: 3px solid var(--theme-orange-fill, #ff880f);
+  border-radius: 13px;
+
+  background: var(--theme-surface, #fff);
+  box-shadow: var(--gs-card-shadow);
+}
+
+.gs-requests-count {
+  color: var(--theme-orange-text, #a4510b);
+  background: color-mix(
+    in srgb,
+    var(--color-orange, #ff880f) 9%,
+    var(--theme-surface, #fff)
+  );
+}
+
+.gs-requests-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.gs-request-item {
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+  gap: 11px;
+
+  padding: 10px 11px;
+
+  border: 1px solid var(--theme-border, #e6dcbf);
+  border-radius: 10px;
+
+  background: var(--theme-surface-soft, #fffcf7);
+}
+
+.gs-request-item__icon {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 9px;
+
+  color: var(--theme-orange-text, #a4510b);
+  background: color-mix(
+    in srgb,
+    var(--color-orange, #ff880f) 12%,
+    transparent
+  );
+
+  font-size: 14px;
+}
+
+.gs-request-item__copy {
+  min-width: 0;
+  flex: 1;
+
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.gs-request-item__copy strong {
+  overflow: hidden;
+
+  color: var(--theme-text, #1f151c);
+
+  font-size: 12px;
+  font-weight: 650;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gs-request-item__copy span {
+  color: var(--theme-secondary, #756b70);
+
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.gs-request-cancel {
+  flex: 0 0 auto;
+
+  padding: 7px 9px;
+
+  border: 0;
+  border-radius: 7px;
+
+  color: var(--theme-danger-text, #dc2626);
+  background: transparent;
+
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 650;
+
+  cursor: pointer;
+  transition: background 0.16s ease;
+}
+
+.gs-request-cancel:hover:not(:disabled) {
+  background: var(--theme-danger-soft, #fef2f2);
+}
+
+.gs-request-cancel:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   MODAL DE ADMINISTRACIÓN
+========================================================= */
+
+.gsd-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  background: rgba(31, 21, 28, 0.48);
+  backdrop-filter: blur(4px);
+
+  animation: gsd-fade 0.18s ease;
+}
+
+.gsd-modal {
+  width: 100%;
+  max-width: 560px;
+  max-height: min(700px, 88vh);
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+
+  border: 1px solid var(--theme-border, #e6dcbf);
+  border-radius: 17px;
+
+  background: var(--theme-surface, #fff);
+  box-shadow: 0 22px 65px rgba(31, 21, 28, 0.24);
+
+  animation: gsd-slide 0.2s ease;
+}
+
+@keyframes gsd-fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes gsd-slide {
+  from {
+    opacity: 0;
+    transform: translateY(9px) scale(0.99);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.gsd-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 13px;
+
+  padding: 20px 22px;
+
+  border-bottom: 1px solid var(--theme-border, #e6dcbf);
+}
+
+.gsd-header-left {
+  min-width: 0;
+  flex: 1;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.gsd-header .gs-sector-info h2 {
+  margin: 0;
+
+  color: var(--theme-text, #1f151c);
+
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.3;
+}
+
+.gsd-header .gs-sector-info span {
+  display: block;
+  margin-top: 4px;
+
+  color: var(--theme-secondary, #756b70);
+
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.gs-icon-btn {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid var(--theme-border, #e6dcbf);
+  border-radius: 9px;
+
+  color: var(--theme-secondary, #756b70);
+  background: var(--theme-surface-soft, #f7f2e9);
+
+  font-size: 15px;
+  cursor: pointer;
+
+  transition:
+    color 0.16s ease,
+    border-color 0.16s ease,
+    background 0.16s ease;
+}
+
+.gs-icon-btn:hover {
+  border-color: var(--theme-danger-text, #dc2626);
+
+  color: var(--theme-danger-text, #dc2626);
+  background: var(--theme-danger-soft, #fef2f2);
+}
+
+/* =========================================================
+   MIEMBROS DEL MODAL
+========================================================= */
+
+.gsd-members-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+
+  padding: 16px 22px 9px;
+}
+
+.gsd-members-head > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.gsd-members-head h4 {
+  margin: 0;
+
+  color: var(--theme-secondary, #756b70);
+
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.1em;
+}
+
+.gsd-members-total {
+  color: var(--theme-secondary, #93898e);
+  font-size: 10px;
+}
+
+.gs-chip {
+  min-height: 34px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  padding: 7px 11px;
+
+  border: 1px solid var(--theme-border, #e6dcbf);
+  border-radius: 8px;
+
+  color: var(--theme-text, #1f151c);
+  background: var(--theme-surface-soft, #f7f2e9);
+
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 650;
+
+  cursor: pointer;
+  transition:
+    border-color 0.16s ease,
+    background 0.16s ease;
+}
+
+.gs-chip:hover {
+  border-color: var(--theme-green-fill, #05903e);
+  background: color-mix(
+    in srgb,
+    var(--theme-green-fill, #05903e) 6%,
+    var(--theme-surface, #fff)
+  );
+}
+
+.gs-chip svg {
+  font-size: 14px;
+}
+
+.gsd-members-list {
+  min-height: 80px;
+  flex: 1 1 auto;
+
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+
+  padding: 10px 22px 19px;
+
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.gs-detail-member {
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  padding: 10px 11px;
+
+  border: 1px solid var(--theme-border, #e6dcbf);
+  border-radius: 10px;
+
+  background: var(--theme-surface-soft, #fffcf7);
+
+  transition:
+    border-color 0.16s ease,
+    background 0.16s ease;
+}
+
+.gs-detail-member:hover {
+  border-color: color-mix(
+    in srgb,
+    var(--sector-color, #05903e) 25%,
+    var(--theme-border, #e6dcbf)
+  );
+
+  background: var(--theme-surface, #fff);
+}
+
+.gs-detail-member-left {
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.gs-member-avatar--lg.user-avatar {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  min-height: 34px;
+  max-width: 34px;
+  max-height: 34px;
+  flex-basis: 34px;
+}
+
+.gs-detail-member-info {
+  min-width: 0;
+}
+
+.gs-dm-name {
+  margin: 0;
+
+  overflow: hidden;
+
+  color: var(--theme-text, #1f151c);
+
+  font-size: 12px;
+  font-weight: 650;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gs-dm-sub {
+  margin: 3px 0 0;
+
+  overflow: hidden;
+
+  color: var(--theme-secondary, #756b70);
+
+  font-size: 10px;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gs-dm-remove {
+  width: 31px;
+  height: 31px;
+  flex: 0 0 31px;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid transparent;
+  border-radius: 8px;
+
+  color: var(--theme-secondary, #756b70);
+  background: transparent;
+
+  font-size: 14px;
+  cursor: pointer;
+
+  transition:
+    color 0.16s ease,
+    border-color 0.16s ease,
+    background 0.16s ease;
+}
+
+.gs-dm-remove:hover {
+  border-color: var(--theme-danger-soft, #fee2e2);
+
+  color: var(--theme-danger-text, #dc2626);
+  background: var(--theme-danger-soft, #fef2f2);
+}
+
+.gsd-empty-members {
+  min-height: 125px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  color: var(--theme-secondary, #756b70);
+  text-align: center;
+}
+
+.gsd-empty-members svg {
+  font-size: 21px;
+  opacity: 0.65;
+}
+
+.gsd-empty-members p {
+  margin: 0;
+  font-size: 12px;
+}
+
+/* =========================================================
+   PIE DEL MODAL
+========================================================= */
+
+.gs-detail-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+
+  padding: 14px 22px;
+
+  border-top: 1px solid var(--theme-border, #e6dcbf);
+}
+
+.gs-detail-foot button {
+  min-height: 34px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  padding: 7px 9px;
+
+  border: 1px solid transparent;
+  border-radius: 8px;
+
+  color: var(--theme-secondary, #756b70);
+  background: transparent;
+
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 650;
+
+  cursor: pointer;
+  transition:
+    color 0.16s ease,
+    background 0.16s ease,
+    border-color 0.16s ease;
+}
+
+.gs-detail-foot button:hover {
+  border-color: var(--theme-border, #e6dcbf);
+
+  color: var(--theme-text, #1f151c);
+  background: var(--theme-surface-soft, #f7f2e9);
+}
+
+.gs-detail-foot .gs-danger {
+  color: var(--theme-danger-text, #dc2626);
+}
+
+.gs-detail-foot .gs-danger:hover {
+  border-color: var(--theme-danger-soft, #fee2e2);
+  color: var(--theme-danger-text, #dc2626);
+  background: var(--theme-danger-soft, #fef2f2);
+}
+
+/* =========================================================
+   MODAL ABANDONAR SECTOR
+========================================================= */
+
+.gs-leave-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+
+  display: grid;
+  place-items: center;
+
+  padding: 20px;
+
+  background: rgba(31, 21, 28, 0.5);
+  backdrop-filter: blur(4px);
+
+  animation: gsd-fade 0.18s ease;
+}
+
+.gs-leave-dialog {
+  width: min(420px, 100%);
+  box-sizing: border-box;
+
+  padding: 25px;
+
+  border: 1px solid var(--theme-border, #e6dcbf);
+  border-radius: 16px;
+
+  background: var(--theme-surface, #fff);
+  box-shadow: 0 22px 60px rgba(31, 21, 28, 0.23);
+
+  animation: gsd-slide 0.2s ease;
+}
+
+.gs-leave-dialog__icon {
+  width: 42px;
+  height: 42px;
+
+  display: grid;
+  place-items: center;
+
+  margin-bottom: 15px;
+
+  border-radius: 11px;
+
+  color: var(--theme-danger-text, #dc2626);
+  background: var(--theme-danger-soft, #fef2f2);
+
+  font-size: 17px;
+}
+
+.gs-leave-dialog h2 {
+  margin: 0 0 9px;
+
+  color: var(--theme-text, #1f151c);
+
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+.gs-leave-dialog p {
+  margin: 0;
+
+  color: var(--theme-secondary, #756b70);
+
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.gs-leave-dialog p strong {
+  color: var(--theme-text, #1f151c);
+  font-weight: 650;
+}
+
+.gs-leave-dialog__warning {
+  margin-top: 13px !important;
+  padding: 10px 11px;
+
+  border: 1px solid var(--theme-danger-soft, #fee2e2);
+  border-radius: 8px;
+
+  color: var(--theme-danger-text, #dc2626) !important;
+  background: var(--theme-danger-soft, #fef2f2);
+
+  font-size: 11px !important;
+}
+
+.gs-leave-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+
+  margin-top: 23px;
+}
+
+.gs-leave-dialog__actions button {
+  min-height: 37px;
+
+  padding: 8px 13px;
+
+  border: 1px solid var(--theme-border, #e6dcbf);
+  border-radius: 9px;
+
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 650;
+
+  cursor: pointer;
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease,
+    opacity 0.16s ease;
+}
+
+.gs-leave-dialog__cancel {
+  color: var(--theme-text, #1f151c);
+  background: var(--theme-surface, #fff);
+}
+
+.gs-leave-dialog__cancel:hover:not(:disabled) {
+  background: var(--theme-surface-soft, #f7f2e9);
+}
+
+.gs-leave-dialog__confirm {
+  border-color: var(--theme-danger-text, #dc2626) !important;
+
+  color: #fff;
+  background: var(--theme-danger-text, #dc2626);
+}
+
+.gs-leave-dialog__confirm:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.gs-leave-dialog__actions button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1050px) {
+  .gs-sector-toolbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .gs-sector-search {
+    grid-column: 1 / -1;
+  }
+
+  .gs-sector-toolbar > .gs-primary {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+  }
+}
+
+@media (max-width: 700px) {
+  .gs-content {
+    gap: 21px;
+    padding: 21px 18px;
+  }
+
+  .gs-sector-groups {
+    gap: 27px;
+  }
+
+  .gs-sectores-list.gs-sectores-list--full {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .gs-sector-card {
+    min-height: 250px;
+  }
+
+  .gs-sector-toolbar {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 9px;
+    padding: 11px;
+  }
+
+  .gs-sector-search,
+  .gs-sector-toolbar > .gs-primary {
+    grid-column: auto;
+  }
+
+  .gs-access-filters {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .gs-access-filters button {
+    flex: 1;
+    padding-inline: 7px;
+  }
+
+  .gs-sector-toolbar > .gs-primary {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .gs-content {
+    padding: 18px 13px;
+  }
+
+  .gs-header {
+    padding-bottom: 16px;
+  }
+
+  .gs-header h1 {
+    font-size: 25px;
+  }
+
+  .gs-sector-group__heading h2,
+  .gs-requests-heading h2 {
+    font-size: 17px;
+  }
+
+  .gs-sector-card {
+    padding: 16px;
+  }
+
+  .gs-sector-card-head {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .gs-sector-badge {
+    grid-column: 2;
+    justify-self: start;
+    margin-left: 0;
+  }
+
+  .gs-sector-card-foot--membership {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .gs-sector-card-foot--membership button {
+    width: 100%;
+    flex: auto;
+  }
+
+  .gs-request-item {
+    align-items: flex-start;
+  }
+
+  .gs-request-cancel {
+    padding: 7px 5px;
+  }
+
+  .gsd-overlay {
+    padding: 12px;
+  }
+
+  .gsd-modal {
+    max-height: 92vh;
+    border-radius: 14px;
+  }
+
+  .gsd-header {
+    padding: 16px;
+  }
+
+  .gsd-members-head {
+    padding: 14px 16px 8px;
+  }
+
+  .gsd-members-list {
+    padding: 9px 16px 15px;
+  }
+
+  .gs-detail-foot {
+    padding: 12px 16px;
+  }
+
+  .gs-leave-dialog {
+    padding: 21px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gs-content *,
+  .gs-content *::before,
+  .gs-content *::after,
+  .gsd-overlay,
+  .gsd-modal,
+  .gs-leave-overlay,
+  .gs-leave-dialog {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

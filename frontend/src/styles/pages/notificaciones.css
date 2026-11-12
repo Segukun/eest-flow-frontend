@@ -1,3 +1,4 @@
+
 /* =========================================
    CONTENEDOR GENERAL
 ========================================= */
@@ -64,18 +65,13 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-
   padding: 11px 23px;
-
   border: 1px solid var(--theme-border, var(--color-border));
   border-radius: 25px;
-
   background: var(--theme-surface, var(--color-white));
   color: var(--color-muted);
-
   font-size: 13px;
   font-weight: 500;
-
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -96,14 +92,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-
   width: 19px;
   height: 19px;
-
   border-radius: 50%;
   background: var(--theme-warm-text, var(--color-orange));
   color: var(--color-graphite);
-
   font-size: 11px;
   font-weight: 700;
 }
@@ -121,7 +114,6 @@
   display: flex;
   flex-direction: column;
   gap: 18px;
-
   width: 100%;
   max-width: 1400px;
 }
@@ -134,21 +126,16 @@
   --notification-accent: var(--theme-secondary, var(--color-muted));
   --notification-text: var(--theme-secondary, color-mix(in srgb, var(--color-muted) 80%, var(--color-graphite)));
   position: relative;
-
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 30px;
-
   min-height: 145px;
   padding: 27px 30px 27px 35px;
-
   background: var(--theme-surface, var(--color-white));
   border: 1px solid var(--theme-border, var(--color-border));
   border-radius: var(--radius-lg);
-
   box-shadow: var(--shadow-sm);
-
   overflow: hidden;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
@@ -162,12 +149,10 @@
 
 .notificacion::before {
   content: "";
-
   position: absolute;
   left: 0;
   top: 0;
   bottom: 0;
-
   width: 4px;
   background: var(--notification-accent);
 }
@@ -237,7 +222,6 @@
 .tiempoNotificacion {
   margin-left: auto;
   flex-shrink: 0;
-
   color: var(--color-muted);
   font-size: 12px;
   font-weight: 400;
@@ -245,7 +229,6 @@
 
 .notificacion h2 {
   margin: 0 0 9px;
-
   color: var(--theme-text, var(--color-graphite));
   font-size: 17px;
   font-weight: 700;
@@ -254,7 +237,6 @@
 
 .descripcionNotificacion {
   margin: 0;
-
   color: var(--color-muted);
   font-size: 13px;
   font-weight: 400;
@@ -270,21 +252,15 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
-
   flex-shrink: 0;
-
   min-width: 95px;
   padding: 12px 18px;
-
   border: 1px solid var(--theme-border, var(--color-border));
   border-radius: var(--radius-sm);
-
   background: var(--theme-background, var(--color-bone));
   color: var(--notification-text);
-
   font-size: 13px;
   font-weight: 650;
-
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -306,16 +282,12 @@
 
 .botonMarcarLeidas {
   padding: 11px 20px;
-
   border: 1px solid var(--theme-border, var(--color-border));
   border-radius: var(--radius-sm);
-
   background: var(--theme-surface, var(--color-white));
   color: var(--theme-green-text, var(--color-green));
-
   font-size: 13px;
   font-weight: 650;
-
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -335,16 +307,12 @@
   align-self: center;
   margin-top: 6px;
   padding: 12px 26px;
-
   border: 1px solid var(--theme-border, var(--color-border));
   border-radius: 25px;
-
   background: var(--theme-surface, var(--color-white));
   color: var(--color-muted);
-
   font-size: 13px;
   font-weight: 600;
-
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -366,7 +334,6 @@
 .sinNotificaciones {
   padding: 70px 20px;
   text-align: center;
-
   background: var(--theme-surface, var(--color-white));
   border: 1px solid var(--theme-border, var(--color-border));
   border-radius: var(--radius-lg);
@@ -513,5 +480,60 @@
   .botonVerNotificacion {
     padding: 10px 14px;
     font-size: 12px;
+  }
+}
+
+/* Acciones de aprobación/rechazo para solicitudes de acceso */
+
+.accionesSolicitudSector {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 15px;
+}
+
+.accionSolicitudSector {
+  min-height: 34px;
+  padding: 7px 13px;
+  border: 1px solid var(--theme-border, var(--color-border));
+  border-radius: 8px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: opacity 0.15s ease, background 0.15s ease;
+}
+
+.accionSolicitudSector--approve {
+  border-color: var(--theme-green-fill, var(--color-green));
+  color: #fff;
+  background: var(--theme-green-fill, var(--color-green));
+}
+
+.accionSolicitudSector--reject {
+  color: var(--theme-danger-text, var(--color-danger));
+  background: var(--theme-surface, #fff);
+}
+
+.accionSolicitudSector:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.estadoSolicitudSector {
+  margin-top: 12px;
+  color: var(--theme-secondary, var(--color-muted));
+  font-size: 12px;
+  font-weight: 650;
+}
+
+@media (max-width: 560px) {
+  .accionesSolicitudSector {
+    width: 100%;
+  }
+
+  .accionSolicitudSector {
+    flex: 1;
   }
 }
